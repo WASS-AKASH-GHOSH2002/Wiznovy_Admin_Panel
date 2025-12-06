@@ -254,8 +254,9 @@ const CityManager = () => {
               <h3 className="text-xl font-bold mb-4">Add New City</h3>
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">City Name</label>
+                  <label htmlFor="cityName" className="block text-sm font-medium text-gray-700 mb-2">City Name</label>
                   <input
+                    id="cityName"
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -264,8 +265,9 @@ const CityManager = () => {
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                  <label htmlFor="cityState" className="block text-sm font-medium text-gray-700 mb-2">State</label>
                   <select
+                    id="cityState"
                     value={formData.stateId}
                     onChange={(e) => setFormData({...formData, stateId: e.target.value})}
                     className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -333,8 +335,9 @@ const CityManager = () => {
                 Update status for: <strong>{statusUpdateCity.name}</strong>
               </p>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+                <label htmlFor="cityStatus" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
                 <select
+                  id="cityStatus"
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
                   className="w-full border border-gray-300 p-2.5 rounded-lg"

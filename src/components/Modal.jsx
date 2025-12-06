@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl', position = 'top' }) => {
   if (!isOpen) return null;
@@ -15,10 +16,14 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl', posit
     <div 
       className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center ${positionClasses} z-50 p-4 overflow-y-auto`}
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
     >
       <div 
         className={modalClasses}
         onClick={(e) => e.stopPropagation()}
+        role="document"
       >
         <div className="p-6">
           {title && (
@@ -29,6 +34,15 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl', posit
       </div>
     </div>
   );
+};
+
+Modal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  title: PropTypes.string,
+  children: PropTypes.node,
+  maxWidth: PropTypes.string,
+  position: PropTypes.oneOf(['top', 'center'])
 };
 
 export default Modal;

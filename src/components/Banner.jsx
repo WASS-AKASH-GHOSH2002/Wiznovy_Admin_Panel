@@ -75,8 +75,8 @@ const BannerManagement = () => {
 
       const normalizedBanners = bannersData.map(banner => ({
         ...banner,
-        image: banner?.image ? banner.image.replace(/\\/g, '/') : '',
-        imagePath: banner?.imagePath ? banner.imagePath.replace(/\\/g, '/') : '',
+        image: banner?.image ? banner.image.replaceAll('\\', '/') : '',
+        imagePath: banner?.imagePath ? banner.imagePath.replaceAll('\\', '/') : '',
         status: banner?.status || 'PENDING',
         createdAt: banner?.createdAt || new Date().toISOString()
       }));
@@ -364,10 +364,11 @@ const BannerManagement = () => {
             <div className="p-6">
               <form onSubmit={editMode ? updateBannerImage : createBanner}>
                 <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                  <label htmlFor="bannerImage" className="block text-gray-700 text-sm font-bold mb-2">
                     Banner Image
                   </label>
                   <input
+                    id="bannerImage"
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     onChange={(e) => setImageFile(e.target.files?.[0])}

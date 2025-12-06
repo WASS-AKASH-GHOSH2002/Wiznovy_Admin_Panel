@@ -184,8 +184,9 @@ const TopicManager = () => {
             <h3 className="text-xl font-bold mb-4">Add New Topic</h3>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Topic Name</label>
+                <label htmlFor="addTopicName" className="block text-sm font-medium text-gray-700 mb-2">Topic Name</label>
                 <input
+                  id="addTopicName"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -194,8 +195,9 @@ const TopicManager = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label htmlFor="addTopicStatus" className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
+                  id="addTopicStatus"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -234,8 +236,9 @@ const TopicManager = () => {
             <h3 className="text-xl font-bold mb-4">Edit Topic</h3>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Topic Name</label>
+                <label htmlFor="editTopicName" className="block text-sm font-medium text-gray-700 mb-2">Topic Name</label>
                 <input
+                  id="editTopicName"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -244,8 +247,9 @@ const TopicManager = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label htmlFor="editTopicStatus" className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
+                  id="editTopicStatus"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -289,8 +293,9 @@ const TopicManager = () => {
               Update status for: <strong>{statusUpdateTopic.name}</strong>
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+              <label htmlFor="updateTopicStatus" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
               <select
+                id="updateTopicStatus"
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
                 className="w-full border border-gray-300 p-2.5 rounded-lg"

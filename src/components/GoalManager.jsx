@@ -219,8 +219,9 @@ const GoalManager = () => {
             <h3 className="text-xl font-bold mb-4">{editingId ? 'Edit Goal' : 'Add New Goal'}</h3>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Goal Name</label>
+                <label htmlFor="goalName" className="block text-sm font-medium text-gray-700 mb-2">Goal Name</label>
                 <input
+                  id="goalName"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -229,8 +230,9 @@ const GoalManager = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label htmlFor="goalStatus" className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
+                  id="goalStatus"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -272,8 +274,9 @@ const GoalManager = () => {
               Update status for: <strong>{statusUpdateGoal.name}</strong>
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+              <label htmlFor="newStatus" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
               <select
+                id="newStatus"
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
                 className="w-full border border-gray-300 p-2.5 rounded-lg"

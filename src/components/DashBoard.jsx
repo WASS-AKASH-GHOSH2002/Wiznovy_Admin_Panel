@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../store/auth/authThunks";
+import PropTypes from 'prop-types';
 import WiznovyLogo from "../assets/WIZNOVY.png";
 import LazyImage from "./LazyImage";
 import axios from "axios";
@@ -582,6 +583,15 @@ function OverviewSection({ totalBanners, facultyCount, activeStaffCount, inactiv
               setActiveMenuItem(item.path);
               navigate(item.path);
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setActiveMenuItem(item.path);
+                navigate(item.path);
+              }
+            }}
+            role="button"
+            tabIndex={0}
             className="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
           >
             <div className={`p-3 mr-3 rounded-lg border ${item.color}`}>
@@ -611,6 +621,20 @@ function OverviewSection({ totalBanners, facultyCount, activeStaffCount, inactiv
   );
 }
 
+OverviewSection.propTypes = {
+  totalBanners: PropTypes.number.isRequired,
+  facultyCount: PropTypes.number.isRequired,
+  activeStaffCount: PropTypes.number.isRequired,
+  inactiveStaffCount: PropTypes.number.isRequired,
+  totalUsersCount: PropTypes.number.isRequired,
+  activeUsersCount: PropTypes.number.isRequired,
+  inactiveUsersCount: PropTypes.number.isRequired,
+  totalCoursesCount: PropTypes.number.isRequired,
+  totalFeedbackCount: PropTypes.number.isRequired,
+  totalNewsCount: PropTypes.number.isRequired,
+  setActiveMenuItem: PropTypes.func.isRequired
+};
+
 function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isActive = false }) {
   const [open, setOpen] = useState(false);
   return (
@@ -625,6 +649,15 @@ function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isAc
           if (hasDropdown) setOpen(!open);
           if (onClick && !hasDropdown) onClick();
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (hasDropdown) setOpen(!open);
+            if (onClick && !hasDropdown) onClick();
+          }
+        }}
+        role="button"
+        tabIndex={0}
       >
         <div className="flex items-center gap-3">
           {icon && <span>{icon}</span>}
@@ -643,16 +676,38 @@ function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isAc
   );
 }
 
+SidebarItem.propTypes = {
+  icon: PropTypes.node,
+  label: PropTypes.string.isRequired,
+  onClick: PropTypes.func,
+  hasDropdown: PropTypes.bool,
+  children: PropTypes.node,
+  isActive: PropTypes.bool
+};
+
 function DropdownItem({ label, onClick }) {
   return (
     <div
       className="px-2 py-1 rounded-md hover:bg-gray-200 cursor-pointer text-gray-700 transition"
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       {label}
     </div>
   );
 }
+
+DropdownItem.propTypes = {
+  label: PropTypes.string.isRequired,
+  onClick: PropTypes.func.isRequired
+};
 
 function PlaceholderPage({ page }) {
   return (
@@ -661,3 +716,7 @@ function PlaceholderPage({ page }) {
     </div>
   );
 }
+
+PlaceholderPage.propTypes = {
+  page: PropTypes.string.isRequired
+};

@@ -84,7 +84,7 @@ const LoginPage = () => {
     
     // For email field, only allow letters, numbers, dots, and @
     if (name === 'loginId') {
-      const filteredValue = value.replace(/[^a-zA-Z0-9.@]/g, '');
+      const filteredValue = value.replaceAll(/[^a-zA-Z0-9.@]/g, '');
       setCredentials({
         ...credentials,
         [name]: filteredValue
@@ -150,10 +150,11 @@ const LoginPage = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email ID</label>
+              <label htmlFor="loginId" className="block text-sm font-medium text-gray-700 mb-2">Email ID</label>
               <div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50 focus-within:ring-2 ring-[#C4DAD2]-400">
                 <User className="text-gray-400 mr-2" size={18} />
                 <input
+                  id="loginId"
                   type="email"
                   name="loginId"
                   placeholder="Enter your email address"
@@ -167,10 +168,11 @@ const LoginPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50 focus-within:ring-2 ring-[#C4DAD2]-400 relative">
                 <Lock className="text-gray-400 mr-2" size={18} />
                 <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Enter your password"
@@ -191,7 +193,7 @@ const LoginPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Captcha</label>
+              <label htmlFor="captcha" className="block text-sm font-medium text-gray-700 mb-2">Captcha</label>
               <TextCaptcha onCaptchaChange={setIsCaptchaValid} />
             </div>
           </div>
