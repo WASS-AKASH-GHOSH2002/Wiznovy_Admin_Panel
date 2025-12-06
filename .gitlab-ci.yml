@@ -1,0 +1,122 @@
+image: node:20
+
+stages:
+  - build
+  - deploy_dev
+  - deploy_qa
+  - deploy_prod
+
+# -----------------------------------------
+# CACHE (optional, but keeps node_modules)
+# -----------------------------------------
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+
+# -----------------------------------------
+# BUILD (Vite build)
+# -----------------------------------------
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build -- --mode production
+  artifacts:
+    paths:
+      - dist/
+      - package.json
+      - package-lock.json
+  only:
+    - main
+
+# -----------------------------------------
+# COMMON SSH SETUP (reusable)
+# -----------------------------------------
+.ssh_setup: &ssh_setup
+  before_script:
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+    - chmod 600 ~/.ssh/deploy_key
+    - ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+# -----------------------------------------
+# DEPLOY — DEV
+# -----------------------------------------
+deploy_dev:
+  stage: deploy_dev
+  <<: *ssh_setup
+  script:
+    - echo "Building FOR DEV environment..."
+    - npm ci
+    - npm run build -- --mode dev
+
+    # Add .htaccess for SPA routing
+    - echo "RewriteEngine On
+      RewriteCond %{REQUEST_FILENAME} !-f
+      RewriteCond %{REQUEST_FILENAME} !-d
+      RewriteRule ^ index.html [L]" > dist/.htaccess
+
+    - echo "Clearing old DEV build..."
+    - ssh -i ~/.ssh/deploy_key $SSH_USER@$SSH_HOST "mkdir -p $DEV_PATH && rm -rf $DEV_PATH/*"
+
+    - echo "Uploading DEV build..."
+    - scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r dist/* $SSH_USER@$SSH_HOST:$DEV_PATH/
+
+    - echo "Deployed to DEV successfully."
+  only:
+    - main
+
+# -----------------------------------------
+# DEPLOY — QA
+# -----------------------------------------
+deploy_qa:
+  stage: deploy_qa
+  <<: *ssh_setup
+  script:
+    - echo "Building FOR QA environment..."
+    - npm ci
+    - npm run build -- --mode qa
+
+    # Add .htaccess for SPA routing
+    - echo "RewriteEngine On
+      RewriteCond %{REQUEST_FILENAME} !-f
+      RewriteCond %{REQUEST_FILENAME} !-d
+      RewriteRule ^ index.html [L]" > dist/.htaccess
+
+    - echo "Clearing old QA build..."
+    - ssh -i ~/.ssh/deploy_key $SSH_USER@$SSH_HOST "mkdir -p $QA_PATH && rm -rf $QA_PATH/*"
+
+    - echo "Uploading QA build..."
+    - scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r dist/* $SSH_USER@$SSH_HOST:$QA_PATH/
+
+    - echo "Deployed to QA successfully."
+  only:
+    - main
+
+# -----------------------------------------
+# DEPLOY — PRODUCTION
+# -----------------------------------------
+# deploy_prod:
+#   stage: deploy_prod
+#   <<: *ssh_setup
+#   script:
+#     - echo "Building FOR PRODUCTION environment..."
+#     - npm ci
+#     - npm run build -- --mode production
+
+#     # Add .htaccess for SPA routing
+#     - echo "RewriteEngine On
+#       RewriteCond %{REQUEST_FILENAME} !-f
+#       RewriteCond %{REQUEST_FILENAME} !-d
+#       RewriteRule ^ index.html [L]" > dist/.htaccess
+
+#     - echo "Clearing old PROD build..."
+#     - ssh -i ~/.ssh/deploy_key $SSH_USER@$SSH_HOST "mkdir -p $PROD_PATH && rm -rf $PROD_PATH/*"
+
+#     - echo "Uploading PROD build..."
+#     - scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r dist/* $SSH_USER@$SSH_HOST:$PROD_PATH/
+
+#     - echo "Deployed to PRODUCTION successfully."
+#   only:
+#     - main
