@@ -41,7 +41,7 @@ const ForgotPassword = () => {
     setMessage('');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/forgotPass`, {
+      await axios.post(`${API_BASE_URL}/auth/forgotPass`, {
         email,
         role: 'ADMIN'
       });

@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../config/axios";
 
+const getActionButtonClass = (status) => {
+  return status === "ACTIVE"
+    ? "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-white hover:bg-amber-600"
+    : "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600";
+};
+
+const getActionButtonText = (status) => {
+  return status === "ACTIVE" ? "Deactivate" : "Activate";
+};
+
 const FacultyArea = () => {
   const [activeTab, setActiveTab] = useState("manage");
   const [staffs, setStaffs] = useState([]);
@@ -195,13 +205,9 @@ const FacultyArea = () => {
                                 s.status === "ACTIVE" ? "DEACTIVE" : "ACTIVE"
                               )
                             }
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                              s.status === "ACTIVE"
-                                ? "bg-amber-500 text-white hover:bg-amber-600"
-                                : "bg-green-500 text-white hover:bg-green-600"
-                            }`}
+                            className={getActionButtonClass(s.status)}
                           >
-                            {s.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                            {getActionButtonText(s.status)}
                           </button>
                           <button
                             onClick={() => setSelected(s.id)}

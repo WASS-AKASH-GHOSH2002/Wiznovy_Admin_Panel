@@ -64,7 +64,20 @@ import CityManager from "../pages/CityManager";
 const totalCourses = 4;
 const totalLectures = 1;
 
-const getStats = (facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount) => [
+const getStats = (statsData) => {
+  const {
+    facultyCount,
+    activeStaffCount,
+    inactiveStaffCount,
+    totalUsersCount,
+    activeUsersCount,
+    inactiveUsersCount,
+    totalCoursesCount,
+    totalFeedbackCount,
+    totalNewsCount
+  } = statsData;
+  
+  return [
   {
     title: "All Users",
     count: totalUsersCount,
@@ -137,6 +150,7 @@ const getStats = (facultyCount, activeStaffCount, inactiveStaffCount, totalUsers
     path: "/news-management",
   },
 ];
+};
 
 const facultyMenuItems = [
   { label: "All Admin&Staff", path: "/faculty/all" },
@@ -230,7 +244,7 @@ export default function DashboardPage() {
           },
         });
 
-        if (activeStaffRes.status === 200 && activeStaffRes.data && inactiveStaffRes.status === 200 && inactiveStaffRes.data) {
+        if (activeStaffRes.status === 200 && activeStaffRes.data?.result && inactiveStaffRes.status === 200 && inactiveStaffRes.data?.result) {
           const activeStaffData = activeStaffRes.data.result || [];
           const inactiveStaffData = inactiveStaffRes.data.result || [];
           const allStaff = [...activeStaffData, ...inactiveStaffData];
@@ -542,17 +556,25 @@ function OverviewSection({ facultyCount, activeStaffCount, inactiveStaffCount, t
       <h2 className="text-xl font-semibold mb-4 text-gray-800">Quick Overview</h2>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {getStats(facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount).map((item, index) => (
-          <div
-            key={index}
+        {getStats({
+          facultyCount,
+          activeStaffCount,
+          inactiveStaffCount,
+          totalUsersCount,
+          activeUsersCount,
+          inactiveUsersCount,
+          totalCoursesCount,
+          totalFeedbackCount,
+          totalNewsCount
+        }).map((item) => (
+          <button
+            key={item.path}
             onClick={() => {
               setActiveMenuItem(item.path);
               navigate(item.path);
             }}
             onKeyDown={(e) => handleKeyDown(e, item)}
-            role="button"
-            tabIndex={0}
-            className="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
+            className="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer w-full text-left"
           >
             <div className={`p-3 mr-3 rounded-lg border ${item.color}`}>
               {item.icon}
@@ -574,7 +596,7 @@ function OverviewSection({ facultyCount, activeStaffCount, inactiveStaffCount, t
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>

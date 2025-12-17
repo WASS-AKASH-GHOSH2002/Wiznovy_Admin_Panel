@@ -41,7 +41,7 @@ const TextCaptcha = ({ onCaptchaChange }) => {
         >
           {captchaText.split('').map((char, index) => (
             <span 
-              key={index}
+              key={`char-${index}-${char}`}
               style={{
                 display: 'inline-block',
                 transform: `rotate(${Math.random() * 20 - 10}deg)`,

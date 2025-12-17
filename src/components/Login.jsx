@@ -71,11 +71,12 @@ const LoginPage = () => {
       } else {
         setLocalError('Invalid admin credentials. Please check your email and password.');
       }
-    } else {
-      // Handle specific error cases
-      if (result?.error?.includes('unauthorized') || result?.error?.includes('Invalid')) {
-        setLocalError('Invalid admin credentials. This email is not authorized for admin access.');
-      }
+      return;
+    }
+    
+    // Handle specific error cases
+    if (result?.error?.includes('unauthorized') || result?.error?.includes('Invalid')) {
+      setLocalError('Invalid admin credentials. This email is not authorized for admin access.');
     }
   };
 

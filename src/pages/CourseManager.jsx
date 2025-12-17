@@ -24,6 +24,21 @@ import { normalizeImageUrl } from '../utils/imageUtils';
 import { validateImageFile } from '../utils/fileValidation';
 import Modal from '../components/Modal';
 
+const getAccessTypeClass = (accessType) => {
+  return accessType === 'FREE' 
+    ? 'bg-green-100 text-green-800' 
+    : 'bg-purple-100 text-purple-800';
+};
+
+const getStatusClass = (status) => {
+  switch (status) {
+    case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+    case 'APPROVED': return 'bg-green-100 text-green-800';
+    case 'REJECTED': return 'bg-red-100 text-red-800';
+    default: return 'bg-gray-100 text-gray-800';
+  }
+};
+
 const CourseManager = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -334,10 +349,7 @@ const CourseManager = () => {
     setShowStatusModal(true);
   };
 
-  const handleThumbnailUpdate = (course) => {
-    setSelectedCourse(course);
-    setShowThumbnailModal(true);
-  };
+
 
   const handleViewDetails = async (course) => {
     setSelectedCourse(course);
@@ -738,11 +750,7 @@ const CourseManager = () => {
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-semibold text-gray-800">{course.name}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      course.accessType === 'FREE' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-purple-100 text-purple-800'
-                    }`}>
+                    <span className={`px-2 py-1 rounded-full text-xs ${getAccessTypeClass(course.accessType)}`}>
                       {course.accessType}
                     </span>
                   </div>
@@ -761,7 +769,7 @@ const CourseManager = () => {
                     <div className="text-sm text-gray-600">
                       <span className="font-medium">Tutor:</span> {course.tutor?.tutorDetail?.name || 'N/A'}
                       {course.tutor?.tutorDetail?.tutorId && (
-                        <span className="text-gray-500 ml-2">({course.tutor.tutorDetail.tutorId})</span>
+                        <span className="text-gray-500 ml-2">({course.tutor?.tutorDetail?.tutorId})</span>
                       )}
                     </div>
                   </div>
@@ -1323,22 +1331,10 @@ const CourseManager = () => {
                           {selectedCourseDetails.description || 'No description available'}
                         </p>
                         <div className="flex flex-wrap gap-3">
-                          <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-                            selectedCourseDetails.accessType === 'FREE' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-purple-100 text-purple-800'
-                          }`}>
+                          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getAccessTypeClass(selectedCourseDetails.accessType)}`}>
                             {selectedCourseDetails.accessType}
                           </span>
-                          <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-                            selectedCourseDetails.status === 'PENDING'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : selectedCourseDetails.status === 'APPROVED'
-                              ? 'bg-green-100 text-green-800'
-                              : selectedCourseDetails.status === 'REJECTED'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusClass(selectedCourseDetails.status)}`}>
                             {selectedCourseDetails.status}
                           </span>
                         </div>

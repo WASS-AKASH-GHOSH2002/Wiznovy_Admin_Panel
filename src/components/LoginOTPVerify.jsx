@@ -164,7 +164,7 @@ const LoginOTPVerify = () => {
           <div className="flex justify-center gap-2">
             {otp.map((digit, index) => (
               <input
-                key={index}
+                key={`otp-${index}`}
                 ref={el => inputRefs.current[index] = el}
                 type="text"
                 inputMode="numeric"

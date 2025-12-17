@@ -19,6 +19,12 @@ import { createStudyMaterial, updateStudyMaterial, updateStudyMaterialPdf } from
 import { toast } from 'react-toastify';
 import Modal from '../components/Modal';
 
+const getStatusButtonClass = (status) => {
+  if (status === 'ACTIVE') return 'bg-green-100 text-green-800';
+  if (status === 'PENDING') return 'bg-yellow-100 text-yellow-800';
+  return 'bg-gray-100 text-gray-800';
+};
+
 const CourseDetails = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -38,9 +44,7 @@ const CourseDetails = () => {
   const [showUpdatePdfModal, setShowUpdatePdfModal] = useState(false);
   const [selectedStudyMaterial, setSelectedStudyMaterial] = useState(null);
   const [selectedEditStudyFile, setSelectedEditStudyFile] = useState(null);
-  const [selectedUnitForVideo, setSelectedUnitForVideo] = useState(null);
-  const [selectedUnitForStudyMaterial, setSelectedUnitForStudyMaterial] = useState(null);
-  const [selectedVideoForStudyMaterial, setSelectedVideoForStudyMaterial] = useState(null);
+
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -125,10 +129,10 @@ const CourseDetails = () => {
       toast.success(successMessage);
       onSuccess();
       dispatch(fetchCourseUnits(courseId));
-    } else {
-      const errorMessage = result.payload || result.error?.message || 'Unknown error';
-      toast.error(`Failed: ${errorMessage}`);
+      return;
     }
+    const errorMessage = result.payload || result.error?.message || 'Unknown error';
+    toast.error(`Failed: ${errorMessage}`);
   };
 
   const normalizeUrl = (url) => {
@@ -188,6 +192,27 @@ const CourseDetails = () => {
     return { isValid: true };
   };
 
+  const processImageFile = (file, setFile, setPreview) => {
+    setFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => setPreview(e.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const processVideoFile = (file, setFile, setPreview) => {
+    setFile(file);
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+  };
+
+  const refreshMaterials = (unitId, videoLectureId) => {
+    if (unitId) {
+      dispatch(fetchStudyMaterials({ unitId }));
+    } else if (videoLectureId) {
+      dispatch(fetchVideoStudyMaterials({ videoLectureId }));
+    }
+  };
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     const validation = validateImageFile(file);
@@ -199,10 +224,7 @@ const CourseDetails = () => {
       return;
     }
     
-    setSelectedFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => setImagePreview(e.target.result);
-    reader.readAsDataURL(file);
+    processImageFile(file, setSelectedFile, setImagePreview);
   };
 
   const resetForm = () => {
@@ -272,19 +294,16 @@ const CourseDetails = () => {
   };
 
   const handleCreateVideo = (unitId) => {
-    setSelectedUnitForVideo(unitId);
     setVideoFormData(prev => ({ ...prev, unitId }));
     setShowVideoModal(true);
   };
   
   const handleCreateStudyMaterial = (unitId) => {
-    setSelectedUnitForStudyMaterial(unitId);
     setStudyMaterialFormData(prev => ({ ...prev, unitId }));
     setShowStudyMaterialModal(true);
   };
   
   const handleCreateVideoStudyMaterial = (videoId) => {
-    setSelectedVideoForStudyMaterial(videoId);
     setVideoStudyMaterialFormData(prev => ({ ...prev, videoLectureId: videoId }));
     setShowVideoStudyMaterialModal(true);
   };
@@ -311,7 +330,6 @@ const CourseDetails = () => {
       toast.success('Video lecture created successfully!');
       setShowVideoModal(false);
       resetVideoForm();
-      // Refresh the video lectures list for this unit
       dispatch(fetchVideoLectures({ unitId: videoFormData.unitId }));
       dispatch(fetchCourseUnits(courseId));
     }
@@ -326,9 +344,7 @@ const CourseDetails = () => {
       return;
     }
     
-    setSelectedVideoFile(file);
-    const url = URL.createObjectURL(file);
-    setVideoPreview(url);
+    processVideoFile(file, setSelectedVideoFile, setVideoPreview);
   };
 
   const handleThumbnailUpload = (e) => {
@@ -340,10 +356,7 @@ const CourseDetails = () => {
       return;
     }
     
-    setSelectedThumbnailFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => setThumbnailPreview(e.target.result);
-    reader.readAsDataURL(file);
+    processImageFile(file, setSelectedThumbnailFile, setThumbnailPreview);
   };
 
   const resetVideoForm = () => {
@@ -408,17 +421,11 @@ const CourseDetails = () => {
     }
     
     const result = await dispatch(createStudyMaterial(submitData));
-    
-    if (result.type.endsWith('/fulfilled')) {
-      toast.success('Study material created successfully!');
+    handleActionResult(result, 'Study material created successfully!', () => {
       setShowStudyMaterialModal(false);
       resetStudyMaterialForm();
-      // Refresh the study materials list for this unit
       dispatch(fetchStudyMaterials({ unitId: studyMaterialFormData.unitId }));
-      dispatch(fetchCourseUnits(courseId));
-    } else {
-      toast.error('Failed to create study material: ' + (result.payload || result.error?.message || 'Unknown error'));
-    }
+    });
   };
   
   const handleVideoStudyMaterialSubmit = async (e) => {
@@ -434,17 +441,11 @@ const CourseDetails = () => {
     }
     
     const result = await dispatch(createStudyMaterial(submitData));
-    
-    if (result.type.endsWith('/fulfilled')) {
-      toast.success('Video study material created successfully!');
+    handleActionResult(result, 'Video study material created successfully!', () => {
       setShowVideoStudyMaterialModal(false);
       resetVideoStudyMaterialForm();
-      // Refresh the video study materials list for this video
       dispatch(fetchVideoStudyMaterials({ videoLectureId: videoStudyMaterialFormData.videoLectureId }));
-      dispatch(fetchCourseUnits(courseId));
-    } else {
-      toast.error('Failed to create video study material: ' + (result.payload || result.error?.message || 'Unknown error'));
-    }
+    });
   };
   
   const handleVideoStudyMaterialInputChange = (e) => {
@@ -467,24 +468,11 @@ const CourseDetails = () => {
     };
     
     const result = await dispatch(updateStudyMaterial({ id: selectedStudyMaterial.id, formData: updateData }));
-    
-    if (result.type.endsWith('/fulfilled')) {
-      toast.success('Study material updated successfully!');
+    handleActionResult(result, 'Study material updated successfully!', () => {
       setShowEditStudyMaterialModal(false);
       setSelectedStudyMaterial(null);
-      
-      // Refresh study materials for unit or video
-      const unitId = selectedStudyMaterial.unitId;
-      const videoLectureId = selectedStudyMaterial.videoLectureId;
-      
-      if (unitId) {
-        dispatch(fetchStudyMaterials({ unitId }));
-      } else if (videoLectureId) {
-        dispatch(fetchVideoStudyMaterials({ videoLectureId }));
-      }
-    } else {
-      toast.error('Failed to update study material: ' + (result.payload || result.error?.message || 'Unknown error'));
-    }
+      refreshMaterials(selectedStudyMaterial.unitId, selectedStudyMaterial.videoLectureId);
+    });
   };
   
   const handleUpdatePdf = async (e) => {
@@ -496,25 +484,12 @@ const CourseDetails = () => {
     }
     
     const result = await dispatch(updateStudyMaterialPdf({ id: selectedStudyMaterial.id, file: selectedEditStudyFile }));
-    
-    if (result.type.endsWith('/fulfilled')) {
-      toast.success('PDF updated successfully!');
+    handleActionResult(result, 'PDF updated successfully!', () => {
       setShowUpdatePdfModal(false);
       setSelectedStudyMaterial(null);
       setSelectedEditStudyFile(null);
-      
-      // Refresh study materials for unit or video
-      const unitId = selectedStudyMaterial.unitId;
-      const videoLectureId = selectedStudyMaterial.videoLectureId;
-      
-      if (unitId) {
-        dispatch(fetchStudyMaterials({ unitId }));
-      } else if (videoLectureId) {
-        dispatch(fetchVideoStudyMaterials({ videoLectureId }));
-      }
-    } else {
-      toast.error('Failed to update PDF: ' + (result.payload || result.error?.message || 'Unknown error'));
-    }
+      refreshMaterials(selectedStudyMaterial.unitId, selectedStudyMaterial.videoLectureId);
+    });
   };
 
 
@@ -647,13 +622,7 @@ const CourseDetails = () => {
                           </span>
                           <button
                             onClick={() => handleStatusUpdate(unit)}
-                            className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
-                              unit.status === 'ACTIVE' 
-                                ? 'bg-green-100 text-green-800' 
-                                : unit.status === 'PENDING'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
+                            className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${getStatusButtonClass(unit.status)}`}
                           >
                             {unit.status}
                           </button>
