@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, RefreshCw, FileText, Download, Settings, Edit } from "lucide-react";
+import { toast } from 'react-toastify';
 import { exportTutorsToPDF, exportTutorsToCSV } from "../utils/downloadUtils";
 import { fetchTutors, updateTutorStatus, bulkUpdateTutorStatus, setSearch, setStatusFilter, updateTutorContact, fetchTutorDetails } from "../store/tutorSlice";
 import { fetchCountries } from "../store/countrySlice";
@@ -82,7 +83,14 @@ const Tutormanagement = () => {
 
   const confirmStatusUpdate = async () => {
     if (statusUpdateTutor && newStatus) {
-      await dispatch(updateTutorStatus({ tutorId: statusUpdateTutor.id, status: newStatus }));
+      const result = await dispatch(updateTutorStatus({ tutorId: statusUpdateTutor.id, status: newStatus }));
+      
+      if (result.type.endsWith('/fulfilled')) {
+        toast.success('Tutor status updated successfully!');
+      } else {
+        toast.error('Failed to update tutor status');
+      }
+      
       setShowStatusModal(false);
       setStatusUpdateTutor(null);
       setNewStatus('');
@@ -121,7 +129,14 @@ const Tutormanagement = () => {
 
   const confirmBulkStatusUpdate = async () => {
     if (selectedTutors.length > 0 && bulkStatus) {
-      await dispatch(bulkUpdateTutorStatus({ ids: selectedTutors, status: bulkStatus }));
+      const result = await dispatch(bulkUpdateTutorStatus({ ids: selectedTutors, status: bulkStatus }));
+      
+      if (result.type.endsWith('/fulfilled')) {
+        toast.success(`${selectedTutors.length} tutor(s) status updated successfully!`);
+      } else {
+        toast.error('Failed to update tutors status');
+      }
+      
       setShowBulkModal(false);
       setSelectedTutors([]);
       setBulkStatus('');
@@ -182,6 +197,7 @@ const Tutormanagement = () => {
       }));
       
       if (result.type.endsWith('/fulfilled')) {
+        toast.success('Contact updated successfully!');
         const offset = (currentPage - 1) * itemsPerPage;
         const fetchParams = { 
           limit: itemsPerPage, 
@@ -192,6 +208,8 @@ const Tutormanagement = () => {
           ...(selectedSubject && { subjectId: selectedSubject })
         };
         dispatch(fetchTutors(fetchParams));
+      } else {
+        toast.error('Failed to update contact');
       }
       
       setShowUpdateModal(false);
@@ -564,8 +582,18 @@ const Tutormanagement = () => {
 
       {/* Status Update Modal */}
       {showStatusModal && statusUpdateTutor && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
+          onClick={() => setShowStatusModal(false)}
+          onKeyDown={(e) => e.key === 'Enter' && setShowStatusModal(false)}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+        >
+          <div 
+            className="bg-white p-6 rounded-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold mb-4">Update Tutor Status</h3>
             <p className="text-gray-600 mb-4">
               Update status for: <strong>{statusUpdateTutor.tutorDetail?.name || statusUpdateTutor.email}</strong>
@@ -609,8 +637,18 @@ const Tutormanagement = () => {
 
       {/* Bulk Update Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
+          onClick={() => setShowBulkModal(false)}
+          onKeyDown={(e) => e.key === 'Enter' && setShowBulkModal(false)}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+        >
+          <div 
+            className="bg-white p-6 rounded-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold mb-4">Bulk Status Update</h3>
             <p className="text-gray-600 mb-4">
               Update status for <strong>{selectedTutors.length}</strong> selected tutors
@@ -655,8 +693,18 @@ const Tutormanagement = () => {
 
       {/* Update Contact Modal */}
       {showUpdateModal && updateTutor && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
+          onClick={() => setShowUpdateModal(false)}
+          onKeyDown={(e) => e.key === 'Enter' && setShowUpdateModal(false)}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+        >
+          <div 
+            className="bg-white p-6 rounded-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold mb-4">Update Contact</h3>
             <p className="text-gray-600 mb-4">
               Update contact for: <strong>{updateTutor.tutorDetail?.name || updateTutor.email}</strong>

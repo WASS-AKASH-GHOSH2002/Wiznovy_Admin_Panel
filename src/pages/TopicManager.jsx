@@ -11,16 +11,28 @@ import {
 } from "../store/topicSlice";
 
 /* =====================
+   CONSTANTS
+===================== */
+
+const STATUS_OPTIONS = [
+  "ACTIVE",
+  "DEACTIVE",
+  "DELETED",
+  "SUSPENDED",
+  "PENDING",
+];
+
+/* =====================
    REUSABLE UI
 ===================== */
 
 const StatusOptions = () => (
   <>
-    <option value="ACTIVE">Active</option>
-    <option value="DEACTIVE">Deactive</option>
-    <option value="DELETED">Deleted</option>
-    <option value="SUSPENDED">Suspended</option>
-    <option value="PENDING">Pending</option>
+    {STATUS_OPTIONS.map((status) => (
+      <option key={status} value={status}>
+        {status.charAt(0) + status.slice(1).toLowerCase()}
+      </option>
+    ))}
   </>
 );
 
@@ -47,7 +59,7 @@ StatusBadge.propTypes = {
 const Modal = ({ isOpen, title, children }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 flex justify-center items-center z-50">
+    <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/40">
       <div className="bg-white p-6 rounded-xl w-full max-w-md">
         <h3 className="text-xl font-bold mb-4">{title}</h3>
         {children}
@@ -85,7 +97,6 @@ const TopicManager = () => {
 
   const [showFormModal, setShowFormModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
-
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const [formData, setFormData] = useState({ name: "", status: "ACTIVE" });
