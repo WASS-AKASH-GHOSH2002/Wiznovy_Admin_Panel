@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Eye, RefreshCw, Settings, Edit } from "lucide-react";
+import { RefreshCw, Settings, Edit } from "lucide-react";
 import {
   createTopic,
   getAllTopics,
   updateTopic,
   updateTopicStatus,
-  deleteTopic,
-  clearError
-} from '../store/topicSlice';
+  clearError,
+} from "../store/topicSlice";
+
+/* =====================
+   REUSABLE UI
+===================== */
 
 const StatusOptions = () => (
   <>
@@ -20,22 +23,26 @@ const StatusOptions = () => (
   </>
 );
 
-const StatusBadge = ({ status }) => (
-  <span className={`px-2 py-1 text-xs rounded-full ${
-    status === "ACTIVE" ? "bg-green-100 text-green-800" : 
-    status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
-    status === "SUSPENDED" ? "bg-orange-100 text-orange-800" :
-    status === "DELETED" ? "bg-gray-100 text-gray-800" :
-    "bg-red-100 text-red-800"
-  }`}>
-    {status}
-  </span>
-);
+const StatusBadge = ({ status }) => {
+  const classes = {
+    ACTIVE: "bg-green-100 text-green-800",
+    PENDING: "bg-yellow-100 text-yellow-800",
+    SUSPENDED: "bg-orange-100 text-orange-800",
+    DELETED: "bg-gray-100 text-gray-800",
+    DEACTIVE: "bg-red-100 text-red-800",
+  };
+
+  return (
+    <span className={`px-2 py-1 text-xs rounded-full ${classes[status]}`}>
+      {status}
+    </span>
+  );
+};
 
 const Modal = ({ isOpen, title, children }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50">
+    <div className="fixed inset-0 flex justify-center items-center z-50">
       <div className="bg-white p-6 rounded-xl w-full max-w-md">
         <h3 className="text-xl font-bold mb-4">{title}</h3>
         {children}
@@ -44,237 +51,278 @@ const Modal = ({ isOpen, title, children }) => {
   );
 };
 
-const ActionButton = ({ onClick, className, title, children }) => (
-  <button onClick={onClick} className={className} title={title}>
+const ActionButton = ({ onClick, title, className, children }) => (
+  <button onClick={onClick} title={title} className={className}>
     {children}
   </button>
 );
 
+/* =====================
+   MAIN COMPONENT
+===================== */
+
 const TopicManager = () => {
   const dispatch = useDispatch();
-  const { topics, loading, error } = useSelector(state => state.topics);
+  const { topics, loading, error } = useSelector((state) => state.topics);
+
+  const [showFormModal, setShowFormModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [statusUpdateTopic, setStatusUpdateTopic] = useState(null);
-  const [newStatus, setNewStatus] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editTopic, setEditTopic] = useState(null);
-  const [formData, setFormData] = useState({ name: '', status: 'ACTIVE' });
+
+  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [newStatus, setNewStatus] = useState("");
+  const [formData, setFormData] = useState({ name: "", status: "ACTIVE" });
+
+  /* =====================
+     EFFECTS
+  ===================== */
 
   useEffect(() => {
+    fetchTopics();
+  }, []);
+
+  const fetchTopics = () => {
     dispatch(getAllTopics());
-  }, [dispatch]);
-
-  const handleStatusUpdate = (topic) => {
-    setStatusUpdateTopic(topic);
-    setNewStatus(topic.status);
-    setShowStatusModal(true);
   };
 
-  const confirmStatusUpdate = () => {
-    if (statusUpdateTopic && newStatus) {
-      dispatch(updateTopicStatus({ topicId: statusUpdateTopic.id, status: newStatus }));
-      setShowStatusModal(false);
-      setStatusUpdateTopic(null);
-      setNewStatus('');
-      dispatch(getAllTopics());
-    }
+  /* =====================
+     FORM HANDLERS
+  ===================== */
+
+  const openAddForm = () => {
+    setFormData({ name: "", status: "ACTIVE" });
+    setSelectedTopic(null);
+    setShowFormModal(true);
   };
 
-  const handleEdit = (topic) => {
-    setEditTopic(topic);
+  const openEditForm = (topic) => {
+    setSelectedTopic(topic);
     setFormData({ name: topic.name, status: topic.status });
-    setShowEditModal(true);
+    setShowFormModal(true);
   };
 
-  const handleAdd = () => {
-    setFormData({ name: '', status: 'ACTIVE' });
-    setShowAddModal(true);
+  const closeFormModal = () => {
+    setShowFormModal(false);
+    setSelectedTopic(null);
+    setFormData({ name: "", status: "ACTIVE" });
+    dispatch(clearError());
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (editTopic) {
-        await dispatch(updateTopic({ topicId: editTopic.id, topicData: formData })).unwrap();
-        setShowEditModal(false);
-        setEditTopic(null);
+      if (selectedTopic) {
+        await dispatch(
+          updateTopic({
+            topicId: selectedTopic.id,
+            topicData: formData,
+          }),
+        ).unwrap();
       } else {
         await dispatch(createTopic(formData)).unwrap();
-        setShowAddModal(false);
       }
-      setFormData({ name: '', status: 'ACTIVE' });
-      dispatch(getAllTopics());
+      closeFormModal();
+      fetchTopics();
     } catch (err) {
-      console.error('Error:', err);
+      console.error(err);
     }
   };
 
-  const handleRefresh = () => {
-    dispatch(getAllTopics());
+  /* =====================
+     STATUS HANDLERS
+  ===================== */
+
+  const openStatusModal = (topic) => {
+    setSelectedTopic(topic);
+    setNewStatus(topic.status);
+    setShowStatusModal(true);
   };
+
+  const closeStatusModal = () => {
+    setShowStatusModal(false);
+    setSelectedTopic(null);
+    setNewStatus("");
+  };
+
+  const confirmStatusUpdate = async () => {
+    try {
+      await dispatch(
+        updateTopicStatus({
+          topicId: selectedTopic.id,
+          status: newStatus,
+        }),
+      ).unwrap();
+      closeStatusModal();
+      fetchTopics();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /* =====================
+     RENDER STATES
+  ===================== */
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="animate-spin h-12 w-12 mx-auto text-blue-500" />
-          <p className="mt-4 text-gray-600">Loading topics...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <RefreshCw className="animate-spin h-12 w-12 text-blue-500" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 mb-4">Error: {error}</p>
+          <p className="text-red-500 mb-4">{error}</p>
           <button
-            onClick={handleRefresh}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+            onClick={fetchTopics}
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
           >
-            Try Again
+            Retry
           </button>
         </div>
       </div>
     );
   }
 
+  /* =====================
+     MAIN UI
+  ===================== */
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
-      <div className={`max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg ${showStatusModal || showAddModal || showEditModal ? 'blur-sm' : ''}`}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Topic Management</h2>
-          <div className="flex gap-2 w-full sm:w-auto">
+      <div
+        className={`max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg ${
+          showFormModal || showStatusModal ? "blur-sm" : ""
+        }`}
+      >
+        <div className="flex justify-between mb-6">
+          <h2 className="text-3xl font-bold">Topic Management</h2>
+          <div className="flex gap-2">
             <button
-              onClick={handleAdd}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
+              onClick={openAddForm}
+              className="bg-green-500 text-white px-4 py-2 rounded-lg"
             >
               Add Topic
             </button>
             <button
-              onClick={handleRefresh}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center gap-2"
+              onClick={fetchTopics}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg flex gap-2"
             >
               <RefreshCw size={18} /> Refresh
             </button>
           </div>
         </div>
-        
-        <p className="text-gray-600 mb-6">Total Topics: {topics.length}</p>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="p-2 sm:p-4 text-left text-sm sm:text-base">Name</th>
-                <th className="p-2 sm:p-4 text-left text-sm sm:text-base">Status</th>
-                <th className="p-2 sm:p-4 text-left text-sm sm:text-base hidden sm:table-cell">Created At</th>
-                <th className="p-2 sm:p-4 text-left text-sm sm:text-base">Actions</th>
+        <p className="mb-4 text-gray-600">Total Topics: {topics.length}</p>
+
+        <table className="w-full">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="p-3 text-left">Name</th>
+              <th className="p-3 text-left">Status</th>
+              <th className="p-3 text-left hidden sm:table-cell">
+                Created At
+              </th>
+              <th className="p-3 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {topics.map((topic, i) => (
+              <tr key={topic.id} className={i % 2 ? "bg-gray-50" : ""}>
+                <td className="p-3">{topic.name}</td>
+                <td className="p-3">
+                  <StatusBadge status={topic.status} />
+                </td>
+                <td className="p-3 hidden sm:table-cell">
+                  {new Date(topic.createdAt).toLocaleDateString()}
+                </td>
+                <td className="p-3 flex gap-1">
+                  <ActionButton
+                    title="Edit"
+                    onClick={() => openEditForm(topic)}
+                    className="text-blue-600"
+                  >
+                    <Edit size={16} />
+                  </ActionButton>
+                  <ActionButton
+                    title="Update Status"
+                    onClick={() => openStatusModal(topic)}
+                    className="text-green-600"
+                  >
+                    <Settings size={16} />
+                  </ActionButton>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {topics.map((topic, index) => (
-                <tr key={topic.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  <td className="p-2 sm:p-4 text-sm sm:text-base font-medium">{topic.name}</td>
-                  <td className="p-2 sm:p-4">
-                    <StatusBadge status={topic.status} />
-                  </td>
-                  <td className="p-2 sm:p-4 text-sm sm:text-base hidden sm:table-cell">
-                    {new Date(topic.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="p-2 sm:p-4">
-                    <div className="flex gap-1">
-                      <ActionButton onClick={() => handleEdit(topic)} className="text-blue-600 hover:text-blue-800 p-1" title="Edit Topic">
-                        <Edit size={16} />
-                      </ActionButton>
-                      <ActionButton onClick={() => handleStatusUpdate(topic)} className="text-green-600 hover:text-green-800 p-1" title="Update Status">
-                        <Settings size={16} />
-                      </ActionButton>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <Modal isOpen={showAddModal || showEditModal} title={editTopic ? 'Edit Topic' : 'Add New Topic'}>
+      {/* ADD / EDIT MODAL */}
+      <Modal
+        isOpen={showFormModal}
+        title={selectedTopic ? "Edit Topic" : "Add Topic"}
+      >
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Topic Name</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full border border-gray-300 p-2.5 rounded-lg"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full border border-gray-300 p-2.5 rounded-lg"
-            >
-              <StatusOptions />
-            </select>
-          </div>
-          <div className="flex gap-3">
+          <input
+            className="w-full border p-2 mb-4 rounded"
+            placeholder="Topic Name"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData({ ...formData, name: e.target.value })
+            }
+            required
+          />
+          <select
+            className="w-full border p-2 mb-4 rounded"
+            value={formData.status}
+            onChange={(e) =>
+              setFormData({ ...formData, status: e.target.value })
+            }
+          >
+            <StatusOptions />
+          </select>
+          <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => {
-                setShowAddModal(false);
-                setShowEditModal(false);
-                setEditTopic(null);
-              }}
-              className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+              onClick={closeFormModal}
+              className="flex-1 bg-gray-500 text-white p-2 rounded"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+              className="flex-1 bg-blue-500 text-white p-2 rounded"
             >
-              {editTopic ? 'Update Topic' : 'Add Topic'}
+              {selectedTopic ? "Update Topic" : "Add Topic"}
             </button>
           </div>
         </form>
       </Modal>
 
-      <Modal isOpen={showStatusModal && statusUpdateTopic} title="Update Topic Status">
-        <p className="text-gray-600 mb-4">
-          Update status for: <strong>{statusUpdateTopic?.name}</strong>
-        </p>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
-          <select
-            value={newStatus}
-            onChange={(e) => setNewStatus(e.target.value)}
-            className="w-full border border-gray-300 p-2.5 rounded-lg"
-          >
-            <StatusOptions />
-          </select>
-        </div>
-        <div className="flex gap-3">
+      {/* STATUS MODAL */}
+      <Modal isOpen={showStatusModal} title="Update Topic Status">
+        <select
+          className="w-full border p-2 mb-4 rounded"
+          value={newStatus}
+          onChange={(e) => setNewStatus(e.target.value)}
+        >
+          <StatusOptions />
+        </select>
+        <div className="flex gap-2">
           <button
-            onClick={() => {
-              setShowStatusModal(false);
-              setStatusUpdateTopic(null);
-              setNewStatus('');
-            }}
-            className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+            onClick={closeStatusModal}
+            className="flex-1 bg-gray-500 text-white p-2 rounded"
           >
             Cancel
           </button>
           <button
             onClick={confirmStatusUpdate}
-            className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+            className="flex-1 bg-blue-500 text-white p-2 rounded"
           >
-            Update Status
+            Update
           </button>
         </div>
       </Modal>
