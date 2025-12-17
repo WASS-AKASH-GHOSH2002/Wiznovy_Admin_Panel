@@ -153,7 +153,7 @@ const Tutormanagement = () => {
   };
 
   const handleEmailChange = (e) => {
-    const value = e.target.value.replace(/[^a-zA-Z.@]/g, '');
+    const value = e.target.value.replaceAll(/[^a-zA-Z.@]/g, '');
     setUpdateData(prev => ({ ...prev, email: value }));
     if (value && !validateEmail(value)) {
       setValidationErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
@@ -163,7 +163,7 @@ const Tutormanagement = () => {
   };
 
   const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
+    const value = e.target.value.replaceAll(/[^0-9]/g, '');
     setUpdateData(prev => ({ ...prev, phoneNumber: value }));
     if (value && value.length < 10) {
       setValidationErrors(prev => ({ ...prev, phoneNumber: 'Phone number must be at least 10 digits' }));
@@ -503,7 +503,6 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50" 
           onClick={() => setShowProfile(false)}
-          onKeyDown={(e) => e.key === 'Escape' && setShowProfile(false)}
           role="dialog"
           aria-modal="true"
           tabIndex={-1}
@@ -511,7 +510,6 @@ const Tutormanagement = () => {
           <div 
             className="bg-white p-8 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" 
             onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
             role="document"
           >
             <h3 className="text-xl font-bold mb-4">Tutor Profile</h3>
@@ -543,7 +541,7 @@ const Tutormanagement = () => {
                     }
                     return (
                       <div key={key} className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-xs text-gray-500 uppercase mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                        <p className="text-xs text-gray-500 uppercase mb-1">{key.replaceAll(/([A-Z])/g, ' $1').trim()}</p>
                         <p className="text-sm font-medium text-gray-800">{displayValue}</p>
                       </div>
                     );
@@ -572,8 +570,9 @@ const Tutormanagement = () => {
               Update status for: <strong>{statusUpdateTutor.tutorDetail?.name || statusUpdateTutor.email}</strong>
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+              <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
               <select
+                id="statusSelect"
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
                 className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -616,8 +615,9 @@ const Tutormanagement = () => {
               Update status for <strong>{selectedTutors.length}</strong> selected tutors
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+              <label htmlFor="bulkStatusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
               <select
+                id="bulkStatusSelect"
                 value={bulkStatus}
                 onChange={(e) => setBulkStatus(e.target.value)}
                 className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -662,8 +662,9 @@ const Tutormanagement = () => {
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                <label htmlFor="updateEmail" className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                 <input
+                  id="updateEmail"
                   type="email"
                   value={updateData.email}
                   onChange={handleEmailChange}
@@ -676,8 +677,9 @@ const Tutormanagement = () => {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                <label htmlFor="updatePhone" className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
                 <input
+                  id="updatePhone"
                   type="tel"
                   value={updateData.phoneNumber}
                   onChange={handlePhoneChange}

@@ -581,7 +581,7 @@ const CourseDetails = () => {
             {units.map((unit) => {
               console.log('Unit data:', unit);
               console.log('Unit imgUrl:', unit.imgUrl);
-              const normalizedUrl = unit.imgUrl ? unit.imgUrl.replace(/\\/g, '/') : null;
+              const normalizedUrl = unit.imgUrl ? unit.imgUrl.replaceAll(/\\/g, '/') : null;
               console.log('Normalized URL:', normalizedUrl);
               return (
               <div key={unit.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -591,7 +591,7 @@ const CourseDetails = () => {
                       <div className="flex-shrink-0 relative group">
                         {unit.imgUrl ? (
                           <img
-                            src={unit.imgUrl.replace(/\\/g, '/').replace('http:/', 'http://')}
+                            src={unit.imgUrl.replaceAll(/\\/g, '/').replaceAll('http:/', 'http://')}
                             alt={unit.name}
                             className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover bg-gray-200"
                             onError={(e) => {
@@ -731,9 +731,9 @@ const CourseDetails = () => {
                                   <button 
                                     onClick={() => {
                                       if (material.fileUrl) {
-                                        let normalizedUrl = material.fileUrl.replace(/\\/g, '/');
+                                        let normalizedUrl = material.fileUrl.replaceAll(/\\/g, '/');
                                         if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
-                                          normalizedUrl = normalizedUrl.replace('http:/', 'http://');
+                                          normalizedUrl = normalizedUrl.replaceAll('http:/', 'http://');
                                         }
                                         console.log('Download URL:', normalizedUrl);
                                         window.open(normalizedUrl, '_blank');
@@ -749,9 +749,9 @@ const CourseDetails = () => {
                                   <button 
                                     onClick={() => {
                                       if (material.fileUrl) {
-                                        let normalizedUrl = material.fileUrl.replace(/\\/g, '/');
+                                        let normalizedUrl = material.fileUrl.replaceAll(/\\/g, '/');
                                         if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
-                                          normalizedUrl = normalizedUrl.replace('http:/', 'http://');
+                                          normalizedUrl = normalizedUrl.replaceAll('http:/', 'http://');
                                         }
                                         console.log('View URL:', normalizedUrl);
                                         window.open(normalizedUrl, '_blank');
@@ -815,7 +815,7 @@ const CourseDetails = () => {
                                   <div className="flex items-center gap-2 flex-1 min-w-0">
                                     <div className="flex-shrink-0">
                                       <img
-                                        src={video.thumbnailUrl?.replace(/\\/g, '/').replace('http:/', 'http://')}
+                                        src={video.thumbnailUrl?.replaceAll(/\\/g, '/').replaceAll('http:/', 'http://')}
                                         alt={video.title}
                                         className="w-12 h-8 rounded object-cover bg-gray-200"
                                       />
@@ -833,7 +833,7 @@ const CourseDetails = () => {
                                   <div className="flex gap-1 flex-shrink-0">
                                     {video.videoUrl && (
                                       <button 
-                                        onClick={() => window.open(video.videoUrl.replace(/\\/g, '/').replace('http:/', 'http://'), '_blank')}
+                                        onClick={() => window.open(video.videoUrl.replaceAll(/\\/g, '/').replaceAll('http:/', 'http://'), '_blank')}
                                         className="p-1.5 text-red-600 hover:bg-red-100 rounded"
                                         title="Play Video"
                                       >
@@ -841,7 +841,7 @@ const CourseDetails = () => {
                                       </button>
                                     )}
                                     <button 
-                                      onClick={() => window.open(video.thumbnailUrl?.replace(/\\/g, '/').replace('http:/', 'http://'), '_blank')}
+                                      onClick={() => window.open(video.thumbnailUrl?.replaceAll(/\\/g, '/').replaceAll('http:/', 'http://'), '_blank')}
                                       className="p-1.5 text-green-600 hover:bg-green-100 rounded"
                                       title="View Thumbnail"
                                     >
@@ -919,9 +919,9 @@ const CourseDetails = () => {
                                               <button 
                                                 onClick={() => {
                                                   if (material.fileUrl) {
-                                                    let normalizedUrl = material.fileUrl.replace(/\\/g, '/');
+                                                    let normalizedUrl = material.fileUrl.replaceAll(/\\/g, '/');
                                                     if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
-                                                      normalizedUrl = normalizedUrl.replace('http:/', 'http://');
+                                                      normalizedUrl = normalizedUrl.replaceAll('http:/', 'http://');
                                                     }
                                                     console.log('Video Material Download URL:', normalizedUrl);
                                                     window.open(normalizedUrl, '_blank');
@@ -937,9 +937,9 @@ const CourseDetails = () => {
                                               <button 
                                                 onClick={() => {
                                                   if (material.fileUrl) {
-                                                    let normalizedUrl = material.fileUrl.replace(/\\/g, '/');
+                                                    let normalizedUrl = material.fileUrl.replaceAll(/\\/g, '/');
                                                     if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
-                                                      normalizedUrl = normalizedUrl.replace('http:/', 'http://');
+                                                      normalizedUrl = normalizedUrl.replaceAll('http:/', 'http://');
                                                     }
                                                     console.log('Video Material View URL:', normalizedUrl);
                                                     window.open(normalizedUrl, '_blank');

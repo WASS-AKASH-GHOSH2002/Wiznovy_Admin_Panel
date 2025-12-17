@@ -45,7 +45,7 @@ const ResetPassword = () => {
       if (!validatePassword(value)) {
         setErrors(prev => ({ 
           ...prev, 
-          newPassword: 'Password must be 6+  character' 
+          newPassword: 'Password must be at least 6 characters long' 
         }));
       }
     }

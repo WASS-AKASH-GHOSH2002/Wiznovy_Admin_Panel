@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { RefreshCw } from 'lucide-react';
 
 const TextCaptcha = ({ onCaptchaChange }) => {
@@ -70,6 +71,10 @@ const TextCaptcha = ({ onCaptchaChange }) => {
       />
     </div>
   );
+};
+
+TextCaptcha.propTypes = {
+  onCaptchaChange: PropTypes.func.isRequired,
 };
 
 export default TextCaptcha;

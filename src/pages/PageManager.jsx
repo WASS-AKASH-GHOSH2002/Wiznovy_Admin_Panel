@@ -518,7 +518,7 @@ const PageManager = () => {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <label htmlFor="pageImageUpload" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                       <div className="flex flex-col items-center justify-center pt-2 pb-2">
                         <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
                           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
@@ -526,7 +526,7 @@ const PageManager = () => {
                         <p className="text-xs text-gray-500">Upload Image</p>
                       </div>
                       <input 
-                        id="pageImage"
+                        id="pageImageUpload"
                         type="file" 
                         className="hidden" 
                         onChange={handleImageUpload}
@@ -730,12 +730,12 @@ const PageManager = () => {
           <div className="max-h-96 overflow-y-auto">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Title</label>
-                <p className="text-gray-900 font-medium">{selectedPage.title}</p>
+                <label htmlFor="viewTitle" className="block text-sm font-medium text-gray-700">Title</label>
+                <p id="viewTitle" className="text-gray-900 font-medium">{selectedPage.title}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Page Type</label>
-                <span className={`px-2 py-1 text-xs rounded-full ${
+                <label htmlFor="viewPageType" className="block text-sm font-medium text-gray-700">Page Type</label>
+                <span id="viewPageType" className={`px-2 py-1 text-xs rounded-full ${
                   selectedPage.pageType === "USER" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
                 }`}>
                   {selectedPage.pageType}
@@ -743,24 +743,24 @@ const PageManager = () => {
               </div>
               {selectedPage.imageUrl && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Image</label>
-                  <img src={normalizeImageUrl(selectedPage.imageUrl)} alt={selectedPage.title} className="w-32 h-32 object-cover rounded-lg" />
+                  <label htmlFor="viewImage" className="block text-sm font-medium text-gray-700">Image</label>
+                  <img id="viewImage" src={normalizeImageUrl(selectedPage.imageUrl)} alt={selectedPage.title} className="w-32 h-32 object-cover rounded-lg" />
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
-                <div className="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
+                <label htmlFor="viewDescription" className="block text-sm font-medium text-gray-700">Description</label>
+                <div id="viewDescription" className="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
                   <p className="text-gray-900 whitespace-pre-wrap">{selectedPage.desc}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Created At</label>
-                  <p className="text-gray-900">{new Date(selectedPage.createdAt).toLocaleString()}</p>
+                  <label htmlFor="viewCreatedAt" className="block text-sm font-medium text-gray-700">Created At</label>
+                  <p id="viewCreatedAt" className="text-gray-900">{new Date(selectedPage.createdAt).toLocaleString()}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Updated At</label>
-                  <p className="text-gray-900">{new Date(selectedPage.updatedAt).toLocaleString()}</p>
+                  <label htmlFor="viewUpdatedAt" className="block text-sm font-medium text-gray-700">Updated At</label>
+                  <p id="viewUpdatedAt" className="text-gray-900">{new Date(selectedPage.updatedAt).toLocaleString()}</p>
                 </div>
               </div>
             </div>

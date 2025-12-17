@@ -1,5 +1,6 @@
 // src/components/LogoutConfirmationModal.jsx
 import React from 'react';
+import PropTypes from 'prop-types';
 
 export default function LogoutConfirmationModal({ 
   isOpen, 
@@ -31,3 +32,9 @@ export default function LogoutConfirmationModal({
     </div>
   );
 }
+
+LogoutConfirmationModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired
+};

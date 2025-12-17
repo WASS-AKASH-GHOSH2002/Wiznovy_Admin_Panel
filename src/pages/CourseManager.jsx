@@ -843,8 +843,9 @@ const CourseManager = () => {
         <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <label htmlFor="courseName" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                     <input
+                      id="courseName"
                       type="text"
                       name="name"
                       value={formData.name}
@@ -855,8 +856,9 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Access Type *</label>
+                    <label htmlFor="accessType" className="block text-sm font-medium text-gray-700 mb-1">Access Type *</label>
                     <select
+                      id="accessType"
                       name="accessType"
                       value={formData.accessType}
                       onChange={handleInputChange}
@@ -871,15 +873,16 @@ const CourseManager = () => {
                   {formData.accessType === 'PAID' && (
                     <>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Price ($) *</label>
+                        <label htmlFor="coursePrice" className="block text-sm font-medium text-gray-700 mb-1">Price ($) *</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                           <input
+                            id="coursePrice"
                             type="text"
                             name="price"
                             value={formData.price}
                             onChange={(e) => {
-                              const value = e.target.value.replace(/[^0-9.]/g, '');
+                              const value = e.target.value.replaceAll(/[^0-9.]/g, '');
                               handleInputChange({ target: { name: 'price', value } });
                             }}
                             required
@@ -906,11 +909,12 @@ const CourseManager = () => {
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                             <input
+                              id="discountPrice"
                               type="text"
                               name="discountPrice"
                               value={formData.discountPrice}
                               onChange={(e) => {
-                                const value = e.target.value.replace(/[^0-9.]/g, '');
+                                const value = e.target.value.replaceAll(/[^0-9.]/g, '');
                                 handleInputChange({ target: { name: 'discountPrice', value } });
                               }}
                               required
@@ -936,8 +940,9 @@ const CourseManager = () => {
 
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+                    <label htmlFor="subjectId" className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
                     <select
+                      id="subjectId"
                       name="subjectId"
                       value={formData.subjectId}
                       onChange={handleInputChange}
@@ -954,8 +959,9 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tutor *</label>
+                    <label htmlFor="tutorId" className="block text-sm font-medium text-gray-700 mb-1">Tutor *</label>
                     <select
+                      id="tutorId"
                       name="tutorId"
                       value={formData.tutorId}
                       onChange={handleInputChange}
@@ -994,8 +1000,9 @@ const CourseManager = () => {
                   />
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="courseDescription" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                     <textarea
+                      id="courseDescription"
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
@@ -1008,13 +1015,14 @@ const CourseManager = () => {
 
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Duration (minutes) *</label>
+                    <label htmlFor="totalDuration" className="block text-sm font-medium text-gray-700 mb-1">Total Duration (minutes) *</label>
                     <input
+                      id="totalDuration"
                       type="text"
                       name="totalDuration"
                       value={formData.totalDuration}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9]/g, '');
+                        const value = e.target.value.replaceAll(/[^0-9]/g, '');
                         handleInputChange({ target: { name: 'totalDuration', value } });
                       }}
                       required
@@ -1023,13 +1031,14 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Lectures *</label>
+                    <label htmlFor="totalLectures" className="block text-sm font-medium text-gray-700 mb-1">Total Lectures *</label>
                     <input
+                      id="totalLectures"
                       type="text"
                       name="totalLectures"
                       value={formData.totalLectures}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9]/g, '');
+                        const value = e.target.value.replaceAll(/[^0-9]/g, '');
                         handleInputChange({ target: { name: 'totalLectures', value } });
                       }}
                       required
@@ -1038,13 +1047,14 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Validity Days *</label>
+                    <label htmlFor="validityDays" className="block text-sm font-medium text-gray-700 mb-1">Validity Days *</label>
                     <input
+                      id="validityDays"
                       type="text"
                       name="validityDays"
                       value={formData.validityDays}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9]/g, '');
+                        const value = e.target.value.replaceAll(/[^0-9]/g, '');
                         handleInputChange({ target: { name: 'validityDays', value } });
                       }}
                       required
@@ -1054,8 +1064,9 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
                     <input
+                      id="startDate"
                       type="datetime-local"
                       name="startDate"
                       value={formData.startDate && formData.startDate.includes('T') ? formData.startDate.slice(0, 16) : formData.startDate}
@@ -1066,8 +1077,9 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
                     <input
+                      id="endDate"
                       type="datetime-local"
                       name="endDate"
                       value={formData.endDate && formData.endDate.includes('T') ? formData.endDate.slice(0, 16) : formData.endDate}
@@ -1078,8 +1090,9 @@ const CourseManager = () => {
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Author Message *</label>
+                    <label htmlFor="authorMessage" className="block text-sm font-medium text-gray-700 mb-1">Author Message *</label>
                     <textarea
+                      id="authorMessage"
                       name="authorMessage"
                       value={formData.authorMessage}
                       onChange={handleInputChange}
@@ -1173,8 +1186,9 @@ const CourseManager = () => {
               <p className="text-gray-600 mb-4">Course: <strong>{selectedCourse.name}</strong></p>
               
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select New Thumbnail</label>
+                <label htmlFor="thumbnailUpdate" className="block text-sm font-medium text-gray-700 mb-2">Select New Thumbnail</label>
                 <input
+                  id="thumbnailUpdate"
                   type="file"
                   accept="image/*"
                   onChange={handleThumbnailFileUpload}

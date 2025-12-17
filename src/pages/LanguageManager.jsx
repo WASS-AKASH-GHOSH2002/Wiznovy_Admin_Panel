@@ -226,10 +226,11 @@ const LanguageManager = () => {
             <h3 className="text-xl font-bold mb-4">Add New Language</h3>
             <form onSubmit={handleCreateLanguage}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="language-name" className="block text-sm font-medium text-gray-700 mb-2">
                   Language Name *
                 </label>
                 <input
+                  id="language-name"
                   type="text"
                   value={newLanguage.name}
                   onChange={(e) => setNewLanguage({ ...newLanguage, name: e.target.value })}
@@ -268,24 +269,24 @@ const LanguageManager = () => {
             <h3 className="text-xl font-bold mb-4">Language Details</h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <p className="text-gray-900">{selectedLanguage.name}</p>
+                <label htmlFor="detail-name" className="block text-sm font-medium text-gray-700">Name</label>
+                <p id="detail-name" className="text-gray-900">{selectedLanguage.name}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Status</label>
-                <span className={`px-2 py-1 text-xs rounded-full ${
+                <label htmlFor="detail-status" className="block text-sm font-medium text-gray-700">Status</label>
+                <span id="detail-status" className={`px-2 py-1 text-xs rounded-full ${
                   selectedLanguage.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                 }`}>
                   {selectedLanguage.status}
                 </span>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Created At</label>
-                <p className="text-gray-900">{new Date(selectedLanguage.createdAt).toLocaleString()}</p>
+                <label htmlFor="detail-created" className="block text-sm font-medium text-gray-700">Created At</label>
+                <p id="detail-created" className="text-gray-900">{new Date(selectedLanguage.createdAt).toLocaleString()}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Updated At</label>
-                <p className="text-gray-900">{new Date(selectedLanguage.updatedAt).toLocaleString()}</p>
+                <label htmlFor="detail-updated" className="block text-sm font-medium text-gray-700">Updated At</label>
+                <p id="detail-updated" className="text-gray-900">{new Date(selectedLanguage.updatedAt).toLocaleString()}</p>
               </div>
             </div>
             <div className="flex justify-end mt-6">
