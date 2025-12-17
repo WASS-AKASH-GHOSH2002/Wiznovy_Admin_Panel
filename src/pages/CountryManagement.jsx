@@ -486,9 +486,7 @@ const CountryManagement = () => {
           position="center"
         >
           <form onSubmit={handleCreateCountry} className="space-y-4">
-                <label htmlFor="countryName" className="sr-only">Country Name</label>
                 <input
-                  id="countryName"
                   type="text"
                   placeholder="Country Name"
                   value={newCountry.name}
@@ -496,9 +494,7 @@ const CountryManagement = () => {
                   className="w-full border border-gray-300 p-2 rounded-lg"
                   required
                 />
-                <label htmlFor="countryCode" className="sr-only">Country Code</label>
                 <input
-                  id="countryCode"
                   type="text"
                   placeholder="Country Code (e.g., USA)"
                   value={newCountry.code}
@@ -576,9 +572,8 @@ const CountryManagement = () => {
                 Upload image for: <strong>{selectedCountryForImage.name}</strong>
               </p>
               <div className="mb-4">
-                <label htmlFor="countryImage" className="block text-sm font-medium text-gray-700 mb-2">Select Image</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Image</label>
                 <input 
-                  id="countryImage"
                   type="file" 
                   onChange={handleFileSelect}
                   accept="image/*"
@@ -638,9 +633,8 @@ const CountryManagement = () => {
                 Update status for: <strong>{statusUpdateCountry.name}</strong>
               </p>
               <div className="mb-4">
-                <label htmlFor="countryStatus" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
                 <select
-                  id="countryStatus"
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
                   className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -732,9 +726,8 @@ const CountryManagement = () => {
           <>
             <div className="space-y-4">
               <div>
-                <label htmlFor="editCountryName" className="block text-sm font-medium text-gray-700 mb-2">Country Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Country Name</label>
                 <input
-                  id="editCountryName"
                   type="text"
                   value={editData.name}
                   onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
@@ -743,9 +736,8 @@ const CountryManagement = () => {
                 />
               </div>
               <div>
-                <label htmlFor="editCountryCode" className="block text-sm font-medium text-gray-700 mb-2">Country Code</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Country Code</label>
                 <input
-                  id="editCountryCode"
                   type="text"
                   value={editData.code}
                   onChange={(e) => setEditData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}

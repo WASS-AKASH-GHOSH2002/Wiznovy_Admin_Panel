@@ -2,13 +2,13 @@ import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, RefreshCw, FileText, Download, Settings, Edit } from "lucide-react";
 import { exportTutorsToPDF, exportTutorsToCSV } from "../utils/downloadUtils";
-import { fetchTutors, updateTutorStatus, bulkUpdateTutorStatus, setSearch, setStatusFilter, updateTutorContact } from "../store/tutorSlice";
+import { fetchTutors, updateTutorStatus, bulkUpdateTutorStatus, setSearch, setStatusFilter, updateTutorContact, fetchTutorDetails } from "../store/tutorSlice";
 import { fetchCountries } from "../store/countrySlice";
 import { fetchSubjects } from "../store/subjectSlice";
 
 const Tutormanagement = () => {
   const dispatch = useDispatch();
-  const { tutors, total, loading, error, filters } = useSelector(state => state.tutors);
+  const { tutors, total, loading, error, filters, selectedTutorDetails, detailsLoading } = useSelector(state => state.tutors);
   const { countries } = useSelector(state => state.countries);
   const { subjects } = useSelector(state => state.subjectsManagement || { subjects: [] });
   const [selectedTutor, setSelectedTutor] = useState(null);
@@ -201,9 +201,10 @@ const Tutormanagement = () => {
     }
   };
 
-  const handleViewProfile = (tutor) => {
+  const handleViewProfile = async (tutor) => {
     setSelectedTutor(tutor);
     setShowProfile(true);
+    await dispatch(fetchTutorDetails(tutor.id));
   };
 
   const handleRefresh = () => {
@@ -499,20 +500,47 @@ const Tutormanagement = () => {
 
       {/* Profile Modal */}
       {showProfile && selectedTutor && (
-        <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-xl w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50" onClick={() => setShowProfile(false)}>
+          <div className="bg-white p-8 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4">Tutor Profile</h3>
-            <div className="space-y-2">
-              <p><strong>Tutor ID:</strong> {selectedTutor.tutorDetail?.tutorId || "N/A"}</p>
-              <p><strong>Name:</strong> {selectedTutor.tutorDetail?.name || "N/A"}</p>
-              <p><strong>Email:</strong> {selectedTutor.email}</p>
-              <p><strong>Phone:</strong> {selectedTutor.phoneNumber}</p>
-              <p><strong>Gender:</strong> {selectedTutor.tutorDetail?.gender || "N/A"}</p>
-              <p><strong>Rating:</strong> {selectedTutor.tutorDetail?.averageRating || "0.00"} ★ ({selectedTutor.tutorDetail?.totalRatings || 0} reviews)</p>
-              <p><strong>Hourly Rate:</strong> ${selectedTutor.tutorDetail?.hourlyRate || "0.00"}/hr</p>
-              <p><strong>Status:</strong> {selectedTutor.status}</p>
-              <p><strong>Created:</strong> {new Date(selectedTutor.createdAt).toLocaleDateString()}</p>
-            </div>
+            {detailsLoading ? (
+              <div className="text-center py-8">
+                <RefreshCw className="animate-spin h-8 w-8 mx-auto text-blue-500" />
+                <p className="mt-2 text-gray-600">Loading details...</p>
+              </div>
+            ) : selectedTutorDetails ? (
+              <div>
+                <div className="flex justify-center mb-6">
+                  {selectedTutorDetails.profileImage ? (
+                    <img src={selectedTutorDetails.profileImage} alt="Profile" className="w-32 h-32 rounded-full object-cover border-4 border-blue-100 shadow-lg" />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center border-4 border-blue-100 shadow-lg">
+                      <span className="text-white text-4xl font-bold">{selectedTutorDetails.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(selectedTutorDetails).filter(([key]) => key !== 'profileImage' && key !== 'id').map(([key, value]) => {
+                    let displayValue = "N/A";
+                    if (value !== null && value !== undefined) {
+                      if (typeof value === 'object') {
+                        displayValue = value?.name || "N/A";
+                      } else {
+                        displayValue = String(value);
+                      }
+                    }
+                    return (
+                      <div key={key} className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-xs text-gray-500 uppercase mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                        <p className="text-sm font-medium text-gray-800">{displayValue}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">No details available</p>
+            )}
             <button
               onClick={() => setShowProfile(false)}
               className="mt-4 w-full bg-gray-600 text-white px-4 py-2 rounded-lg"
@@ -525,7 +553,7 @@ const Tutormanagement = () => {
 
       {/* Status Update Modal */}
       {showStatusModal && statusUpdateTutor && (
-        <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-md">
             <h3 className="text-xl font-bold mb-4">Update Tutor Status</h3>
             <p className="text-gray-600 mb-4">
@@ -569,7 +597,7 @@ const Tutormanagement = () => {
 
       {/* Bulk Update Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-md">
             <h3 className="text-xl font-bold mb-4">Bulk Status Update</h3>
             <p className="text-gray-600 mb-4">
@@ -614,7 +642,7 @@ const Tutormanagement = () => {
 
       {/* Update Contact Modal */}
       {showUpdateModal && updateTutor && (
-        <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-md">
             <h3 className="text-xl font-bold mb-4">Update Contact</h3>
             <p className="text-gray-600 mb-4">

@@ -15,7 +15,7 @@ import {
 import { createUnit, updateUnit, updateUnitStatus, updateUnitImage } from '../store/unitSlice';
 import { createVideoLecture } from '../store/videoLectureSlice';
 import { createStudyMaterial, updateStudyMaterial, updateStudyMaterialPdf } from '../store/studyMaterialSlice';
-import LazyImage from '../components/LazyImage';
+
 import { toast } from 'react-toastify';
 import Modal from '../components/Modal';
 
@@ -120,6 +120,17 @@ const CourseDetails = () => {
     }
   };
 
+  const handleActionResult = (result, successMessage, onSuccess) => {
+    if (result.type.endsWith('/fulfilled')) {
+      toast.success(successMessage);
+      onSuccess();
+      dispatch(fetchCourseUnits(courseId));
+    } else {
+      const errorMessage = result.payload || result.error?.message || 'Unknown error';
+      toast.error(`Failed: ${errorMessage}`);
+    }
+  };
+
   const handleCreateUnit = async (e) => {
     e.preventDefault();
     
@@ -133,15 +144,10 @@ const CourseDetails = () => {
     }
     
     const result = await dispatch(createUnit(submitData));
-    
-    if (result.type.endsWith('/fulfilled')) {
-      toast.success('Unit created successfully!');
+    handleActionResult(result, 'Unit created successfully!', () => {
       setShowCreateModal(false);
       resetForm();
-      dispatch(fetchCourseUnits(courseId));
-    } else {
-      toast.error('Failed to create unit: ' + (result.payload || result.error?.message || 'Unknown error'));
-    }
+    });
   };
 
   const handleUpdateUnit = async (e) => {
@@ -153,46 +159,33 @@ const CourseDetails = () => {
     };
     
     const result = await dispatch(updateUnit({ id: selectedUnit.id, formData: updateData }));
-    
-    if (result.type.endsWith('/fulfilled')) {
-      toast.success('Unit updated successfully!');
+    handleActionResult(result, 'Unit updated successfully!', () => {
       setShowEditModal(false);
       resetForm();
-      dispatch(fetchCourseUnits(courseId));
-    } else {
-      toast.error('Failed to update unit: ' + (result.payload || result.error?.message || 'Unknown error'));
-    }
+    });
+  };
+
+  const validateImageFile = (file) => {
+    if (!file) return { isValid: false, error: 'No file selected' };
+    if (!file.type.match('image.*')) return { isValid: false, error: 'Please select an image file' };
+    if (file.size > 5 * 1024 * 1024) return { isValid: false, error: 'Image size should be less than 5MB' };
+    return { isValid: true };
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    console.log('handleImageUpload called with file:', file);
+    const validation = validateImageFile(file);
     
-    if (!file) {
-      console.log('No file selected in handleImageUpload');
+    if (!validation.isValid) {
+      if (validation.error !== 'No file selected') {
+        toast.error(validation.error);
+      }
       return;
     }
     
-    if (!file.type.match('image.*')) {
-      toast.error('Please select an image file');
-      return;
-    }
-    
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
-      return;
-    }
-    
-    console.log('File is valid, creating preview for:', file.name);
-    
-    // Store the file in state
     setSelectedFile(file);
-    
     const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target.result);
-      console.log('Image preview set and file stored in state');
-    };
+    reader.onload = (e) => setImagePreview(e.target.result);
     reader.readAsDataURL(file);
   };
 
@@ -245,28 +238,18 @@ const CourseDetails = () => {
 
   const handleUnitImageUpload = async (e, unitId) => {
     const file = e.target.files[0];
-    if (!file) return;
+    const validation = validateImageFile(file);
     
-    if (!file.type.match('image.*')) {
-      toast.error('Please select an image file');
-      return;
-    }
-    
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
+    if (!validation.isValid) {
+      if (validation.error !== 'No file selected') {
+        toast.error(validation.error);
+      }
       return;
     }
     
     try {
       const result = await dispatch(updateUnitImage({ id: unitId, file }));
-      
-      if (result.type.endsWith('/fulfilled')) {
-        toast.success('Unit image updated successfully!');
-        dispatch(fetchCourseUnits(courseId));
-      } else {
-        const errorMessage = result.payload || result.error?.message || 'Unknown error';
-        toast.error('Failed to update unit image: ' + errorMessage);
-      }
+      handleActionResult(result, 'Unit image updated successfully!', () => {});
     } catch (error) {
       toast.error('Failed to update unit image: ' + error.message);
     }
@@ -598,7 +581,7 @@ const CourseDetails = () => {
             {units.map((unit) => {
               console.log('Unit data:', unit);
               console.log('Unit imgUrl:', unit.imgUrl);
-              const normalizedUrl = unit.imgUrl ? unit.imgUrl.replaceAll('\\', '/') : null;
+              const normalizedUrl = unit.imgUrl ? unit.imgUrl.replace(/\\/g, '/') : null;
               console.log('Normalized URL:', normalizedUrl);
               return (
               <div key={unit.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -608,7 +591,7 @@ const CourseDetails = () => {
                       <div className="flex-shrink-0 relative group">
                         {unit.imgUrl ? (
                           <img
-                            src={unit.imgUrl.replaceAll('\\', '/').replace('http:/', 'http://')}
+                            src={unit.imgUrl.replace(/\\/g, '/').replace('http:/', 'http://')}
                             alt={unit.name}
                             className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover bg-gray-200"
                             onError={(e) => {
@@ -748,7 +731,7 @@ const CourseDetails = () => {
                                   <button 
                                     onClick={() => {
                                       if (material.fileUrl) {
-                                        let normalizedUrl = material.fileUrl.replaceAll('\\', '/');
+                                        let normalizedUrl = material.fileUrl.replace(/\\/g, '/');
                                         if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
                                           normalizedUrl = normalizedUrl.replace('http:/', 'http://');
                                         }
@@ -766,7 +749,7 @@ const CourseDetails = () => {
                                   <button 
                                     onClick={() => {
                                       if (material.fileUrl) {
-                                        let normalizedUrl = material.fileUrl.replaceAll('\\', '/');
+                                        let normalizedUrl = material.fileUrl.replace(/\\/g, '/');
                                         if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
                                           normalizedUrl = normalizedUrl.replace('http:/', 'http://');
                                         }
@@ -832,7 +815,7 @@ const CourseDetails = () => {
                                   <div className="flex items-center gap-2 flex-1 min-w-0">
                                     <div className="flex-shrink-0">
                                       <img
-                                        src={video.thumbnailUrl?.replaceAll('\\', '/').replace('http:/', 'http://')}
+                                        src={video.thumbnailUrl?.replace(/\\/g, '/').replace('http:/', 'http://')}
                                         alt={video.title}
                                         className="w-12 h-8 rounded object-cover bg-gray-200"
                                       />
@@ -850,7 +833,7 @@ const CourseDetails = () => {
                                   <div className="flex gap-1 flex-shrink-0">
                                     {video.videoUrl && (
                                       <button 
-                                        onClick={() => window.open(video.videoUrl.replaceAll('\\', '/').replace('http:/', 'http://'), '_blank')}
+                                        onClick={() => window.open(video.videoUrl.replace(/\\/g, '/').replace('http:/', 'http://'), '_blank')}
                                         className="p-1.5 text-red-600 hover:bg-red-100 rounded"
                                         title="Play Video"
                                       >
@@ -858,7 +841,7 @@ const CourseDetails = () => {
                                       </button>
                                     )}
                                     <button 
-                                      onClick={() => window.open(video.thumbnailUrl?.replaceAll('\\', '/').replace('http:/', 'http://'), '_blank'))
+                                      onClick={() => window.open(video.thumbnailUrl?.replace(/\\/g, '/').replace('http:/', 'http://'), '_blank')}
                                       className="p-1.5 text-green-600 hover:bg-green-100 rounded"
                                       title="View Thumbnail"
                                     >
@@ -936,7 +919,7 @@ const CourseDetails = () => {
                                               <button 
                                                 onClick={() => {
                                                   if (material.fileUrl) {
-                                                    let normalizedUrl = material.fileUrl.replaceAll('\\', '/');
+                                                    let normalizedUrl = material.fileUrl.replace(/\\/g, '/');
                                                     if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
                                                       normalizedUrl = normalizedUrl.replace('http:/', 'http://');
                                                     }
@@ -954,7 +937,7 @@ const CourseDetails = () => {
                                               <button 
                                                 onClick={() => {
                                                   if (material.fileUrl) {
-                                                    let normalizedUrl = material.fileUrl.replaceAll('\\', '/');
+                                                    let normalizedUrl = material.fileUrl.replace(/\\/g, '/');
                                                     if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
                                                       normalizedUrl = normalizedUrl.replace('http:/', 'http://');
                                                     }
@@ -1267,7 +1250,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Video File *</label>
+                    <label htmlFor="video-file-input" className="block text-sm font-medium text-gray-700 mb-1">Video File *</label>
                     {videoPreview ? (
                       <div className="relative mb-3">
                         <video 
@@ -1291,12 +1274,13 @@ const CourseDetails = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-center w-full">
-                        <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <label htmlFor="video-file-input" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                           <div className="flex flex-col items-center justify-center pt-2 pb-2">
                             <Play className="w-6 h-6 mb-2 text-gray-500" />
                             <p className="text-xs text-gray-500">Upload Video</p>
                           </div>
                           <input 
+                            id="video-file-input"
                             type="file" 
                             className="hidden" 
                             onChange={handleVideoFileUpload}
@@ -1310,7 +1294,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail *</label>
+                    <label htmlFor="thumbnail-file-input" className="block text-sm font-medium text-gray-700 mb-1">Thumbnail *</label>
                     {thumbnailPreview ? (
                       <div className="relative mb-3">
                         <img 
@@ -1334,7 +1318,7 @@ const CourseDetails = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-center w-full">
-                        <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <label htmlFor="thumbnail-file-input" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                           <div className="flex flex-col items-center justify-center pt-2 pb-2">
                             <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
                               <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
@@ -1342,6 +1326,7 @@ const CourseDetails = () => {
                             <p className="text-xs text-gray-500">Upload Thumbnail</p>
                           </div>
                           <input 
+                            id="thumbnail-file-input"
                             type="file" 
                             className="hidden" 
                             onChange={handleThumbnailUpload}
@@ -1390,8 +1375,9 @@ const CourseDetails = () => {
               <form onSubmit={handleStudyMaterialSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label htmlFor="study-material-title" className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
                     <input
+                      id="study-material-title"
                       type="text"
                       name="title"
                       value={studyMaterialFormData.title}
@@ -1403,8 +1389,9 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="study-material-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                     <textarea
+                      id="study-material-description"
                       name="description"
                       value={studyMaterialFormData.description}
                       onChange={handleStudyMaterialInputChange}
@@ -1416,9 +1403,9 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">File *</label>
+                    <label htmlFor="study-material-file" className="block text-sm font-medium text-gray-700 mb-1">File *</label>
                     <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                      <label htmlFor="study-material-file" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                         <div className="flex flex-col items-center justify-center pt-2 pb-2">
                           <FileText className="w-6 h-6 mb-2 text-gray-500" />
                           <p className="text-xs text-gray-500">
@@ -1426,6 +1413,7 @@ const CourseDetails = () => {
                           </p>
                         </div>
                         <input 
+                          id="study-material-file"
                           type="file" 
                           className="hidden" 
                           onChange={handleStudyFileUpload}
@@ -1472,8 +1460,9 @@ const CourseDetails = () => {
               <form onSubmit={handleVideoStudyMaterialSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label htmlFor="video-study-title" className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
                     <input
+                      id="video-study-title"
                       type="text"
                       name="title"
                       value={videoStudyMaterialFormData.title}
@@ -1485,8 +1474,9 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="video-study-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                     <textarea
+                      id="video-study-description"
                       name="description"
                       value={videoStudyMaterialFormData.description}
                       onChange={handleVideoStudyMaterialInputChange}
@@ -1498,9 +1488,9 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">File *</label>
+                    <label htmlFor="video-study-file" className="block text-sm font-medium text-gray-700 mb-1">File *</label>
                     <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                      <label htmlFor="video-study-file" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                         <div className="flex flex-col items-center justify-center pt-2 pb-2">
                           <FileText className="w-6 h-6 mb-2 text-gray-500" />
                           <p className="text-xs text-gray-500">
@@ -1508,6 +1498,7 @@ const CourseDetails = () => {
                           </p>
                         </div>
                         <input 
+                          id="video-study-file"
                           type="file" 
                           className="hidden" 
                           onChange={handleVideoStudyFileUpload}
@@ -1553,8 +1544,9 @@ const CourseDetails = () => {
               <form onSubmit={handleEditStudyMaterial}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label htmlFor="edit-study-title" className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
                     <input
+                      id="edit-study-title"
                       type="text"
                       value={selectedStudyMaterial.title}
                       onChange={(e) => setSelectedStudyMaterial(prev => ({ ...prev, title: e.target.value }))}
@@ -1565,8 +1557,9 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="edit-study-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                     <textarea
+                      id="edit-study-description"
                       value={selectedStudyMaterial.description}
                       onChange={(e) => setSelectedStudyMaterial(prev => ({ ...prev, description: e.target.value }))}
                       required
@@ -1614,9 +1607,9 @@ const CourseDetails = () => {
               <form onSubmit={handleUpdatePdf}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Select New PDF File *</label>
+                    <label htmlFor="update-pdf-file" className="block text-sm font-medium text-gray-700 mb-1">Select New PDF File *</label>
                     <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                      <label htmlFor="update-pdf-file" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                         <div className="flex flex-col items-center justify-center pt-2 pb-2">
                           <FileText className="w-6 h-6 mb-2 text-gray-500" />
                           <p className="text-xs text-gray-500">
@@ -1624,6 +1617,7 @@ const CourseDetails = () => {
                           </p>
                         </div>
                         <input 
+                          id="update-pdf-file"
                           type="file" 
                           className="hidden" 
                           onChange={(e) => setSelectedEditStudyFile(e.target.files[0])}

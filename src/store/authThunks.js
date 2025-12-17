@@ -7,7 +7,7 @@ export const loginUser = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   
   try {
-    // Convert to x-www-form-urlencoded
+    
     const params = new URLSearchParams();
     params.append('loginId', credentials.loginId);
     params.append('password', credentials.password);

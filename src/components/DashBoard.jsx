@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../store/auth/authThunks";
-import PropTypes from 'prop-types';
 import WiznovyLogo from "../assets/WIZNOVY.png";
 import LazyImage from "./LazyImage";
 import axios from "axios";
@@ -13,38 +12,22 @@ import {
   Laptop,
   Home,
   Settings,
-  HelpCircle,
   MessageCircle,
   Newspaper,
   QrCode,
   ChevronDown,
   ChevronUp,
-  BookOpen,
+
   PcCase,
-  BadgePercent,
-  TvMinimalPlay,
-  BadgeQuestionMark,
-  SquareMinus,
   ShieldCheck,
-  OctagonPause,
-  BadgeIndianRupee,
-  ClipboardMinus,
   LogOut,
-  PhoneCall,
+
   Search,
   X,
   BookCopy,
-  ListStart,
-  SquareKanban,
-  CircleArrowOutUpLeft,
-  Podcast,
-  Database,
-  Waypoints,
-  Play,
-  Headset,
-  FileText,
+ 
   BookKey,
-  MapPin
+ 
 } from "lucide-react";
 
 import FacultyArea from "./FacultyArea";
@@ -73,8 +56,8 @@ import CountryManagement from "../pages/CountryManagement";
 import StateManagement from "../pages/StateManagement";
 import SubjectsNew from "../pages/SubjectNew";
 import CourseDetails from "../pages/CourseDetails";
-import GoalManager from "./GoalManager";
-import TopicManager from "./TopicManager";
+import GoalManager from "../pages/GoalManager";
+import TopicManager from "../pages/TopicManager";
 import LanguageManager from "../pages/LanguageManager";
 import PageManager from "../pages/PageManager";
 import EducationalLevelManager from "../pages/EducationalLevelManager";
@@ -141,13 +124,13 @@ const getStats = (bannerCount, facultyCount, activeStaffCount, inactiveStaffCoun
     icon: <BookKey />,
     path: "/banners",
   },
-  {
-    title: "Total lectures",
-    count: totalLectures,
-    color: "border-purple-300 text-purple-500",
-    icon: <User />,
-    path: "/lectures",
-  },
+  // {
+  //   title: "Total lectures",
+  //   count: totalLectures,
+  //   color: "border-purple-300 text-purple-500",
+  //   icon: <User />,
+  //   path: "/lectures",
+  // },
   {
     title: "Total Feedback",
     count: totalFeedbackCount,
@@ -225,7 +208,7 @@ export default function DashboardPage() {
   const [totalNewsCount, setTotalNewsCount] = useState(0);
   const [activeMenuItem, setActiveMenuItem] = useState('/');
 
-  // Get token from localStorage
+  
   const getAuthToken = () => {
     return localStorage.getItem("token") || "";
   };
@@ -583,15 +566,6 @@ function OverviewSection({ totalBanners, facultyCount, activeStaffCount, inactiv
               setActiveMenuItem(item.path);
               navigate(item.path);
             }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setActiveMenuItem(item.path);
-                navigate(item.path);
-              }
-            }}
-            role="button"
-            tabIndex={0}
             className="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
           >
             <div className={`p-3 mr-3 rounded-lg border ${item.color}`}>
@@ -621,20 +595,6 @@ function OverviewSection({ totalBanners, facultyCount, activeStaffCount, inactiv
   );
 }
 
-OverviewSection.propTypes = {
-  totalBanners: PropTypes.number.isRequired,
-  facultyCount: PropTypes.number.isRequired,
-  activeStaffCount: PropTypes.number.isRequired,
-  inactiveStaffCount: PropTypes.number.isRequired,
-  totalUsersCount: PropTypes.number.isRequired,
-  activeUsersCount: PropTypes.number.isRequired,
-  inactiveUsersCount: PropTypes.number.isRequired,
-  totalCoursesCount: PropTypes.number.isRequired,
-  totalFeedbackCount: PropTypes.number.isRequired,
-  totalNewsCount: PropTypes.number.isRequired,
-  setActiveMenuItem: PropTypes.func.isRequired
-};
-
 function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isActive = false }) {
   const [open, setOpen] = useState(false);
   return (
@@ -649,15 +609,6 @@ function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isAc
           if (hasDropdown) setOpen(!open);
           if (onClick && !hasDropdown) onClick();
         }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (hasDropdown) setOpen(!open);
-            if (onClick && !hasDropdown) onClick();
-          }
-        }}
-        role="button"
-        tabIndex={0}
       >
         <div className="flex items-center gap-3">
           {icon && <span>{icon}</span>}
@@ -676,38 +627,16 @@ function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isAc
   );
 }
 
-SidebarItem.propTypes = {
-  icon: PropTypes.node,
-  label: PropTypes.string.isRequired,
-  onClick: PropTypes.func,
-  hasDropdown: PropTypes.bool,
-  children: PropTypes.node,
-  isActive: PropTypes.bool
-};
-
 function DropdownItem({ label, onClick }) {
   return (
     <div
       className="px-2 py-1 rounded-md hover:bg-gray-200 cursor-pointer text-gray-700 transition"
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      role="button"
-      tabIndex={0}
     >
       {label}
     </div>
   );
 }
-
-DropdownItem.propTypes = {
-  label: PropTypes.string.isRequired,
-  onClick: PropTypes.func.isRequired
-};
 
 function PlaceholderPage({ page }) {
   return (
@@ -716,7 +645,3 @@ function PlaceholderPage({ page }) {
     </div>
   );
 }
-
-PlaceholderPage.propTypes = {
-  page: PropTypes.string.isRequired
-};

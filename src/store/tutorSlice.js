@@ -53,6 +53,20 @@ export const updateTutorContact = createAsyncThunk(
   }
 );
 
+export const fetchTutorDetails = createAsyncThunk(
+  'tutors/fetchTutorDetails',
+  async (accountId, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/tutor-details/${accountId}`);
+      console.log('Tutor details response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Tutor details error:', error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 const tutorSlice = createSlice({
   name: 'tutors',
   initialState: {
@@ -60,6 +74,8 @@ const tutorSlice = createSlice({
     total: 0,
     loading: false,
     error: null,
+    selectedTutorDetails: null,
+    detailsLoading: false,
     filters: {
       search: '',
       status: ''
@@ -106,6 +122,17 @@ const tutorSlice = createSlice({
       })
       .addCase(updateTutorContact.rejected, (state, action) => {
         toast.error('Failed to update tutor contact: ' + (action.payload?.message || 'Unknown error'));
+      })
+      .addCase(fetchTutorDetails.pending, (state) => {
+        state.detailsLoading = true;
+      })
+      .addCase(fetchTutorDetails.fulfilled, (state, action) => {
+        state.detailsLoading = false;
+        state.selectedTutorDetails = action.payload;
+      })
+      .addCase(fetchTutorDetails.rejected, (state, action) => {
+        state.detailsLoading = false;
+        toast.error('Failed to fetch tutor details: ' + (action.payload?.message || 'Unknown error'));
       });
   }
 });

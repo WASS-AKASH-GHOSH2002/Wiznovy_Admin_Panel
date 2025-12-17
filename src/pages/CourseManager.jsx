@@ -7,8 +7,6 @@ import {
   fetchCourses,
   createCourse,
   updateCourse,
-  deleteCourse,
-  searchCourses,
   setFilters,
   setThumbnailUpdating,
   updateCourseStatus,
@@ -31,8 +29,6 @@ const CourseManager = () => {
   const { courses, loading, error, totalCount, filters, thumbnailUpdating, selectedCourseDetails, detailsLoading } = useSelector(state => state.courses);
   const { tutors } = useSelector(state => state.tutors);
   const { subjects } = useSelector(state => state.subjectsManagement);
-
-  
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,7 +72,7 @@ const CourseManager = () => {
     unitIds: []
   });
 
-  // Debounced search effect
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       setKeyword(searchQuery);
@@ -85,7 +81,7 @@ const CourseManager = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Maintain cursor position during search
+  
   useEffect(() => {
     if (searchInputRef.current && document.activeElement !== searchInputRef.current && searchQuery) {
       const cursorPosition = searchInputRef.current.selectionStart;
@@ -142,60 +138,52 @@ const CourseManager = () => {
     }
   }, [formData.accessType, formData.discountPrice, formData.price]);
 
+  const buildFormData = () => {
+    const submitData = new FormData();
+    
+    for (const key of Object.keys(formData)) {
+      if (key !== 'imageUrl' && key !== 'thumbnail' && key !== 'unitIds') {
+        const value = formData[key];
+        if (value !== null && value !== undefined && value !== '') {
+          submitData.append(key, value);
+        }
+      }
+    }
+    
+    if (formData.unitIds?.length > 0) {
+      for (const unitId of formData.unitIds) {
+        submitData.append('unitIds[]', unitId);
+      }
+    }
+    
+    return submitData;
+  };
+
+  const handlePricing = (submitData) => {
+    if (formData.accessType === 'FREE') {
+      submitData.set('price', '0');
+      submitData.set('discountPrice', '0');
+    } else if (!showDiscount && formData.accessType === 'PAID') {
+      submitData.set('discountPrice', formData.price);
+    }
+  };
+
+  const addImageFiles = (submitData) => {
+    const imageFile = selectedImageFile || fileInputRef.current?.files[0];
+    const thumbnailFile = selectedThumbnailFile || thumbnailInputRef.current?.files[0];
+    
+    if (imageFile) submitData.append('image', imageFile);
+    if (thumbnailFile) submitData.append('thumbnail', thumbnailFile);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
     try {
-      const submitData = new FormData();
-      
-      // Add all form fields except image-related ones
-      Object.keys(formData).forEach(key => {
-        if (key !== 'imageUrl' && key !== 'thumbnail' && key !== 'unitIds') {
-          const value = formData[key];
-          if (value !== null && value !== undefined && value !== '') {
-            submitData.append(key, value);
-          }
-        }
-      });
-      
-      // Handle unitIds array properly
-      if (formData.unitIds && formData.unitIds.length > 0) {
-        formData.unitIds.forEach(unitId => {
-          submitData.append('unitIds[]', unitId);
-        });
-      }
-      
-      // Handle pricing for FREE courses
-      if (formData.accessType === 'FREE') {
-        submitData.set('price', '0');
-        submitData.set('discountPrice', '0');
-      } else if (!showDiscount && formData.accessType === 'PAID') {
-        submitData.set('discountPrice', formData.price);
-      }
-      
-      // Add image files - backend expects 'image' and 'thumbnail' fields
-      const imageFile = selectedImageFile || fileInputRef.current?.files[0];
-      const thumbnailFile = selectedThumbnailFile || thumbnailInputRef.current?.files[0];
-      
-      console.log('Image file:', imageFile);
-      console.log('Thumbnail file:', thumbnailFile);
-      
-      if (imageFile) {
-        submitData.append('image', imageFile);
-        console.log('Added image file to FormData');
-      }
-      
-      if (thumbnailFile) {
-        submitData.append('thumbnail', thumbnailFile);
-        console.log('Added thumbnail file to FormData');
-      }
-      
-      // Log FormData contents for debugging
-      console.log('Submitting course data:');
-      for (let [key, value] of submitData.entries()) {
-        console.log(key, value);
-      }
+      const submitData = buildFormData();
+      handlePricing(submitData);
+      addImageFiles(submitData);
       
       const result = await dispatch(
         editingCourse 
@@ -204,7 +192,6 @@ const CourseManager = () => {
       );
       
       if (result.type.endsWith('/fulfilled')) {
-        // Force refresh all data
         await forceRefresh();
         setShowModal(false);
         resetForm();
@@ -394,8 +381,7 @@ const CourseManager = () => {
   const updateStatus = async (status) => {
     const result = await dispatch(updateCourseStatus({ id: selectedCourse.id, status }));
     if (result.type.endsWith('/fulfilled')) {
-      // Force refresh all data to show updated status
-      await forceRefresh();
+      forceRefresh();
       setShowStatusModal(false);
       setSelectedCourse(null);
       toast.success('Course status updated successfully!');
@@ -468,7 +454,7 @@ const CourseManager = () => {
   };
 
   const forceRefresh = async () => {
-    // Force refresh all data to ensure UI is up to date
+
     await dispatch(fetchCourses(filters));
     dispatch(fetchTutors({ limit: 100, status: 'ACTIVE' }));
     dispatch(fetchSubjects({ limit: 100, status: 'ACTIVE' }));
@@ -625,31 +611,7 @@ const CourseManager = () => {
             </div>
           </div>
         </div>
-        
-        {/* Pagination Controls */}
-        {totalCount > 10 && (
-          <div className="mt-4 flex justify-between items-center">
-            <span className="text-sm text-gray-600">
-              Showing {filters.offset + 1} to {Math.min(filters.offset + filters.limit, totalCount)} of {totalCount} courses
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handlePagination('prev')}
-                disabled={filters.offset === 0}
-                className="px-3 py-1 bg-blue-600 text-white rounded disabled:bg-gray-300"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => handlePagination('next')}
-                disabled={filters.offset + filters.limit >= totalCount}
-                className="px-3 py-1 bg-blue-600 text-white rounded disabled:bg-gray-300"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
+
       </div>
 
       {/* Courses List */}
@@ -1498,6 +1460,37 @@ const CourseManager = () => {
       )}
     </div>
   );
+};
+
+import PropTypes from 'prop-types';
+
+const PriceDisplay = ({ course }) => {
+  if (course.accessType === 'FREE') {
+    return <span className="text-green-600 font-medium">Free</span>;
+  }
+  
+  const hasDiscount = course.discountPrice !== course.price && course.discountPrice > 0;
+  
+  return (
+    <div className="flex flex-col items-end">
+      {hasDiscount ? (
+        <>
+          <span className="text-red-600 line-through text-sm">${course.price}</span>
+          <span className="text-green-600 font-medium">${course.discountPrice}</span>
+        </>
+      ) : (
+        <span className="text-green-600 font-medium">${course.price}</span>
+      )}
+    </div>
+  );
+};
+
+PriceDisplay.propTypes = {
+  course: PropTypes.shape({
+    accessType: PropTypes.string.isRequired,
+    price: PropTypes.number,
+    discountPrice: PropTypes.number
+  }).isRequired
 };
 
 export default CourseManager;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, Ban, Unlock, RefreshCw, Plus, Edit } from "lucide-react";
 import { toast } from 'react-toastify';
@@ -42,6 +42,7 @@ const EducationalLevelManager = () => {
     
     if (result.type.endsWith('/fulfilled')) {
       toast.success(`Educational level ${newStatus === 'ACTIVE' ? 'activated' : 'deactivated'} successfully!`);
+      handleRefresh();
     } else {
       toast.error('Failed to update status');
     }
@@ -88,7 +89,7 @@ const EducationalLevelManager = () => {
       toast.success('Educational level created successfully!');
       setNewQualification({ name: '' });
       setShowCreateForm(false);
-      dispatch(fetchQualifications({ limit: itemsPerPage, offset: (currentPage - 1) * itemsPerPage }));
+      handleRefresh();
     } else {
       toast.error('Failed to create educational level');
     }
@@ -108,7 +109,7 @@ const EducationalLevelManager = () => {
       setEditQualification({ name: '' });
       setSelectedQualification(null);
       setShowEditForm(false);
-      dispatch(fetchQualifications({ limit: itemsPerPage, offset: (currentPage - 1) * itemsPerPage }));
+      handleRefresh();
     } else {
       toast.error('Failed to update educational level');
     }
@@ -292,10 +293,11 @@ const EducationalLevelManager = () => {
             <h3 className="text-xl font-bold mb-4">Add New Educational Level</h3>
             <form onSubmit={handleCreateQualification}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="create-name" className="block text-sm font-medium text-gray-700 mb-2">
                   Educational Level Name *
                 </label>
                 <input
+                  id="create-name"
                   type="text"
                   value={newQualification.name}
                   onChange={(e) => setNewQualification({ ...newQualification, name: e.target.value })}
@@ -334,10 +336,11 @@ const EducationalLevelManager = () => {
             <h3 className="text-xl font-bold mb-4">Edit Educational Level</h3>
             <form onSubmit={handleUpdateQualification}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 mb-2">
                   Educational Level Name *
                 </label>
                 <input
+                  id="edit-name"
                   type="text"
                   value={editQualification.name}
                   onChange={(e) => setEditQualification({ ...editQualification, name: e.target.value })}
@@ -377,11 +380,11 @@ const EducationalLevelManager = () => {
             <h3 className="text-xl font-bold mb-4">Educational Level Details</h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <span className="block text-sm font-medium text-gray-700">Name</span>
                 <p className="text-gray-900">{selectedQualification.name}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <span className="block text-sm font-medium text-gray-700">Status</span>
                 <span className={`px-2 py-1 text-xs rounded-full ${
                   selectedQualification.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                 }`}>
@@ -389,11 +392,11 @@ const EducationalLevelManager = () => {
                 </span>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Created At</label>
+                <span className="block text-sm font-medium text-gray-700">Created At</span>
                 <p className="text-gray-900">{new Date(selectedQualification.createdAt).toLocaleString()}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Updated At</label>
+                <span className="block text-sm font-medium text-gray-700">Updated At</span>
                 <p className="text-gray-900">{new Date(selectedQualification.updatedAt).toLocaleString()}</p>
               </div>
             </div>

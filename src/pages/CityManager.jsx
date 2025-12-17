@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, RefreshCw, Settings, Plus } from "lucide-react";
 import { toast } from 'react-toastify';
-import { createCity, fetchCities, updateCityStatus, setSearch, setStatusFilter, setStateFilter, clearError } from '../store/citySlice';
+import { createCity, fetchCities, updateCityStatus, setSearch, setStatusFilter, setStateFilter,  } from '../store/citySlice';
 import { fetchStates } from '../store/stateSlice';
 
 const CityManager = () => {
@@ -254,9 +254,8 @@ const CityManager = () => {
               <h3 className="text-xl font-bold mb-4">Add New City</h3>
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <label htmlFor="cityName" className="block text-sm font-medium text-gray-700 mb-2">City Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">City Name</label>
                   <input
-                    id="cityName"
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -265,9 +264,8 @@ const CityManager = () => {
                   />
                 </div>
                 <div className="mb-4">
-                  <label htmlFor="cityState" className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
                   <select
-                    id="cityState"
                     value={formData.stateId}
                     onChange={(e) => setFormData({...formData, stateId: e.target.value})}
                     className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -335,9 +333,8 @@ const CityManager = () => {
                 Update status for: <strong>{statusUpdateCity.name}</strong>
               </p>
               <div className="mb-4">
-                <label htmlFor="cityStatus" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
                 <select
-                  id="cityStatus"
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
                   className="w-full border border-gray-300 p-2.5 rounded-lg"

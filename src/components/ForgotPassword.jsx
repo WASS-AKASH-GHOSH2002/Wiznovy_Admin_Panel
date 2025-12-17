@@ -23,7 +23,7 @@ const ForgotPassword = () => {
 
   const handleEmailChange = (e) => {
     // Filter input to only allow letters, numbers, dots, and @
-    const filteredValue = e.target.value.replaceAll(/[^a-zA-Z0-9.@]/g, '');
+    const filteredValue = e.target.value.replace(/[^a-zA-Z0-9.@]/g, '');
     setEmail(filteredValue);
     setEmailError('');
     setMessage('');
