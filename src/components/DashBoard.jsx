@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../store/auth/authThunks";
@@ -23,7 +24,6 @@ import {
   Search,
   X,
   BookCopy,
-  BookKey,
   MapPin,
   BookOpen,
   ListStart,
@@ -38,15 +38,12 @@ import UserManagement from "../pages/UserManagement";
 
 
 import CouponManager from "../pages/CouponManager";
-import NoticeBoardManager from "../pages/NoticeBoard";
-import PaymentsManager from "../pages/PaymentManager";
 import CourseManager from "../pages/CourseManager";
-import BannerManagementPage from "./Banner";
+
 import FaqManager from "../pages/FaqSection";
 import ContactUsAdmin from "../pages/Contact_us";
 import AdminFeedback from "../pages/Feedback";
 import { API_BASE_URL } from "../config/api";
-import NewsManagement from "../pages/NewsManagement";
 import NotificationManager from "../pages/NotificationManager";
 import SettingsPage from "../pages/Settings";
 
@@ -67,7 +64,7 @@ import CityManager from "../pages/CityManager";
 const totalCourses = 4;
 const totalLectures = 1;
 
-const getStats = (bannerCount, facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount) => [
+const getStats = (facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount) => [
   {
     title: "All Users",
     count: totalUsersCount,
@@ -117,13 +114,7 @@ const getStats = (bannerCount, facultyCount, activeStaffCount, inactiveStaffCoun
     icon: <Home />,
     path: "/courses/show",
   },
-  {
-    title: "Total Banners",
-    count: bannerCount,
-    color: "border-emerald-300 text-emerald-500",
-    icon: <BookKey />,
-    path: "/banners",
-  },
+
   // {
   //   title: "Total lectures",
   //   count: totalLectures,
@@ -176,7 +167,7 @@ const additionalMenuItems = [
 
   // { label: "Audit Logs", path: "/audit-logs", icon: <ShieldCheck size={18} /> },
   // { label: "Payments", path: "/payments", icon: <BadgeIndianRupee size={18} /> },
-  // { label: "Banner Management", path: "/banners", icon: <Newspaper size={18} /> },
+
   // { label: "FAQ Management", path: "/faqs", icon: <HelpCircle size={18} /> },
   // { label: "Contact Us", path: "/contact-us", icon: <PhoneCall size={18} /> },
   // { label: "Feedback Management", path: "/feedback", icon: <ShieldCheck size={18} /> },
@@ -192,8 +183,7 @@ export default function DashboardPage() {
   const [facultyList, setFacultyList] = useState([]);
   const [activeStaffCount, setActiveStaffCount] = useState(0);
   const [inactiveStaffCount, setInactiveStaffCount] = useState(0);
-  const [totalBanners, setTotalBanners] = useState(0);
-  const [banners, setBanners] = useState([]);
+
   const [courseList, setCourseList] = useState(() => {
     const stored = localStorage.getItem("courseList");
     return stored ? JSON.parse(stored) : [];
@@ -218,16 +208,7 @@ export default function DashboardPage() {
       try {
         const token = getAuthToken();
         
-    
-        const bannersRes = await axios.get(`${API_BASE_URL}/banner/all`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (bannersRes.status === 200 && bannersRes.data) {
-          const bannersData = bannersRes.data.data || [];
-          const totalCount = bannersRes.data.total || bannersData.length;
-          setBanners(bannersData);
-          setTotalBanners(totalCount);
-        }
+
 
        
         const activeStaffRes = await axios.get(`${API_BASE_URL}/account/stafflist`, {
@@ -489,7 +470,6 @@ export default function DashboardPage() {
       <main className="flex-1 bg-gray-100 p-6 overflow-y-auto">
         <Routes>
           <Route path="/" element={<OverviewSection 
-            totalBanners={totalBanners} 
             facultyCount={facultyList.length} 
             activeStaffCount={activeStaffCount}
             inactiveStaffCount={inactiveStaffCount}
@@ -524,15 +504,10 @@ export default function DashboardPage() {
           {/* <Route path="/study-material" element={<Study_material />} /> */}
       
           <Route path="/subject" element={<SubjectsNew />} />
-          <Route path="/notice-board" element={<NoticeBoardManager />} />
-          <Route path="/banners" element={<BannerManagementPage />} />
           <Route path="/faqs" element={<FaqManager />} />
           <Route path="/contact-us" element={<ContactUsAdmin />} />
           <Route path="/feedback" element={<AdminFeedback />} />
-          <Route path="/news-management" element={
-           
-              <NewsManagement />
-          } />
+
           <Route path="/notification-manager" element={
             
               <NotificationManager />
@@ -542,7 +517,7 @@ export default function DashboardPage() {
               <CouponManager />
            
           } />
-          <Route path="/payments" element={<PaymentsManager />} />
+
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<PlaceholderPage page="404 - Not Found" />} />
         </Routes>
@@ -551,21 +526,32 @@ export default function DashboardPage() {
   );
 }
 
-function OverviewSection({ totalBanners, facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount, setActiveMenuItem }) {
+function OverviewSection({ facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount, setActiveMenuItem }) {
   const navigate = useNavigate();
+  
+  const handleKeyDown = (e, item) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setActiveMenuItem(item.path);
+      navigate(item.path);
+    }
+  };
   
   return (
     <div className="mb-8">
       <h2 className="text-xl font-semibold mb-4 text-gray-800">Quick Overview</h2>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {getStats(totalBanners, facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount).map((item, index) => (
+        {getStats(facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount).map((item, index) => (
           <div
             key={index}
             onClick={() => {
               setActiveMenuItem(item.path);
               navigate(item.path);
             }}
+            onKeyDown={(e) => handleKeyDown(e, item)}
+            role="button"
+            tabIndex={0}
             className="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
           >
             <div className={`p-3 mr-3 rounded-lg border ${item.color}`}>
@@ -595,8 +581,30 @@ function OverviewSection({ totalBanners, facultyCount, activeStaffCount, inactiv
   );
 }
 
+OverviewSection.propTypes = {
+  facultyCount: PropTypes.number.isRequired,
+  activeStaffCount: PropTypes.number.isRequired,
+  inactiveStaffCount: PropTypes.number.isRequired,
+  totalUsersCount: PropTypes.number.isRequired,
+  activeUsersCount: PropTypes.number.isRequired,
+  inactiveUsersCount: PropTypes.number.isRequired,
+  totalCoursesCount: PropTypes.number.isRequired,
+  totalFeedbackCount: PropTypes.number.isRequired,
+  totalNewsCount: PropTypes.number.isRequired,
+  setActiveMenuItem: PropTypes.func.isRequired,
+};
+
 function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isActive = false }) {
   const [open, setOpen] = useState(false);
+  
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (hasDropdown) setOpen(!open);
+      if (onClick && !hasDropdown) onClick();
+    }
+  };
+  
   return (
     <div>
       <div
@@ -609,6 +617,9 @@ function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isAc
           if (hasDropdown) setOpen(!open);
           if (onClick && !hasDropdown) onClick();
         }}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
       >
         <div className="flex items-center gap-3">
           {icon && <span>{icon}</span>}
@@ -627,16 +638,40 @@ function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isAc
   );
 }
 
+SidebarItem.propTypes = {
+  icon: PropTypes.node,
+  label: PropTypes.string.isRequired,
+  onClick: PropTypes.func,
+  hasDropdown: PropTypes.bool,
+  children: PropTypes.node,
+  isActive: PropTypes.bool,
+};
+
 function DropdownItem({ label, onClick }) {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  };
+  
   return (
     <div
       className="px-2 py-1 rounded-md hover:bg-gray-200 cursor-pointer text-gray-700 transition"
       onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
     >
       {label}
     </div>
   );
 }
+
+DropdownItem.propTypes = {
+  label: PropTypes.string.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
 
 function PlaceholderPage({ page }) {
   return (
@@ -645,3 +680,7 @@ function PlaceholderPage({ page }) {
     </div>
   );
 }
+
+PlaceholderPage.propTypes = {
+  page: PropTypes.string.isRequired,
+};

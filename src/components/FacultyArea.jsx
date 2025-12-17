@@ -257,10 +257,11 @@ const FacultyArea = () => {
           </h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="loginId" className="block text-sm font-medium text-gray-700 mb-1">
                 Login ID *
               </label>
               <input
+                id="loginId"
                 type="text"
                 name="loginId"
                 className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -270,11 +271,12 @@ const FacultyArea = () => {
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password *
               </label>
               <div className="relative">
                 <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   name="password"
                   className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
@@ -301,10 +303,11 @@ const FacultyArea = () => {
               </div>
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name *
               </label>
               <input
+                id="name"
                 type="text"
                 name="name"
                 className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -314,10 +317,11 @@ const FacultyArea = () => {
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address
               </label>
               <input
+                id="email"
                 type="email"
                 name="email"
                 className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -326,10 +330,11 @@ const FacultyArea = () => {
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-1">
                 Date of Birth
               </label>
               <input
+                id="dob"
                 type="date"
                 name="dob"
                 className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -338,10 +343,11 @@ const FacultyArea = () => {
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
                 Gender
               </label>
               <select
+                id="gender"
                 name="gender"
                 className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={form.gender}
@@ -354,10 +360,11 @@ const FacultyArea = () => {
               </select>
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
                 City
               </label>
               <input
+                id="city"
                 type="text"
                 name="city"
                 className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -366,10 +373,11 @@ const FacultyArea = () => {
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
                 State
               </label>
               <input
+                id="state"
                 type="text"
                 name="state"
                 className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -378,10 +386,11 @@ const FacultyArea = () => {
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
                 Country
               </label>
               <input
+                id="country"
                 type="text"
                 name="country"
                 className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -390,10 +399,11 @@ const FacultyArea = () => {
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-1">
                 PIN Code
               </label>
               <input
+                id="pin"
                 type="text"
                 name="pin"
                 className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

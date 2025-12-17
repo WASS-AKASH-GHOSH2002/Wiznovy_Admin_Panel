@@ -161,7 +161,7 @@ const UserPermissionsPage = () => {
           userPermissionArray.push({
             id: menuPerms[type]?.id || 0,
             accountId: accountId,
-            menuId: parseInt(menuId),
+            menuId: Number.parseInt(menuId, 10),
             permissionId: id,
             status: menuPerms[type]?.status || false,
             permission: { id: id }
@@ -169,7 +169,7 @@ const UserPermissionsPage = () => {
         });
         
         menuArray.push({
-          id: parseInt(menuId),
+          id: Number.parseInt(menuId, 10),
           userPermission: userPermissionArray
         });
       });

@@ -263,8 +263,9 @@ const StateManagement = () => {
               <h3 className="text-xl font-bold mb-4">Add New State</h3>
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">State Name</label>
+                  <label htmlFor="stateName" className="block text-sm font-medium text-gray-700 mb-2">State Name</label>
                   <input
+                    id="stateName"
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -273,8 +274,9 @@ const StateManagement = () => {
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">State Code</label>
+                  <label htmlFor="stateCode" className="block text-sm font-medium text-gray-700 mb-2">State Code</label>
                   <input
+                    id="stateCode"
                     type="text"
                     value={formData.code}
                     onChange={(e) => setFormData({...formData, code: e.target.value})}
@@ -283,8 +285,9 @@ const StateManagement = () => {
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                  <label htmlFor="stateCountry" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
                   <select
+                    id="stateCountry"
                     value={formData.countryId}
                     onChange={(e) => setFormData({...formData, countryId: e.target.value})}
                     className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -347,8 +350,9 @@ const StateManagement = () => {
                 Update status for: <strong>{statusUpdateState.name}</strong>
               </p>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+                <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
                 <select
+                  id="statusSelect"
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
                   className="w-full border border-gray-300 p-2.5 rounded-lg"

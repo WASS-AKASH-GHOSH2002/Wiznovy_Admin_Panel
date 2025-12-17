@@ -572,8 +572,9 @@ const CountryManagement = () => {
                 Upload image for: <strong>{selectedCountryForImage.name}</strong>
               </p>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Image</label>
+                <label htmlFor="imageUpload" className="block text-sm font-medium text-gray-700 mb-2">Select Image</label>
                 <input 
+                  id="imageUpload"
                   type="file" 
                   onChange={handleFileSelect}
                   accept="image/*"
@@ -633,8 +634,9 @@ const CountryManagement = () => {
                 Update status for: <strong>{statusUpdateCountry.name}</strong>
               </p>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+                <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
                 <select
+                  id="statusSelect"
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
                   className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -680,8 +682,9 @@ const CountryManagement = () => {
           Update status for <strong>{selectedCountries.length}</strong> selected countries
         </p>
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+          <label htmlFor="bulkStatusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
           <select
+            id="bulkStatusSelect"
             value={bulkStatus}
             onChange={(e) => setBulkStatus(e.target.value)}
             className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -726,8 +729,9 @@ const CountryManagement = () => {
           <>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Country Name</label>
+                <label htmlFor="editCountryName" className="block text-sm font-medium text-gray-700 mb-2">Country Name</label>
                 <input
+                  id="editCountryName"
                   type="text"
                   value={editData.name}
                   onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
@@ -736,8 +740,9 @@ const CountryManagement = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Country Code</label>
+                <label htmlFor="editCountryCode" className="block text-sm font-medium text-gray-700 mb-2">Country Code</label>
                 <input
+                  id="editCountryCode"
                   type="text"
                   value={editData.code}
                   onChange={(e) => setEditData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}

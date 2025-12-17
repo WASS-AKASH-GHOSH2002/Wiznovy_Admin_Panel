@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -489,15 +490,27 @@ const CourseManager = () => {
     );
   };
 
+  StatusBadge.propTypes = {
+    status: PropTypes.string.isRequired,
+    onClick: PropTypes.func.isRequired,
+  };
+
   const ActionButton = ({ onClick, className, title, children }) => (
     <button onClick={onClick} className={className} title={title}>
       {children}
     </button>
   );
 
+  ActionButton.propTypes = {
+    onClick: PropTypes.func.isRequired,
+    className: PropTypes.string,
+    title: PropTypes.string,
+    children: PropTypes.node.isRequired,
+  };
+
   const ImageUpload = ({ type, preview, onUpload, onRemove, inputRef, disabled }) => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={`${type}Upload`} className="block text-sm font-medium text-gray-700 mb-1">
         Course {type === 'thumbnail' ? 'Thumbnail' : 'Image'}
         {inputRef.current?.files[0] && (
           <span className="ml-2 text-green-600 text-xs">✓ File selected</span>
@@ -521,12 +534,21 @@ const CourseManager = () => {
               </svg>
               <p className="text-xs text-gray-500">Upload {type === 'thumbnail' ? 'Thumbnail' : 'Image'}</p>
             </div>
-            <input type="file" className="hidden" onChange={onUpload} accept="image/*" ref={inputRef} disabled={disabled} />
+            <input id={`${type}Upload`} type="file" className="hidden" onChange={onUpload} accept="image/*" ref={inputRef} disabled={disabled} />
           </label>
         </div>
       )}
     </div>
   );
+
+  ImageUpload.propTypes = {
+    type: PropTypes.string.isRequired,
+    preview: PropTypes.string,
+    onUpload: PropTypes.func.isRequired,
+    onRemove: PropTypes.func.isRequired,
+    inputRef: PropTypes.object.isRequired,
+    disabled: PropTypes.bool,
+  };
 
   const PriceDisplay = ({ course }) => {
     if (course.accessType === 'FREE') {
@@ -545,6 +567,14 @@ const CourseManager = () => {
         )}
       </div>
     );
+  };
+
+  PriceDisplay.propTypes = {
+    course: PropTypes.shape({
+      accessType: PropTypes.string.isRequired,
+      price: PropTypes.number.isRequired,
+      discountPrice: PropTypes.number.isRequired,
+    }).isRequired,
   };
 
   return (
@@ -566,8 +596,9 @@ const CourseManager = () => {
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search Input - Left Side */}
           <div className="lg:w-1/3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search Courses</label>
+            <label htmlFor="searchCourses" className="block text-sm font-medium text-gray-700 mb-1">Search Courses</label>
             <input
+              id="searchCourses"
               ref={searchInputRef}
               type="text"
               value={searchQuery}
@@ -582,8 +613,9 @@ const CourseManager = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label htmlFor="statusFilter" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
+                  id="statusFilter"
                   value={filters.status}
                   onChange={(e) => updateFilter('status', e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm"
@@ -598,8 +630,9 @@ const CourseManager = () => {
               
               {/* Access Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Access Type</label>
+                <label htmlFor="accessTypeFilter" className="block text-sm font-medium text-gray-700 mb-1">Access Type</label>
                 <select
+                  id="accessTypeFilter"
                   value={filters.accessType}
                   onChange={(e) => updateFilter('accessType', e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm"
@@ -612,8 +645,9 @@ const CourseManager = () => {
               
               {/* Subject Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <label htmlFor="subjectFilter" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
                 <select
+                  id="subjectFilter"
                   value={filters.subjectId || ''}
                   onChange={(e) => updateFilter('subjectId', e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm"
@@ -631,8 +665,9 @@ const CourseManager = () => {
               
               {/* Tutor Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tutor</label>
+                <label htmlFor="tutorFilter" className="block text-sm font-medium text-gray-700 mb-1">Tutor</label>
                 <select
+                  id="tutorFilter"
                   value={filters.tutorId || ''}
                   onChange={(e) => updateFilter('tutorId', e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm"

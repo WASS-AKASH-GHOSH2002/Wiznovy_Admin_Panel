@@ -462,10 +462,11 @@ const PageManager = () => {
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="pageTitle" className="block text-sm font-medium text-gray-700 mb-2">
                     Title *
                   </label>
                   <input
+                    id="pageTitle"
                     type="text"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -475,10 +476,11 @@ const PageManager = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="pageType" className="block text-sm font-medium text-gray-700 mb-2">
                     Page Type *
                   </label>
                   <select
+                    id="pageType"
                     value={formData.pageType}
                     onChange={(e) => setFormData({ ...formData, pageType: e.target.value })}
                     className="w-full border border-gray-300 p-2 rounded-lg"
@@ -490,7 +492,7 @@ const PageManager = () => {
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="pageImage" className="block text-sm font-medium text-gray-700 mb-2">
                   Page Image
                   {fileInputRef.current?.files[0] && (
                     <span className="ml-2 text-green-600 text-xs">✓ File selected</span>
@@ -524,6 +526,7 @@ const PageManager = () => {
                         <p className="text-xs text-gray-500">Upload Image</p>
                       </div>
                       <input 
+                        id="pageImage"
                         type="file" 
                         className="hidden" 
                         onChange={handleImageUpload}
@@ -535,10 +538,11 @@ const PageManager = () => {
                 )}
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="pageDescription" className="block text-sm font-medium text-gray-700 mb-2">
                   Description *
                 </label>
                 <textarea
+                  id="pageDescription"
                   value={formData.desc}
                   onChange={(e) => setFormData({ ...formData, desc: e.target.value })}
                   className="w-full border border-gray-300 p-2 rounded-lg"
@@ -606,8 +610,9 @@ const PageManager = () => {
             <>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+                <label htmlFor="updateTitle" className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
                 <input
+                  id="updateTitle"
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -615,8 +620,9 @@ const PageManager = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Page Type *</label>
+                <label htmlFor="updatePageType" className="block text-sm font-medium text-gray-700 mb-2">Page Type *</label>
                 <select
+                  id="updatePageType"
                   value={formData.pageType}
                   onChange={(e) => setFormData({ ...formData, pageType: e.target.value })}
                   className="w-full border border-gray-300 p-2 rounded-lg"
@@ -626,8 +632,9 @@ const PageManager = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                <label htmlFor="updateDescription" className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
                 <textarea
+                  id="updateDescription"
                   value={formData.desc}
                   onChange={(e) => setFormData({ ...formData, desc: e.target.value })}
                   className="w-full border border-gray-300 p-2 rounded-lg"
@@ -673,8 +680,9 @@ const PageManager = () => {
         {selectedPage && (
             <>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select New Image</label>
+              <label htmlFor="updateImage" className="block text-sm font-medium text-gray-700 mb-2">Select New Image</label>
               <input 
+                id="updateImage"
                 type="file" 
                 onChange={handleImageUpload}
                 accept="image/*"
