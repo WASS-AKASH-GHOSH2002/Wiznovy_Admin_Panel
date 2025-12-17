@@ -177,61 +177,11 @@ const TopicManager = () => {
         </div>
       </div>
 
-      {/* Add Topic Modal */}
-      {showAddModal && (
+      {/* Topic Form Modal */}
+      {(showAddModal || showEditModal) && (
         <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">Add New Topic</h3>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Topic Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border border-gray-300 p-2.5 rounded-lg"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full border border-gray-300 p-2.5 rounded-lg"
-                >
-                  <option value="ACTIVE">Active</option>
-                  <option value="DEACTIVE">Deactive</option>
-                  <option value="DELETED">Deleted</option>
-                  <option value="SUSPENDED">Suspended</option>
-                  <option value="PENDING">Pending</option>
-                </select>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                >
-                  Add Topic
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Topic Modal */}
-      {showEditModal && editTopic && (
-        <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">Edit Topic</h3>
+            <h3 className="text-xl font-bold mb-4">{editTopic ? 'Edit Topic' : 'Add New Topic'}</h3>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Topic Name</label>
@@ -261,6 +211,7 @@ const TopicManager = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    setShowAddModal(false);
                     setShowEditModal(false);
                     setEditTopic(null);
                   }}
@@ -272,7 +223,7 @@ const TopicManager = () => {
                   type="submit"
                   className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
                 >
-                  Update Topic
+                  {editTopic ? 'Update Topic' : 'Add Topic'}
                 </button>
               </div>
             </form>

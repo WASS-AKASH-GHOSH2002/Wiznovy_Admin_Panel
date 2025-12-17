@@ -4,21 +4,31 @@ import { toast } from 'react-toastify';
 
 export const fetchTutors = createAsyncThunk(
   'tutors/fetchTutors',
-  async ({ limit = 10, offset = 0, keyword = '', status = '', countryId = '', subjectId = '' } = {}) => {
-    const params = {
-      limit: Math.min(Math.max(Number(limit) || 50, 1), 100),
-      offset: Math.max(Number(offset) || 0, 0)
-    };
-    if (keyword) params.keyword = keyword;
-    if (status) params.status = status;
-    if (countryId) params.countryId = countryId;
-    if (subjectId) params.subjectId = subjectId;
+  async ({ limit = 10, offset = 0, keyword = '', status = '', countryId = '', subjectId = '' } = {}, { rejectWithValue }) => {
+    try {
+      const params = {
+        limit: Math.min(Math.max(Number(limit) || 50, 1), 100),
+        offset: Math.max(Number(offset) || 0, 0)
+      };
+      if (keyword) params.keyword = keyword;
+      if (status) params.status = status;
+      if (countryId) params.countryId = countryId;
+      if (subjectId) params.subjectId = subjectId;
 
-    const response = await api.get('/account/tutors', { params });
-    return {
-      result: response.data.result || [],
-      total: response.data.total || 0
-    };
+      const response = await api.get('/account/tutors', { params });
+      return {
+        result: response.data.result || [],
+        total: response.data.total || 0
+      };
+    } catch (error) {
+      if (error.response?.status === 401) {
+        // Clear invalid token and redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
@@ -105,7 +115,10 @@ const tutorSlice = createSlice({
       })
       .addCase(fetchTutors.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload?.message || action.error.message;
+        if (action.payload?.status === 401) {
+          toast.error('Session expired. Please login again.');
+        }
       })
       .addCase(updateTutorStatus.fulfilled, (state, action) => {
         // Don't update local state - let the refresh API call handle it

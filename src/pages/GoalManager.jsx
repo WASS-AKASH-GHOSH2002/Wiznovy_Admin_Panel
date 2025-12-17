@@ -10,6 +10,16 @@ import {
   clearError
 } from '../store/goalSlice';
 
+const StatusOptions = () => (
+  <>
+    <option value="ACTIVE">Active</option>
+    <option value="DEACTIVE">Deactive</option>
+    <option value="DELETED">Deleted</option>
+    <option value="SUSPENDED">Suspended</option>
+    <option value="PENDING">Pending</option>
+  </>
+);
+
 const GoalManager = () => {
   const dispatch = useDispatch();
   const { goals, loading, error } = useSelector(state => state.goals);
@@ -235,11 +245,7 @@ const GoalManager = () => {
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full border border-gray-300 p-2.5 rounded-lg"
                 >
-                  <option value="ACTIVE">Active</option>
-                  <option value="DEACTIVE">Deactive</option>
-                  <option value="DELETED">Deleted</option>
-                  <option value="SUSPENDED">Suspended</option>
-                  <option value="PENDING">Pending</option>
+                  <StatusOptions />
                 </select>
               </div>
               <div className="flex gap-3">
@@ -278,11 +284,7 @@ const GoalManager = () => {
                 onChange={(e) => setNewStatus(e.target.value)}
                 className="w-full border border-gray-300 p-2.5 rounded-lg"
               >
-                <option value="ACTIVE">Active</option>
-                <option value="DEACTIVE">Deactive</option>
-                <option value="DELETED">Deleted</option>
-                <option value="SUSPENDED">Suspended</option>
-                <option value="PENDING">Pending</option>
+                <StatusOptions />
               </select>
             </div>
             <div className="flex gap-3">

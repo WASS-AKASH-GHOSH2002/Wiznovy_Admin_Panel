@@ -468,13 +468,65 @@ const CourseManager = () => {
     dispatch(setFilters({ offset: newOffset }));
   };
 
+  const StatusBadge = ({ status, onClick }) => (
+    <button
+      onClick={onClick}
+      className={`px-2 py-1 rounded text-xs cursor-pointer hover:opacity-80 ${
+        status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+        status === 'APPROVED' ? 'bg-blue-100 text-blue-800' :
+        status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+        status === 'DELETED' ? 'bg-gray-100 text-gray-800' :
+        'bg-gray-100 text-gray-800'
+      }`}
+    >
+      {status}
+    </button>
+  );
+
+  const ActionButton = ({ onClick, className, title, children }) => (
+    <button onClick={onClick} className={className} title={title}>
+      {children}
+    </button>
+  );
+
+  const ImageUpload = ({ type, preview, onUpload, onRemove, inputRef, disabled }) => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        Course {type === 'thumbnail' ? 'Thumbnail' : 'Image'}
+        {inputRef.current?.files[0] && (
+          <span className="ml-2 text-green-600 text-xs">✓ File selected</span>
+        )}
+      </label>
+      {preview ? (
+        <div className="relative mb-3">
+          <img src={preview} alt={`${type} preview`} className="w-full h-32 object-cover rounded-md" />
+          <button type="button" onClick={onRemove} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center w-full">
+          <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+            <div className="flex flex-col items-center justify-center pt-2 pb-2">
+              <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+              </svg>
+              <p className="text-xs text-gray-500">Upload {type === 'thumbnail' ? 'Thumbnail' : 'Image'}</p>
+            </div>
+            <input type="file" className="hidden" onChange={onUpload} accept="image/*" ref={inputRef} disabled={disabled} />
+          </label>
+        </div>
+      )}
+    </div>
+  );
+
   const PriceDisplay = ({ course }) => {
     if (course.accessType === 'FREE') {
       return <span className="text-green-600 font-medium">Free</span>;
     }
-    
     const hasDiscount = course.discountPrice !== course.price && course.discountPrice > 0;
-    
     return (
       <div className="flex flex-col items-end">
         {hasDiscount ? (
@@ -674,58 +726,18 @@ const CourseManager = () => {
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <button
-                      onClick={() => handleStatusUpdate(course)}
-                      className={`px-2 py-1 rounded text-xs cursor-pointer hover:opacity-80 ${
-                        course.status === 'PENDING'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : course.status === 'APPROVED'
-                          ? 'bg-blue-100 text-blue-800'
-                          : course.status === 'REJECTED'
-                          ? 'bg-red-100 text-red-800'
-                          : course.status === 'DELETED'
-                          ? 'bg-gray-100 text-gray-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {course.status}
-                    </button>
-                    
+                    <StatusBadge status={course.status} onClick={() => handleStatusUpdate(course)} />
                     <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleViewDetails(course)}
-                        className="text-green-600 hover:text-green-800 text-sm flex items-center"
-                        title="View Details"
-                      >
+                      <ActionButton onClick={() => handleViewDetails(course)} className="text-green-600 hover:text-green-800 text-sm flex items-center" title="View Details">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                      </button>
-                      <button
-                        onClick={() => navigate(`/courses/${course.id}/details`)}
-                        className="text-green-600 hover:text-green-800 text-sm"
-                      >
-                        Details
-                      </button>
-                      <button
-                        onClick={() => handleEdit(course)}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleStatusUpdate(course)}
-                        className="text-purple-600 hover:text-purple-800 text-sm"
-                      >
-                        Status
-                      </button>
-                      <button
-                        onClick={() => handleDelete(course)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
+                      </ActionButton>
+                      <ActionButton onClick={() => navigate(`/courses/${course.id}/details`)} className="text-green-600 hover:text-green-800 text-sm">Details</ActionButton>
+                      <ActionButton onClick={() => handleEdit(course)} className="text-blue-600 hover:text-blue-800 text-sm">Edit</ActionButton>
+                      <ActionButton onClick={() => handleStatusUpdate(course)} className="text-purple-600 hover:text-purple-800 text-sm">Status</ActionButton>
+                      <ActionButton onClick={() => handleDelete(course)} className="text-red-600 hover:text-red-800 text-sm">Delete</ActionButton>
                     </div>
                   </div>
                 </div>
@@ -922,101 +934,23 @@ const CourseManager = () => {
                   
 
                   
-                  {/* Image Upload Section */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Course Image
-                      {fileInputRef.current?.files[0] && (
-                        <span className="ml-2 text-green-600 text-xs">✓ File selected</span>
-                      )}
-                    </label>
-                    
-                    {imagePreview ? (
-                      <div className="relative mb-3">
-                        <img 
-                          src={imagePreview} 
-                          alt="Course preview" 
-                          className="w-full h-32 object-cover rounded-md"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage('image')}
-                          className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center w-full">
-                        <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                          <div className="flex flex-col items-center justify-center pt-2 pb-2">
-                            <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
-                              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                            </svg>
-                            <p className="text-xs text-gray-500">Upload Image</p>
-                          </div>
-                          <input 
-                            type="file" 
-                            className="hidden" 
-                            onChange={(e) => handleImageUpload(e, 'image')}
-                            accept="image/*"
-                            ref={fileInputRef}
-                            disabled={thumbnailUpdating}
-                          />
-                        </label>
-                      </div>
-                    )}
-                  </div>
+                  <ImageUpload 
+                    type="image"
+                    preview={imagePreview}
+                    onUpload={(e) => handleImageUpload(e, 'image')}
+                    onRemove={() => removeImage('image')}
+                    inputRef={fileInputRef}
+                    disabled={thumbnailUpdating}
+                  />
                   
-                  {/* Thumbnail Upload Section */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Course Thumbnail
-                      {thumbnailInputRef.current?.files[0] && (
-                        <span className="ml-2 text-green-600 text-xs">✓ File selected</span>
-                      )}
-                    </label>
-                    
-                    {thumbnailPreview ? (
-                      <div className="relative mb-3">
-                        <img 
-                          src={thumbnailPreview} 
-                          alt="Thumbnail preview" 
-                          className="w-full h-32 object-cover rounded-md"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage('thumbnail')}
-                          className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center w-full">
-                        <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                          <div className="flex flex-col items-center justify-center pt-2 pb-2">
-                            <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
-                              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                            </svg>
-                            <p className="text-xs text-gray-500">Upload Thumbnail</p>
-                          </div>
-                          <input 
-                            type="file" 
-                            className="hidden" 
-                            onChange={(e) => handleImageUpload(e, 'thumbnail')}
-                            accept="image/*"
-                            ref={thumbnailInputRef}
-                            disabled={thumbnailUpdating}
-                          />
-                        </label>
-                      </div>
-                    )}
-                  </div>
+                  <ImageUpload 
+                    type="thumbnail"
+                    preview={thumbnailPreview}
+                    onUpload={(e) => handleImageUpload(e, 'thumbnail')}
+                    onRemove={() => removeImage('thumbnail')}
+                    inputRef={thumbnailInputRef}
+                    disabled={thumbnailUpdating}
+                  />
                   
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
@@ -1462,35 +1396,6 @@ const CourseManager = () => {
   );
 };
 
-import PropTypes from 'prop-types';
 
-const PriceDisplay = ({ course }) => {
-  if (course.accessType === 'FREE') {
-    return <span className="text-green-600 font-medium">Free</span>;
-  }
-  
-  const hasDiscount = course.discountPrice !== course.price && course.discountPrice > 0;
-  
-  return (
-    <div className="flex flex-col items-end">
-      {hasDiscount ? (
-        <>
-          <span className="text-red-600 line-through text-sm">${course.price}</span>
-          <span className="text-green-600 font-medium">${course.discountPrice}</span>
-        </>
-      ) : (
-        <span className="text-green-600 font-medium">${course.price}</span>
-      )}
-    </div>
-  );
-};
-
-PriceDisplay.propTypes = {
-  course: PropTypes.shape({
-    accessType: PropTypes.string.isRequired,
-    price: PropTypes.number,
-    discountPrice: PropTypes.number
-  }).isRequired
-};
 
 export default CourseManager;

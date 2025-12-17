@@ -17,17 +17,17 @@ import {
   QrCode,
   ChevronDown,
   ChevronUp,
-
   PcCase,
   ShieldCheck,
   LogOut,
-
   Search,
   X,
   BookCopy,
- 
   BookKey,
- 
+  MapPin,
+  BookOpen,
+  ListStart,
+  SquareKanban
 } from "lucide-react";
 
 import FacultyArea from "./FacultyArea";
@@ -161,15 +161,15 @@ const additionalMenuItems = [
   { label: "Users", path: "/users", icon: <MessageCircle size={18} /> },
   { label: "Tutors", path: "/tutors", icon: <MessageCircle size={18} /> },
   { label: "Countries", path: "/countries", icon: <Laptop size={18} /> },
-  // { label: "States", path: "/states", icon: <MapPin size={18} /> },
-  // { label: "Cities", path: "/cities", icon: <MapPin size={18} /> },
-  // { label: "Subjects", path: "/subject-list", icon: <BookOpen size={18} /> },
-  // { label: "Languages", path: "/languages", icon: <BookOpen size={18} /> },
-  // { label: "Educational Levels", path: "/educational-levels", icon: <BookOpen size={18} /> },
-  // { label: "Goal Manager", path: "/goals", icon: <ListStart size={18} /> },
-  // { label: "Topic Manager", path: "/topics", icon: <SquareKanban size={18} /> },
-  // { label: "Admin & Staff", path: "/faculty", icon: <Users size={18} />, hasDropdown: true },
-  //  {label: "Menu Permission", path: "/menu-permission", icon: <Users size={18} />},
+  { label: "States", path: "/states", icon: <MapPin size={18} /> },
+  { label: "Cities", path: "/cities", icon: <MapPin size={18} /> },
+  { label: "Subjects", path: "/subject-list", icon: <BookOpen size={18} /> },
+  { label: "Languages", path: "/languages", icon: <BookOpen size={18} /> },
+  { label: "Educational Levels", path: "/educational-levels", icon: <BookOpen size={18} /> },
+  { label: "Goal Manager", path: "/goals", icon: <ListStart size={18} /> },
+  { label: "Topic Manager", path: "/topics", icon: <SquareKanban size={18} /> },
+  { label: "Admin & Staff", path: "/faculty", icon: <Users size={18} />, hasDropdown: true },
+   {label: "Menu Permission", path: "/menu-permission", icon: <Users size={18} />},
  
   // { label: "Coupons", path: "/coupons", icon: <BadgePercent size={18} /> },
 

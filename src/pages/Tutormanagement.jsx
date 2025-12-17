@@ -500,8 +500,20 @@ const Tutormanagement = () => {
 
       {/* Profile Modal */}
       {showProfile && selectedTutor && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50" onClick={() => setShowProfile(false)}>
-          <div className="bg-white p-8 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50" 
+          onClick={() => setShowProfile(false)}
+          onKeyDown={(e) => e.key === 'Escape' && setShowProfile(false)}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+        >
+          <div 
+            className="bg-white p-8 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" 
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="document"
+          >
             <h3 className="text-xl font-bold mb-4">Tutor Profile</h3>
             {detailsLoading ? (
               <div className="text-center py-8">
