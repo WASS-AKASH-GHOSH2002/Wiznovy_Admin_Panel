@@ -36,13 +36,16 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl', posit
     <div 
       className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center ${positionClasses} z-50 p-4 overflow-y-auto`}
       onClick={onClose}
+      onKeyDown={(e) => e.key === 'Enter' && onClose()}
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? "modal-title" : undefined}
+      tabIndex={-1}
     >
       <div 
         className={modalClasses}
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
         role="document"
       >
         <div className="p-6">

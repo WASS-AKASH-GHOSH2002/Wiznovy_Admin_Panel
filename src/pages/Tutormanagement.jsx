@@ -503,6 +503,7 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50" 
           onClick={() => setShowProfile(false)}
+          onKeyDown={(e) => e.key === 'Enter' && setShowProfile(false)}
           role="dialog"
           aria-modal="true"
           tabIndex={-1}

@@ -86,7 +86,7 @@ export const fetchMcqTests = createAsyncThunk(
       // Process the MCQ tests data - fix the thumbnail URLs
       const fixThumbnailUrl = (url) => {
         if (!url) return null;
-        let fixedUrl = url.replace(/\\/g, '/');
+        let fixedUrl = url.replaceAll(/\\/g, '/');
         if (fixedUrl.includes('localhost') && !API_BASE_URL.includes('localhost')) {
           const urlPath = fixedUrl.split('/').slice(3).join('/');
           fixedUrl = `${API_BASE_URL}/${urlPath}`;
