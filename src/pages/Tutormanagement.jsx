@@ -521,7 +521,7 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50" 
           onClick={() => setShowProfile(false)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowProfile(false)}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setShowProfile(false)}
           role="dialog"
           aria-modal="true"
           tabIndex={-1}
@@ -585,7 +585,7 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowStatusModal(false)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowStatusModal(false)}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setShowStatusModal(false)}
           role="dialog"
           aria-modal="true"
           tabIndex={-1}
@@ -640,7 +640,7 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowBulkModal(false)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowBulkModal(false)}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setShowBulkModal(false)}
           role="dialog"
           aria-modal="true"
           tabIndex={-1}
@@ -696,7 +696,7 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowUpdateModal(false)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowUpdateModal(false)}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setShowUpdateModal(false)}
           role="dialog"
           aria-modal="true"
           tabIndex={-1}

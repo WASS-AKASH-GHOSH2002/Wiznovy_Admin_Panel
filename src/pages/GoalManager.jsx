@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { RefreshCw, Settings, Edit, Trash2, Plus } from 'lucide-react';
@@ -12,33 +12,17 @@ import {
 } from '../store/goalSlice';
 
 /* =====================
-   CONSTANTS
+   STATIC DATA
 ===================== */
 
-const STATUS_OPTIONS = [
-  'ACTIVE',
-  'DEACTIVE',
-  'DELETED',
-  'SUSPENDED',
-  'PENDING',
-];
+const GOAL_STATUSES = ['ACTIVE', 'DEACTIVE', 'DELETED', 'SUSPENDED', 'PENDING'];
 
 /* =====================
-   REUSABLE COMPONENTS
+   UI HELPERS
 ===================== */
 
-const StatusOptions = () => (
-  <>
-    {STATUS_OPTIONS.map((status) => (
-      <option key={status} value={status}>
-        {status.charAt(0) + status.slice(1).toLowerCase()}
-      </option>
-    ))}
-  </>
-);
-
-const StatusBadge = ({ status }) => {
-  const statusClasses = {
+const StatusPill = ({ value }) => {
+  const map = {
     ACTIVE: 'bg-green-100 text-green-800',
     PENDING: 'bg-yellow-100 text-yellow-800',
     SUSPENDED: 'bg-orange-100 text-orange-800',
@@ -47,45 +31,30 @@ const StatusBadge = ({ status }) => {
   };
 
   return (
-    <span className={`px-2 py-1 text-xs rounded-full ${statusClasses[status]}`}>
-      {status}
+    <span className={`px-2 py-1 rounded-full text-xs ${map[value]}`}>
+      {value}
     </span>
   );
 };
 
-StatusBadge.propTypes = {
-  status: PropTypes.string.isRequired,
-};
+StatusPill.propTypes = { value: PropTypes.string.isRequired };
 
-const Modal = ({ isOpen, title, children }) => {
-  if (!isOpen) return null;
+const OverlayModal = ({ open, title, children }) => {
+  if (!open) return null;
   return (
-    <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/40">
-      <div className="bg-white p-6 rounded-xl w-full max-w-md">
-        <h3 className="text-xl font-bold mb-4">{title}</h3>
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+      <div className="bg-white w-full max-w-md p-6 rounded-xl">
+        <h3 className="text-xl font-semibold mb-4">{title}</h3>
         {children}
       </div>
     </div>
   );
 };
 
-Modal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
+OverlayModal.propTypes = {
+  open: PropTypes.bool.isRequired,
   title: PropTypes.string.isRequired,
   children: PropTypes.node.isRequired,
-};
-
-const ActionButton = ({ onClick, title, children, className }) => (
-  <button onClick={onClick} title={title} className={className}>
-    {children}
-  </button>
-);
-
-ActionButton.propTypes = {
-  onClick: PropTypes.func.isRequired,
-  title: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-  className: PropTypes.string.isRequired,
 };
 
 /* =====================
@@ -94,127 +63,86 @@ ActionButton.propTypes = {
 
 const GoalManager = () => {
   const dispatch = useDispatch();
-  const { goals, loading, error } = useSelector((state) => state.goals);
+  const { goals, loading, error } = useSelector((s) => s.goals);
 
-  const [formData, setFormData] = useState({ name: '', status: 'ACTIVE' });
-  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState({ name: '', status: 'ACTIVE' });
+  const [editId, setEditId] = useState(null);
 
   const [showForm, setShowForm] = useState(false);
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showStatus, setShowStatus] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
-  const [selectedGoal, setSelectedGoal] = useState(null);
-  const [newStatus, setNewStatus] = useState('');
+  const [currentGoal, setCurrentGoal] = useState(null);
+  const [statusValue, setStatusValue] = useState('');
 
   /* =====================
-     EFFECTS
+     DATA
   ===================== */
 
   useEffect(() => {
-    fetchGoals();
-  }, []);
-
-  const fetchGoals = () => {
     dispatch(getAllGoals());
-  };
+  }, [dispatch]);
 
   /* =====================
-     FORM HANDLERS
+     FORM
   ===================== */
 
-  const resetForm = () => {
-    setFormData({ name: '', status: 'ACTIVE' });
-    setEditingId(null);
+  const reset = () => {
+    setForm({ name: '', status: 'ACTIVE' });
+    setEditId(null);
     setShowForm(false);
     dispatch(clearError());
   };
 
-  const handleSubmit = async (e) => {
+  const submitForm = async (e) => {
     e.preventDefault();
     try {
-      if (editingId) {
-        await dispatch(
-          updateGoal({ goalId: editingId, goalData: formData }),
-        ).unwrap();
+      if (editId) {
+        await dispatch(updateGoal({ goalId: editId, goalData: form })).unwrap();
       } else {
-        await dispatch(createGoal(formData)).unwrap();
+        await dispatch(createGoal(form)).unwrap();
       }
-      resetForm();
-      fetchGoals();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleEdit = (goal) => {
-    setFormData({ name: goal.name, status: goal.status });
-    setEditingId(goal.id);
-    setShowForm(true);
+      reset();
+      dispatch(getAllGoals());
+    } catch {}
   };
 
   /* =====================
-     STATUS HANDLERS
+     STATUS
   ===================== */
 
-  const openStatusModal = (goal) => {
-    setSelectedGoal(goal);
-    setNewStatus(goal.status);
-    setShowStatusModal(true);
-  };
+  const changeStatus = async () => {
+    await dispatch(
+      updateGoalStatus({
+        goalId: currentGoal.id,
+        status: statusValue,
+      }),
+    ).unwrap();
 
-  const closeStatusModal = () => {
-    setSelectedGoal(null);
-    setNewStatus('');
-    setShowStatusModal(false);
-  };
-
-  const confirmStatusUpdate = async () => {
-    try {
-      await dispatch(
-        updateGoalStatus({
-          goalId: selectedGoal.id,
-          status: newStatus,
-        }),
-      ).unwrap();
-      closeStatusModal();
-      fetchGoals();
-    } catch (err) {
-      console.error(err);
-    }
+    setShowStatus(false);
+    setCurrentGoal(null);
+    dispatch(getAllGoals());
   };
 
   /* =====================
-     DELETE HANDLERS
+     DELETE
   ===================== */
-
-  const openDeleteModal = (goal) => {
-    setSelectedGoal(goal);
-    setShowDeleteModal(true);
-  };
-
-  const closeDeleteModal = () => {
-    setSelectedGoal(null);
-    setShowDeleteModal(false);
-  };
 
   const confirmDelete = async () => {
-    try {
-      await dispatch(deleteGoal(selectedGoal.id)).unwrap();
-      closeDeleteModal();
-      fetchGoals();
-    } catch (err) {
-      console.error(err);
-    }
+    await dispatch(deleteGoal(currentGoal.id)).unwrap();
+    setShowDelete(false);
+    setCurrentGoal(null);
+    dispatch(getAllGoals());
   };
 
   /* =====================
-     RENDER
+     STATES
   ===================== */
 
-  if (loading && goals.length === 0) {
+  if (loading && !goals.length) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <RefreshCw className="animate-spin h-12 w-12 text-blue-500" />
+        <RefreshCw className="animate-spin h-10 w-10 text-blue-500" />
       </div>
     );
   }
@@ -223,12 +151,10 @@ const GoalManager = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 mb-4">
-            {error?.message || 'Something went wrong'}
-          </p>
+          <p className="text-red-500 mb-4">{error}</p>
           <button
-            onClick={fetchGoals}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+            onClick={() => dispatch(getAllGoals())}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
           >
             Retry
           </button>
@@ -237,14 +163,18 @@ const GoalManager = () => {
     );
   }
 
+  /* =====================
+     UI
+  ===================== */
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div
-        className={`max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg ${
-          showForm || showStatusModal || showDeleteModal ? 'blur-sm' : ''
+        className={`max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-8 ${
+          showForm || showStatus || showDelete ? 'blur-sm' : ''
         }`}
       >
-        <div className="flex justify-between mb-6">
+        <header className="flex justify-between mb-6">
           <h2 className="text-3xl font-bold">Goal Management</h2>
           <div className="flex gap-2">
             <button
@@ -254,59 +184,65 @@ const GoalManager = () => {
               <Plus size={18} /> Add Goal
             </button>
             <button
-              onClick={fetchGoals}
+              onClick={() => dispatch(getAllGoals())}
               className="bg-blue-500 text-white px-4 py-2 rounded-lg flex gap-2"
             >
               <RefreshCw size={18} /> Refresh
             </button>
           </div>
-        </div>
+        </header>
 
-        <p className="mb-4 text-gray-600">Total Goals: {goals.length}</p>
+        <p className="text-gray-600 mb-4">Total Goals: {goals.length}</p>
 
         <table className="w-full">
           <thead className="bg-gray-200">
             <tr>
               <th className="p-3 text-left">Name</th>
               <th className="p-3 text-left">Status</th>
-              <th className="p-3 text-left hidden sm:table-cell">
-                Created At
-              </th>
+              <th className="p-3 text-left hidden sm:table-cell">Created</th>
               <th className="p-3 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {goals.map((goal, i) => (
-              <tr key={goal.id} className={i % 2 ? 'bg-gray-50' : ''}>
-                <td className="p-3">{goal.name}</td>
+            {goals.map((g, i) => (
+              <tr key={g.id} className={i % 2 ? 'bg-gray-50' : ''}>
+                <td className="p-3">{g.name}</td>
                 <td className="p-3">
-                  <StatusBadge status={goal.status} />
+                  <StatusPill value={g.status} />
                 </td>
                 <td className="p-3 hidden sm:table-cell">
-                  {new Date(goal.createdAt).toLocaleDateString()}
+                  {new Date(g.createdAt).toLocaleDateString()}
                 </td>
-                <td className="p-3 flex gap-1">
-                  <ActionButton
-                    onClick={() => handleEdit(goal)}
-                    title="Edit"
+                <td className="p-3 flex gap-2">
+                  <button
                     className="text-blue-600"
+                    onClick={() => {
+                      setEditId(g.id);
+                      setForm({ name: g.name, status: g.status });
+                      setShowForm(true);
+                    }}
                   >
                     <Edit size={16} />
-                  </ActionButton>
-                  <ActionButton
-                    onClick={() => openStatusModal(goal)}
-                    title="Update Status"
+                  </button>
+                  <button
                     className="text-green-600"
+                    onClick={() => {
+                      setCurrentGoal(g);
+                      setStatusValue(g.status);
+                      setShowStatus(true);
+                    }}
                   >
                     <Settings size={16} />
-                  </ActionButton>
-                  <ActionButton
-                    onClick={() => openDeleteModal(goal)}
-                    title="Delete"
+                  </button>
+                  <button
                     className="text-red-600"
+                    onClick={() => {
+                      setCurrentGoal(g);
+                      setShowDelete(true);
+                    }}
                   >
                     <Trash2 size={16} />
-                  </ActionButton>
+                  </button>
                 </td>
               </tr>
             ))}
@@ -314,90 +250,69 @@ const GoalManager = () => {
         </table>
       </div>
 
-      {/* ADD / EDIT MODAL */}
-      <Modal isOpen={showForm} title={editingId ? 'Edit Goal' : 'Add Goal'}>
-        <form onSubmit={handleSubmit}>
+      {/* FORM */}
+      <OverlayModal open={showForm} title={editId ? 'Edit Goal' : 'Add Goal'}>
+        <form onSubmit={submitForm}>
           <input
             className="w-full border p-2 mb-4 rounded"
             placeholder="Goal Name"
-            value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
           />
           <select
             className="w-full border p-2 mb-4 rounded"
-            value={formData.status}
-            onChange={(e) =>
-              setFormData({ ...formData, status: e.target.value })
-            }
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
           >
-            <StatusOptions />
+            {GOAL_STATUSES.map((s) => (
+              <option key={s}>{s}</option>
+            ))}
           </select>
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={resetForm}
-              className="flex-1 bg-gray-500 text-white p-2 rounded"
-            >
+            <button type="button" onClick={reset} className="flex-1 bg-gray-500 text-white p-2 rounded">
               Cancel
             </button>
-            <button
-              type="submit"
-              className="flex-1 bg-blue-500 text-white p-2 rounded"
-            >
-              {editingId ? 'Update' : 'Create'}
+            <button type="submit" className="flex-1 bg-blue-500 text-white p-2 rounded">
+              {editId ? 'Update' : 'Create'}
             </button>
           </div>
         </form>
-      </Modal>
+      </OverlayModal>
 
-      {/* STATUS MODAL */}
-      <Modal isOpen={showStatusModal} title="Update Status">
+      {/* STATUS */}
+      <OverlayModal open={showStatus} title="Update Status">
         <select
           className="w-full border p-2 mb-4 rounded"
-          value={newStatus}
-          onChange={(e) => setNewStatus(e.target.value)}
+          value={statusValue}
+          onChange={(e) => setStatusValue(e.target.value)}
         >
-          <StatusOptions />
+          {GOAL_STATUSES.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
         </select>
         <div className="flex gap-2">
-          <button
-            onClick={closeStatusModal}
-            className="flex-1 bg-gray-500 text-white p-2 rounded"
-          >
+          <button onClick={() => setShowStatus(false)} className="flex-1 bg-gray-500 text-white p-2 rounded">
             Cancel
           </button>
-          <button
-            onClick={confirmStatusUpdate}
-            className="flex-1 bg-blue-500 text-white p-2 rounded"
-          >
+          <button onClick={changeStatus} className="flex-1 bg-blue-500 text-white p-2 rounded">
             Update
           </button>
         </div>
-      </Modal>
+      </OverlayModal>
 
-      {/* DELETE MODAL */}
-      <Modal isOpen={showDeleteModal} title="Delete Goal">
-        <p className="mb-4 text-gray-600">
-          Are you sure you want to delete this goal?
-        </p>
+      {/* DELETE */}
+      <OverlayModal open={showDelete} title="Delete Goal">
+        <p className="mb-4 text-gray-600">Are you sure?</p>
         <div className="flex gap-2">
-          <button
-            onClick={closeDeleteModal}
-            className="flex-1 bg-gray-500 text-white p-2 rounded"
-          >
+          <button onClick={() => setShowDelete(false)} className="flex-1 bg-gray-500 text-white p-2 rounded">
             Cancel
           </button>
-          <button
-            onClick={confirmDelete}
-            className="flex-1 bg-red-500 text-white p-2 rounded"
-          >
+          <button onClick={confirmDelete} className="flex-1 bg-red-500 text-white p-2 rounded">
             Delete
           </button>
         </div>
-      </Modal>
+      </OverlayModal>
     </div>
   );
 };

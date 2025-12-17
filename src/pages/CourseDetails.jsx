@@ -131,6 +131,22 @@ const CourseDetails = () => {
     }
   };
 
+  const normalizeUrl = (url) => {
+    if (!url) return null;
+    let normalized = url.replaceAll(/\\/g, '/');
+    return normalized.replaceAll('http:/', 'http://');
+  };
+
+  const handleFileAction = (material, action) => {
+    if (material.fileUrl) {
+      const normalizedUrl = normalizeUrl(material.fileUrl);
+      console.log(`${action} URL:`, normalizedUrl);
+      window.open(normalizedUrl, '_blank');
+    } else {
+      toast.error('File URL not available');
+    }
+  };
+
   const handleCreateUnit = async (e) => {
     e.preventDefault();
     
@@ -591,7 +607,7 @@ const CourseDetails = () => {
                       <div className="flex-shrink-0 relative group">
                         {unit.imgUrl ? (
                           <img
-                            src={unit.imgUrl.replaceAll(/\\/g, '/').replaceAll('http:/', 'http://')}
+                            src={normalizeUrl(unit.imgUrl)}
                             alt={unit.name}
                             className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover bg-gray-200"
                             onError={(e) => {
@@ -729,36 +745,14 @@ const CourseDetails = () => {
                                     </svg>
                                   </button>
                                   <button 
-                                    onClick={() => {
-                                      if (material.fileUrl) {
-                                        let normalizedUrl = material.fileUrl.replaceAll(/\\/g, '/');
-                                        if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
-                                          normalizedUrl = normalizedUrl.replaceAll('http:/', 'http://');
-                                        }
-                                        console.log('Download URL:', normalizedUrl);
-                                        window.open(normalizedUrl, '_blank');
-                                      } else {
-                                        toast.error('File URL not available');
-                                      }
-                                    }}
+                                    onClick={() => handleFileAction(material, 'Download')}
                                     className="p-2 text-blue-600 hover:bg-blue-100 rounded-md border border-blue-200"
                                     title="Download"
                                   >
                                     <Download size={16} />
                                   </button>
                                   <button 
-                                    onClick={() => {
-                                      if (material.fileUrl) {
-                                        let normalizedUrl = material.fileUrl.replaceAll(/\\/g, '/');
-                                        if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
-                                          normalizedUrl = normalizedUrl.replaceAll('http:/', 'http://');
-                                        }
-                                        console.log('View URL:', normalizedUrl);
-                                        window.open(normalizedUrl, '_blank');
-                                      } else {
-                                        toast.error('File URL not available');
-                                      }
-                                    }}
+                                    onClick={() => handleFileAction(material, 'View')}
                                     className="p-2 text-green-600 hover:bg-green-100 rounded-md border border-green-200"
                                     title="View"
                                   >
@@ -815,7 +809,7 @@ const CourseDetails = () => {
                                   <div className="flex items-center gap-2 flex-1 min-w-0">
                                     <div className="flex-shrink-0">
                                       <img
-                                        src={video.thumbnailUrl?.replaceAll(/\\/g, '/').replaceAll('http:/', 'http://')}
+                                        src={normalizeUrl(video.thumbnailUrl)}
                                         alt={video.title}
                                         className="w-12 h-8 rounded object-cover bg-gray-200"
                                       />
@@ -833,7 +827,7 @@ const CourseDetails = () => {
                                   <div className="flex gap-1 flex-shrink-0">
                                     {video.videoUrl && (
                                       <button 
-                                        onClick={() => window.open(video.videoUrl.replaceAll(/\\/g, '/').replaceAll('http:/', 'http://'), '_blank')}
+                                        onClick={() => window.open(normalizeUrl(video.videoUrl), '_blank')}
                                         className="p-1.5 text-red-600 hover:bg-red-100 rounded"
                                         title="Play Video"
                                       >
@@ -841,7 +835,7 @@ const CourseDetails = () => {
                                       </button>
                                     )}
                                     <button 
-                                      onClick={() => window.open(video.thumbnailUrl?.replaceAll(/\\/g, '/').replaceAll('http:/', 'http://'), '_blank')}
+                                      onClick={() => window.open(normalizeUrl(video.thumbnailUrl), '_blank')}
                                       className="p-1.5 text-green-600 hover:bg-green-100 rounded"
                                       title="View Thumbnail"
                                     >
@@ -917,36 +911,14 @@ const CourseDetails = () => {
                                                 </svg>
                                               </button>
                                               <button 
-                                                onClick={() => {
-                                                  if (material.fileUrl) {
-                                                    let normalizedUrl = material.fileUrl.replaceAll(/\\/g, '/');
-                                                    if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
-                                                      normalizedUrl = normalizedUrl.replaceAll('http:/', 'http://');
-                                                    }
-                                                    console.log('Video Material Download URL:', normalizedUrl);
-                                                    window.open(normalizedUrl, '_blank');
-                                                  } else {
-                                                    toast.error('File URL not available');
-                                                  }
-                                                }}
+                                                onClick={() => handleFileAction(material, 'Video Material Download')}
                                                 className="p-1 text-blue-600 hover:bg-blue-100 rounded"
                                                 title="Download"
                                               >
                                                 <Download size={12} />
                                               </button>
                                               <button 
-                                                onClick={() => {
-                                                  if (material.fileUrl) {
-                                                    let normalizedUrl = material.fileUrl.replaceAll(/\\/g, '/');
-                                                    if (normalizedUrl.includes('http:/') && !normalizedUrl.includes('http://')) {
-                                                      normalizedUrl = normalizedUrl.replaceAll('http:/', 'http://');
-                                                    }
-                                                    console.log('Video Material View URL:', normalizedUrl);
-                                                    window.open(normalizedUrl, '_blank');
-                                                  } else {
-                                                    toast.error('File URL not available');
-                                                  }
-                                                }}
+                                                onClick={() => handleFileAction(material, 'Video Material View')}
                                                 className="p-1 text-green-600 hover:bg-green-100 rounded"
                                                 title="View"
                                               >
