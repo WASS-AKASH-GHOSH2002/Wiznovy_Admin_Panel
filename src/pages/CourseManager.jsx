@@ -468,20 +468,26 @@ const CourseManager = () => {
     dispatch(setFilters({ offset: newOffset }));
   };
 
-  const StatusBadge = ({ status, onClick }) => (
-    <button
-      onClick={onClick}
-      className={`px-2 py-1 rounded text-xs cursor-pointer hover:opacity-80 ${
-        status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-        status === 'APPROVED' ? 'bg-blue-100 text-blue-800' :
-        status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-        status === 'DELETED' ? 'bg-gray-100 text-gray-800' :
-        'bg-gray-100 text-gray-800'
-      }`}
-    >
-      {status}
-    </button>
-  );
+  const StatusBadge = ({ status, onClick }) => {
+    const getStatusStyles = (status) => {
+      switch (status) {
+        case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+        case 'APPROVED': return 'bg-blue-100 text-blue-800';
+        case 'REJECTED': return 'bg-red-100 text-red-800';
+        case 'DELETED': return 'bg-gray-100 text-gray-800';
+        default: return 'bg-gray-100 text-gray-800';
+      }
+    };
+
+    return (
+      <button
+        onClick={onClick}
+        className={`px-2 py-1 rounded text-xs cursor-pointer hover:opacity-80 ${getStatusStyles(status)}`}
+      >
+        {status}
+      </button>
+    );
+  };
 
   const ActionButton = ({ onClick, className, title, children }) => (
     <button onClick={onClick} className={className} title={title}>

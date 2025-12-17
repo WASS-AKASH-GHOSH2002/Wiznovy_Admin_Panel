@@ -13,18 +13,3 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Clear invalid token and redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('email');
-      localStorage.removeItem('role');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);

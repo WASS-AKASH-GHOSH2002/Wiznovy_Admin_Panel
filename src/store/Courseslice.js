@@ -205,12 +205,10 @@ const courseSlice = createSlice({
         
         state.courses.unshift(newCourse); // Add to beginning of array
         state.totalCount += 1;
-        toast.success('Course created successfully!');
       })
       .addCase(createCourse.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        toast.error('Failed to create course: ' + (action.payload?.message || 'Unknown error'));
       })
      
       .addCase(updateCourse.pending, (state) => {
@@ -225,12 +223,10 @@ const courseSlice = createSlice({
         if (index !== -1) {
           state.courses[index] = updatedCourse;
         }
-        toast.success('Course updated successfully!');
       })
       .addCase(updateCourse.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        toast.error('Failed to update course: ' + (action.payload?.message || 'Unknown error'));
       })
       
       .addCase(deleteCourse.fulfilled, (state, action) => {
@@ -255,10 +251,9 @@ const courseSlice = createSlice({
         if (index !== -1) {
           state.courses[index] = updatedCourse;
         }
-        toast.success('Course status updated successfully!');
       })
       .addCase(updateCourseStatus.rejected, (state, action) => {
-        toast.error('Failed to update course status: ' + (action.payload?.message || 'Unknown error'));
+        state.error = action.payload;
       })
       
       .addCase(deleteCourseWithReason.fulfilled, (state, action) => {
@@ -267,10 +262,9 @@ const courseSlice = createSlice({
         if (index !== -1) {
           state.courses[index] = updatedCourse;
         }
-        toast.success('Course deleted with reason successfully!');
       })
       .addCase(deleteCourseWithReason.rejected, (state, action) => {
-        toast.error('Failed to delete course: ' + (action.payload?.message || 'Unknown error'));
+        state.error = action.payload;
       })
       
       .addCase(fetchCourseById.pending, (state) => {
@@ -284,7 +278,6 @@ const courseSlice = createSlice({
       .addCase(fetchCourseById.rejected, (state, action) => {
         state.detailsLoading = false;
         state.error = action.payload;
-        toast.error('Failed to fetch course details: ' + (action.payload?.message || 'Unknown error'));
       });
   },
 });
