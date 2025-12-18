@@ -51,30 +51,14 @@ const LoginOTPVerify = () => {
     setOtp(newOtp);
     setMessage('');
 
-  
     if (value && index < 5) {
-      setTimeout(() => {
-        inputRefs.current[index + 1]?.focus();
-      }, 0);
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace') {
-      if (!otp[index] && index > 0) {
-        
-        const newOtp = [...otp];
-        newOtp[index - 1] = '';
-        setOtp(newOtp);
-        setTimeout(() => {
-          inputRefs.current[index - 1]?.focus();
-        }, 0);
-      } else if (otp[index]) {
-        
-        const newOtp = [...otp];
-        newOtp[index] = '';
-        setOtp(newOtp);
-      }
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
@@ -181,7 +165,7 @@ const LoginOTPVerify = () => {
           <div className="flex justify-center gap-2">
             {otp.map((digit, index) => (
               <input
-                key={index}
+                key={`otp-input-${digit}-${index}`}
                 ref={el => inputRefs.current[index] = el}
                 type="text"
                 inputMode="numeric"

@@ -36,7 +36,6 @@ const CountryManagement = () => {
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [bulkStatus, setBulkStatus] = useState('');
-  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   const debouncedSearch = useCallback((searchValue) => {
     if (searchTimeoutRef.current) {
@@ -76,17 +75,11 @@ const CountryManagement = () => {
 
   const confirmStatusUpdate = async () => {
     if (statusUpdateCountry && newStatus) {
-      try {
-        await dispatch(updateCountryStatus({ countryId: statusUpdateCountry.id, status: newStatus })).unwrap();
-        toast.success('Status updated successfully!');
-        setShowStatusModal(false);
-        setStatusUpdateCountry(null);
-        setNewStatus('');
-        handleRefresh();
-      } catch (error) {
-        console.error('Status update failed:', error);
-        toast.error('Failed to update status');
-      }
+      dispatch(updateCountryStatus({ countryId: statusUpdateCountry.id, status: newStatus }));
+      setShowStatusModal(false);
+      setStatusUpdateCountry(null);
+      setNewStatus('');
+      handleRefresh();
     }
   };
 
@@ -110,20 +103,11 @@ const CountryManagement = () => {
 
   const confirmBulkStatusUpdate = async () => {
     if (selectedCountries.length > 0 && bulkStatus) {
-      setIsBulkUpdating(true);
-      try {
-        await dispatch(bulkUpdateCountryStatus({ ids: selectedCountries, status: bulkStatus })).unwrap();
-        toast.success(`${selectedCountries.length} countries updated successfully!`);
-        setShowBulkModal(false);
-        setSelectedCountries([]);
-        setBulkStatus('');
-        handleRefresh();
-      } catch (error) {
-        console.error('Bulk status update failed:', error);
-        toast.error('Failed to update countries status');
-      } finally {
-        setIsBulkUpdating(false);
-      }
+      dispatch(bulkUpdateCountryStatus({ ids: selectedCountries, status: bulkStatus }));
+      setShowBulkModal(false);
+      setSelectedCountries([]);
+      setBulkStatus('');
+      handleRefresh();
     }
   };
 
@@ -143,11 +127,6 @@ const CountryManagement = () => {
       params.status = filters.status;
     }
     dispatch(fetchCountries(params));
-  };
-
-  const handleOpenCreateModal = () => {
-    setNewCountry({ name: '', code: '' });
-    setShowCreateForm(true);
   };
 
 
@@ -174,14 +153,9 @@ const CountryManagement = () => {
     setIsSubmitting(true);
     
     try {
-      await dispatch(createCountry(newCountry)).unwrap();
-      toast.success('Country created successfully!');
+      dispatch(createCountry(newCountry));
       setNewCountry({ name: '', code: '' });
       setShowCreateForm(false);
-      handleRefresh();
-    } catch (error) {
-      console.error('Country creation failed:', error);
-      toast.error('Failed to create country');
     } finally {
       setIsSubmitting(false);
     }
@@ -309,7 +283,7 @@ const CountryManagement = () => {
           <h2 className="text-3xl font-bold text-gray-800">Country Management</h2>
           <div className="flex gap-2">
             <button
-              onClick={handleOpenCreateModal}
+              onClick={() => setShowCreateForm(true)}
               className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
             >
               <Plus size={18} /> Add Country
@@ -491,28 +465,13 @@ const CountryManagement = () => {
 
         <Modal 
           isOpen={showCreateForm} 
-          onClose={() => {
-            setShowCreateForm(false);
-            setNewCountry({ name: '', code: '' });
-          }}
+          onClose={() => setShowCreateForm(false)}
           title="Add New Country"
           maxWidth="max-w-md"
           position="center"
         >
-          <div className="relative">
-            {isSubmitting && (
-              <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-                <div className="flex flex-col items-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                  <p className="mt-2 text-sm text-gray-600">Creating...</p>
-                </div>
-              </div>
-            )}
-            <form onSubmit={handleCreateCountry} className="space-y-4">
-              <div>
-                <label htmlFor="countryName" className="block text-sm font-medium text-gray-700 mb-2 text-left">Country Name *</label>
+          <form onSubmit={handleCreateCountry} className="space-y-4">
                 <input
-                  id="countryName"
                   type="text"
                   placeholder="Country Name"
                   value={newCountry.name}
@@ -520,11 +479,7 @@ const CountryManagement = () => {
                   className="w-full border border-gray-300 p-2 rounded-lg"
                   required
                 />
-              </div>
-              <div>
-                <label htmlFor="countryCode" className="block text-sm font-medium text-gray-700 mb-2 text-left">Country Code *</label>
                 <input
-                  id="countryCode"
                   type="text"
                   placeholder="Country Code (e.g., USA)"
                   value={newCountry.code}
@@ -533,7 +488,6 @@ const CountryManagement = () => {
                   maxLength={3}
                   required
                 />
-              </div>
                 <div className="flex gap-2">
                   <button
                     type="submit"
@@ -556,7 +510,6 @@ const CountryManagement = () => {
                   </button>
                 </div>
               </form>
-          </div>
         </Modal>
 
         <Modal 
@@ -567,7 +520,7 @@ const CountryManagement = () => {
           position="center"
         >
           {selectedCountry && (
-            <div className="space-y-2 text-left">
+            <div className="space-y-2">
               <p><strong>Name:</strong> {selectedCountry.name}</p>
               <p><strong>Code:</strong> {selectedCountry.code}</p>
               <p><strong>Status:</strong> {selectedCountry.status}</p>
@@ -604,7 +557,7 @@ const CountryManagement = () => {
                 Upload image for: <strong>{selectedCountryForImage.name}</strong>
               </p>
               <div className="mb-4">
-                <label htmlFor="imageUpload" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Image</label>
+                <label htmlFor="imageUpload" className="block text-sm font-medium text-gray-700 mb-2">Select Image</label>
                 <input 
                   id="imageUpload"
                   type="file" 
@@ -666,7 +619,7 @@ const CountryManagement = () => {
                 Update status for: <strong>{statusUpdateCountry.name}</strong>
               </p>
               <div className="mb-4">
-                <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Status</label>
+                <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
                 <select
                   id="statusSelect"
                   value={newStatus}
@@ -710,49 +663,39 @@ const CountryManagement = () => {
         maxWidth="max-w-md"
         position="center"
       >
-        <div className="relative">
-          {isBulkUpdating && (
-            <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <p className="mt-2 text-sm text-gray-600">Updating...</p>
-              </div>
-            </div>
-          )}
-          <p className="text-gray-600 mb-4">
-            Update status for <strong>{selectedCountries.length}</strong> selected countries
-          </p>
-          <div className="mb-4">
-            <label htmlFor="bulkStatusSelect" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Status</label>
-            <select
-              id="bulkStatusSelect"
-              value={bulkStatus}
-              onChange={(e) => setBulkStatus(e.target.value)}
-              className="w-full border border-gray-300 p-2.5 rounded-lg"
-            >
-              <option value="">Select Status</option>
-              <option value="ACTIVE">Active</option>
-              <option value="DEACTIVE">Deactive</option>
-            </select>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => {
-                setShowBulkModal(false);
-                setBulkStatus('');
-              }}
-              className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmBulkStatusUpdate}
-              disabled={!bulkStatus || isBulkUpdating}
-              className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
-            >
-              {isBulkUpdating ? 'Updating...' : 'Update Status'}
-            </button>
-          </div>
+        <p className="text-gray-600 mb-4">
+          Update status for <strong>{selectedCountries.length}</strong> selected countries
+        </p>
+        <div className="mb-4">
+          <label htmlFor="bulkStatusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+          <select
+            id="bulkStatusSelect"
+            value={bulkStatus}
+            onChange={(e) => setBulkStatus(e.target.value)}
+            className="w-full border border-gray-300 p-2.5 rounded-lg"
+          >
+            <option value="">Select Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="DEACTIVE">Deactive</option>
+          </select>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setShowBulkModal(false);
+              setBulkStatus('');
+            }}
+            className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmBulkStatusUpdate}
+            disabled={!bulkStatus}
+            className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
+          >
+            Update Status
+          </button>
         </div>
       </Modal>
 
@@ -767,20 +710,11 @@ const CountryManagement = () => {
         maxWidth="max-w-md"
         position="center"
       >
-        <div className="relative">
-          {isUpdating && (
-            <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <p className="mt-2 text-sm text-gray-600">Updating...</p>
-              </div>
-            </div>
-          )}
-          {editCountry && (
-            <>
+        {editCountry && (
+          <>
             <div className="space-y-4">
               <div>
-                <label htmlFor="editCountryName" className="block text-sm font-medium text-gray-700 mb-2 text-left">Country Name *</label>
+                <label htmlFor="editCountryName" className="block text-sm font-medium text-gray-700 mb-2">Country Name</label>
                 <input
                   id="editCountryName"
                   type="text"
@@ -791,7 +725,7 @@ const CountryManagement = () => {
                 />
               </div>
               <div>
-                <label htmlFor="editCountryCode" className="block text-sm font-medium text-gray-700 mb-2 text-left">Country Code *</label>
+                <label htmlFor="editCountryCode" className="block text-sm font-medium text-gray-700 mb-2">Country Code</label>
                 <input
                   id="editCountryCode"
                   type="text"
@@ -824,7 +758,6 @@ const CountryManagement = () => {
             </div>
           </>
         )}
-        </div>
       </Modal>
     </div>
   );
