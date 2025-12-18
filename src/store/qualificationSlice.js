@@ -72,15 +72,19 @@ export const updateQualificationStatus = createAsyncThunk(
    REDUCER HELPERS
 ===================== */
 
-const pendingReducer = (state) => {
-  state.loading = true;
-  state.error = null;
-};
-
-const rejectedReducer = (state, action) => {
-  state.loading = false;
-  state.error = action.payload || action.error?.message;
-};
+const createAsyncReducers = () => ({
+  pending: (state) => {
+    state.loading = true;
+    state.error = null;
+  },
+  rejected: (state, action) => {
+    state.loading = false;
+    state.error = action.payload || action.error?.message;
+  },
+  fulfilled: (state) => {
+    state.loading = false;
+  }
+});
 
 const updateById = (list, payload) => {
   const index = list.findIndex(item => item.id === payload.id);
@@ -114,41 +118,42 @@ const qualificationSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    const asyncReducers = createAsyncReducers();
+    
     builder
-
       /* FETCH */
-      .addCase(fetchQualifications.pending, pendingReducer)
+      .addCase(fetchQualifications.pending, asyncReducers.pending)
       .addCase(fetchQualifications.fulfilled, (state, action) => {
-        state.loading = false;
+        asyncReducers.fulfilled(state);
         state.qualifications = action.payload.result;
         state.total = action.payload.total;
       })
-      .addCase(fetchQualifications.rejected, rejectedReducer)
+      .addCase(fetchQualifications.rejected, asyncReducers.rejected)
 
       /* CREATE */
-      .addCase(createQualification.pending, pendingReducer)
+      .addCase(createQualification.pending, asyncReducers.pending)
       .addCase(createQualification.fulfilled, (state, action) => {
-        state.loading = false;
+        asyncReducers.fulfilled(state);
         state.qualifications.unshift(action.payload);
         state.total += 1;
       })
-      .addCase(createQualification.rejected, rejectedReducer)
+      .addCase(createQualification.rejected, asyncReducers.rejected)
 
       /* UPDATE */
-      .addCase(updateQualification.pending, pendingReducer)
+      .addCase(updateQualification.pending, asyncReducers.pending)
       .addCase(updateQualification.fulfilled, (state, action) => {
-        state.loading = false;
+        asyncReducers.fulfilled(state);
         updateById(state.qualifications, action.payload);
       })
-      .addCase(updateQualification.rejected, rejectedReducer)
+      .addCase(updateQualification.rejected, asyncReducers.rejected)
 
       /* UPDATE STATUS */
-      .addCase(updateQualificationStatus.pending, pendingReducer)
+      .addCase(updateQualificationStatus.pending, asyncReducers.pending)
       .addCase(updateQualificationStatus.fulfilled, (state, action) => {
-        state.loading = false;
+        asyncReducers.fulfilled(state);
         updateById(state.qualifications, action.payload);
       })
-      .addCase(updateQualificationStatus.rejected, rejectedReducer);
+      .addCase(updateQualificationStatus.rejected, asyncReducers.rejected);
   },
 });
 

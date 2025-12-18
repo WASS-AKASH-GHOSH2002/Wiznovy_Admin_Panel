@@ -7,6 +7,14 @@ import { fetchTutors, updateTutorStatus, bulkUpdateTutorStatus, setStatusFilter,
 import { fetchCountries } from "../store/countrySlice";
 import { fetchSubjects } from "../store/subjectSlice";
 
+const STATUS_OPTIONS = [
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'DEACTIVE', label: 'Deactive' },
+  { value: 'DELETED', label: 'Deleted' },
+  { value: 'SUSPENDED', label: 'Suspended' },
+  { value: 'PENDING', label: 'Pending' }
+];
+
 const getStatusClass = (status) => {
   if (status === "ACTIVE") return "bg-green-100 text-green-800";
   if (status === "PENDING") return "bg-yellow-100 text-yellow-800";
@@ -14,6 +22,19 @@ const getStatusClass = (status) => {
   if (status === "DELETED") return "bg-gray-100 text-gray-800";
   return "bg-red-100 text-red-800";
 };
+
+const StatusOptions = () => (
+  STATUS_OPTIONS.map(option => (
+    <option key={option.value} value={option.value}>{option.label}</option>
+  ))
+);
+
+const LoadingSpinner = ({ text }) => (
+  <div className="flex items-center justify-center">
+    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+    {text}
+  </div>
+);
 
 const getDisplayValue = (value) => {
   if (value === null || value === undefined) return "N/A";
@@ -42,6 +63,8 @@ const Tutormanagement = () => {
   const [updateData, setUpdateData] = useState({ email: '', phoneNumber: '' });
   const [validationErrors, setValidationErrors] = useState({ email: '', phoneNumber: '' });
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [isStatusUpdating, setIsStatusUpdating] = useState(false);
 
   useEffect(() => {
     dispatch(fetchCountries({ limit: 100, status: '' }));
@@ -96,31 +119,39 @@ const Tutormanagement = () => {
     setShowStatusModal(true);
   };
 
+  // Helper function to refresh tutors data
+  const refreshTutors = () => {
+    const offset = (currentPage - 1) * itemsPerPage;
+    const fetchParams = { 
+      limit: itemsPerPage, 
+      offset,
+      ...(keyword && { keyword: keyword }),
+      ...(filters.status && { status: filters.status }),
+      ...(selectedCountry && { countryId: selectedCountry }),
+      ...(selectedSubject && { subjectId: selectedSubject })
+    };
+    dispatch(fetchTutors(fetchParams));
+  };
+
   const confirmStatusUpdate = async () => {
     if (statusUpdateTutor && newStatus) {
-      const result = dispatch(updateTutorStatus({ tutorId: statusUpdateTutor.id, status: newStatus }));
-      
-      if (result.type.endsWith('/fulfilled')) {
-        toast.success('Tutor status updated successfully!');
-      } else {
-        toast.error('Failed to update tutor status');
+      setIsStatusUpdating(true);
+      try {
+        const result = await dispatch(updateTutorStatus({ tutorId: statusUpdateTutor.id, status: newStatus }));
+        
+        if (result.type.endsWith('/fulfilled')) {
+          toast.success(`Tutor status updated to ${newStatus}`);
+          refreshTutors();
+        } else {
+          toast.error('Failed to update tutor status');
+        }
+        
+        setShowStatusModal(false);
+        setStatusUpdateTutor(null);
+        setNewStatus('');
+      } finally {
+        setIsStatusUpdating(false);
       }
-      
-      setShowStatusModal(false);
-      setStatusUpdateTutor(null);
-      setNewStatus('');
-      
-      // Refresh data to ensure filter consistency
-      const offset = (currentPage - 1) * itemsPerPage;
-      const fetchParams = { 
-        limit: itemsPerPage, 
-        offset,
-        ...(keyword && { keyword: keyword }),
-        ...(filters.status && { status: filters.status }),
-        ...(selectedCountry && { countryId: selectedCountry }),
-        ...(selectedSubject && { subjectId: selectedSubject })
-      };
-      dispatch(fetchTutors(fetchParams));
     }
   };
 
@@ -144,29 +175,23 @@ const Tutormanagement = () => {
 
   const confirmBulkStatusUpdate = async () => {
     if (selectedTutors.length > 0 && bulkStatus) {
-      const result = dispatch(bulkUpdateTutorStatus({ ids: selectedTutors, status: bulkStatus }));
-      
-      if (result.type.endsWith('/fulfilled')) {
-        toast.success(`${selectedTutors.length} tutor(s) status updated successfully!`);
-      } else {
-        toast.error('Failed to update tutors status');
+      setIsBulkUpdating(true);
+      try {
+        const result = await dispatch(bulkUpdateTutorStatus({ ids: selectedTutors, status: bulkStatus }));
+        
+        if (result.type.endsWith('/fulfilled')) {
+          toast.success(`Successfully updated ${selectedTutors.length} tutors to ${bulkStatus}`);
+          refreshTutors();
+        } else {
+          toast.error('Failed to update tutors status');
+        }
+        
+        setShowBulkModal(false);
+        setSelectedTutors([]);
+        setBulkStatus('');
+      } finally {
+        setIsBulkUpdating(false);
       }
-      
-      setShowBulkModal(false);
-      setSelectedTutors([]);
-      setBulkStatus('');
-      
-      // Refresh data to ensure filter consistency
-      const offset = (currentPage - 1) * itemsPerPage;
-      const fetchParams = { 
-        limit: itemsPerPage, 
-        offset,
-        ...(keyword && { keyword: keyword }),
-        ...(filters.status && { status: filters.status }),
-        ...(selectedCountry && { countryId: selectedCountry }),
-        ...(selectedSubject && { subjectId: selectedSubject })
-      };
-      dispatch(fetchTutors(fetchParams));
     }
   };
 
@@ -216,16 +241,7 @@ const Tutormanagement = () => {
         
         if (result.type.endsWith('/fulfilled')) {
           toast.success('Contact updated successfully!');
-          const offset = (currentPage - 1) * itemsPerPage;
-          const fetchParams = { 
-            limit: itemsPerPage, 
-            offset,
-            ...(keyword && { keyword: keyword }),
-            ...(filters.status && { status: filters.status }),
-            ...(selectedCountry && { countryId: selectedCountry }),
-            ...(selectedSubject && { subjectId: selectedSubject })
-          };
-          dispatch(fetchTutors(fetchParams));
+          refreshTutors();
         } else {
           toast.error('Failed to update contact');
         }
@@ -247,16 +263,7 @@ const Tutormanagement = () => {
   };
 
   const handleRefresh = () => {
-    const offset = (currentPage - 1) * itemsPerPage;
-    const fetchParams = { 
-      limit: itemsPerPage, 
-      offset,
-      ...(keyword && { keyword: keyword }),
-      ...(filters.status && { status: filters.status }),
-      ...(selectedCountry && { countryId: selectedCountry }),
-      ...(selectedSubject && { subjectId: selectedSubject })
-    };
-    dispatch(fetchTutors(fetchParams));
+    refreshTutors();
   };
 
   if (loading) {
@@ -605,11 +612,7 @@ const Tutormanagement = () => {
                 onChange={(e) => setNewStatus(e.target.value)}
                 className="w-full border border-gray-300 p-2.5 rounded-lg"
               >
-                <option value="ACTIVE">Active</option>
-                <option value="DEACTIVE">Deactive</option>
-                <option value="DELETED">Deleted</option>
-                <option value="SUSPENDED">Suspended</option>
-                <option value="PENDING">Pending</option>
+                <StatusOptions />
               </select>
             </div>
             <div className="flex gap-3">
@@ -625,9 +628,10 @@ const Tutormanagement = () => {
               </button>
               <button
                 onClick={confirmStatusUpdate}
-                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                disabled={isStatusUpdating}
+                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
               >
-                Update Status
+                {isStatusUpdating ? <LoadingSpinner text="Updating..." /> : 'Update Status'}
               </button>
             </div>
           </div>
@@ -657,11 +661,7 @@ const Tutormanagement = () => {
                 className="w-full border border-gray-300 p-2.5 rounded-lg"
               >
                 <option value="">Select Status</option>
-                <option value="ACTIVE">Active</option>
-                <option value="DEACTIVE">Deactive</option>
-                <option value="DELETED">Deleted</option>
-                <option value="SUSPENDED">Suspended</option>
-                <option value="PENDING">Pending</option>
+                <StatusOptions />
               </select>
             </div>
             <div className="flex gap-3">
@@ -676,10 +676,10 @@ const Tutormanagement = () => {
               </button>
               <button
                 onClick={confirmBulkStatusUpdate}
-                disabled={!bulkStatus}
+                disabled={!bulkStatus || isBulkUpdating}
                 className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
               >
-                Update Status
+                {isBulkUpdating ? <LoadingSpinner text="Updating..." /> : 'Update Status'}
               </button>
             </div>
           </div>
@@ -749,12 +749,7 @@ const Tutormanagement = () => {
                 disabled={!updateData.email.trim() || !updateData.phoneNumber.trim() || validationErrors.email || validationErrors.phoneNumber || !validateEmail(updateData.email) || isUpdating}
                 className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
               >
-                {isUpdating ? (
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Updating...
-                  </div>
-                ) : 'Update Contact'}
+                {isUpdating ? <LoadingSpinner text="Updating..." /> : 'Update Contact'}
               </button>
             </div>
           </div>

@@ -13,6 +13,12 @@ const SubjectNew = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Helper function to refresh subjects data
+  const refreshSubjects = () => {
+    const offset = (currentPage - 1) * itemsPerPage;
+    dispatch(fetchSubjects({ limit: itemsPerPage, offset }));
+  };
+
   useEffect(() => {
     const offset = (currentPage - 1) * itemsPerPage;
     dispatch(fetchSubjects({ limit: itemsPerPage, offset }));
@@ -45,6 +51,7 @@ const SubjectNew = () => {
     dispatch(createSubject(newSubject));
     setNewSubject({ name: '', description: '' });
     setShowCreateForm(false);
+    refreshSubjects();
   };
 
   if (loading) {
@@ -222,75 +229,76 @@ const SubjectNew = () => {
           </div>
         </div>
 
-        {showCreateForm && (
+        {/* Modal Backdrop Component */}
+        {(showCreateForm || showProfile) && (
           <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-8 rounded-xl w-full max-w-md">
-              <h3 className="text-xl font-bold mb-4">Add New Subject</h3>
-              <form onSubmit={handleCreateSubject} className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Subject Name"
-                  value={newSubject.name}
-                  onChange={(e) => setNewSubject({...newSubject, name: e.target.value})}
-                  className="w-full border border-gray-300 p-2 rounded-lg"
-                  required
-                />
-                <textarea
-                  placeholder="Description (optional)"
-                  value={newSubject.description}
-                  onChange={(e) => setNewSubject({...newSubject, description: e.target.value})}
-                  className="w-full border border-gray-300 p-2 rounded-lg h-20 resize-none"
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-                  >
-                    Create
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateForm(false)}
-                    className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {showProfile && selectedSubject && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-8 rounded-xl w-full max-w-md">
-              <h3 className="text-xl font-bold mb-4">Subject Details</h3>
-              <div className="space-y-2">
-                {selectedSubject.image && (
-                  <div className="flex justify-center mb-4">
-                    <img 
-                      src={selectedSubject.image} 
-                      alt={selectedSubject.name}
-                      className="w-24 h-24 object-cover rounded-lg"
-                    />
+            {showCreateForm && (
+              <div className="bg-white p-8 rounded-xl w-full max-w-md">
+                <h3 className="text-xl font-bold mb-4">Add New Subject</h3>
+                <form onSubmit={handleCreateSubject} className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder="Subject Name"
+                    value={newSubject.name}
+                    onChange={(e) => setNewSubject({...newSubject, name: e.target.value})}
+                    className="w-full border border-gray-300 p-2 rounded-lg"
+                    required
+                  />
+                  <textarea
+                    placeholder="Description (optional)"
+                    value={newSubject.description}
+                    onChange={(e) => setNewSubject({...newSubject, description: e.target.value})}
+                    className="w-full border border-gray-300 p-2 rounded-lg h-20 resize-none"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                    >
+                      Create
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateForm(false)}
+                      className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                    >
+                      Cancel
+                    </button>
                   </div>
-                )}
-                <p><strong>Name:</strong> {selectedSubject.name}</p>
-                <p><strong>Description:</strong> {selectedSubject.description || "No description"}</p>
-                <p><strong>Status:</strong> {selectedSubject.status}</p>
-                <p><strong>Created:</strong> {new Date(selectedSubject.createdAt).toLocaleDateString()}</p>
-                <p><strong>Updated:</strong> {new Date(selectedSubject.updatedAt).toLocaleDateString()}</p>
-                {selectedSubject.imagePath && (
-                  <p><strong>Image Path:</strong> {selectedSubject.imagePath}</p>
-                )}
+                </form>
               </div>
-              <button
-                onClick={() => setShowProfile(false)}
-                className="mt-4 w-full bg-gray-600 text-white px-4 py-2 rounded-lg"
-              >
-                Close
-              </button>
-            </div>
+            )}
+
+            {showProfile && selectedSubject && (
+              <div className="bg-white p-8 rounded-xl w-full max-w-md">
+                <h3 className="text-xl font-bold mb-4">Subject Details</h3>
+                <div className="space-y-2">
+                  {selectedSubject.image && (
+                    <div className="flex justify-center mb-4">
+                      <img 
+                        src={selectedSubject.image} 
+                        alt={selectedSubject.name}
+                        className="w-24 h-24 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                  <p><strong>Name:</strong> {selectedSubject.name}</p>
+                  <p><strong>Description:</strong> {selectedSubject.description || "No description"}</p>
+                  <p><strong>Status:</strong> {selectedSubject.status}</p>
+                  <p><strong>Created:</strong> {new Date(selectedSubject.createdAt).toLocaleDateString()}</p>
+                  <p><strong>Updated:</strong> {new Date(selectedSubject.updatedAt).toLocaleDateString()}</p>
+                  {selectedSubject.imagePath && (
+                    <p><strong>Image Path:</strong> {selectedSubject.imagePath}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowProfile(false)}
+                  className="mt-4 w-full bg-gray-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Close
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

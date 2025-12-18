@@ -13,6 +13,12 @@ const LanguageManager = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Helper function to refresh languages data
+  const refreshLanguages = () => {
+    const offset = (currentPage - 1) * itemsPerPage;
+    dispatch(fetchLanguages({ limit: itemsPerPage, offset }));
+  };
+
   useEffect(() => {
     const offset = (currentPage - 1) * itemsPerPage;
     dispatch(fetchLanguages({ limit: itemsPerPage, offset }));
@@ -45,7 +51,7 @@ const LanguageManager = () => {
     dispatch(createLanguage(newLanguage));
     setNewLanguage({ name: '' });
     setShowCreateForm(false);
-    dispatch(fetchLanguages({ limit: itemsPerPage, offset: (currentPage - 1) * itemsPerPage }));
+    refreshLanguages();
   };
 
   if (loading) {
@@ -262,24 +268,24 @@ const LanguageManager = () => {
             <h3 className="text-xl font-bold mb-4">Language Details</h3>
             <div className="space-y-3">
               <div>
-                <label htmlFor="detail-name" className="block text-sm font-medium text-gray-700">Name</label>
-                <p id="detail-name" className="text-gray-900">{selectedLanguage.name}</p>
+                <p className="text-sm font-medium text-gray-700">Name</p>
+                <p className="text-gray-900">{selectedLanguage.name}</p>
               </div>
               <div>
-                <label htmlFor="detail-status" className="block text-sm font-medium text-gray-700">Status</label>
-                <span id="detail-status" className={`px-2 py-1 text-xs rounded-full ${
+                <p className="text-sm font-medium text-gray-700">Status</p>
+                <span className={`px-2 py-1 text-xs rounded-full ${
                   selectedLanguage.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                 }`}>
                   {selectedLanguage.status}
                 </span>
               </div>
               <div>
-                <label htmlFor="detail-created" className="block text-sm font-medium text-gray-700">Created At</label>
-                <p id="detail-created" className="text-gray-900">{new Date(selectedLanguage.createdAt).toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-700">Created At</p>
+                <p className="text-gray-900">{new Date(selectedLanguage.createdAt).toLocaleString()}</p>
               </div>
               <div>
-                <label htmlFor="detail-updated" className="block text-sm font-medium text-gray-700">Updated At</label>
-                <p id="detail-updated" className="text-gray-900">{new Date(selectedLanguage.updatedAt).toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-700">Updated At</p>
+                <p className="text-gray-900">{new Date(selectedLanguage.updatedAt).toLocaleString()}</p>
               </div>
             </div>
             <div className="flex justify-end mt-6">

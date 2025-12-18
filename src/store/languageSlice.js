@@ -57,15 +57,19 @@ export const updateLanguageStatus = createAsyncThunk(
    REDUCER HELPERS
 ===================== */
 
-const pendingReducer = (state) => {
-  state.loading = true;
-  state.error = null;
-};
-
-const rejectedReducer = (state, action) => {
-  state.loading = false;
-  state.error = action.payload || action.error?.message;
-};
+const createAsyncReducers = (entityName) => ({
+  pending: (state) => {
+    state.loading = true;
+    state.error = null;
+  },
+  rejected: (state, action) => {
+    state.loading = false;
+    state.error = action.payload || action.error?.message;
+  },
+  fulfilled: (state) => {
+    state.loading = false;
+  }
+});
 
 const updateById = (list, payload) => {
   const index = list.findIndex(item => item.id === payload.id);
@@ -99,33 +103,34 @@ const languageSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    const asyncReducers = createAsyncReducers('languages');
+    
     builder
-
       /* FETCH LANGUAGES */
-      .addCase(fetchLanguages.pending, pendingReducer)
+      .addCase(fetchLanguages.pending, asyncReducers.pending)
       .addCase(fetchLanguages.fulfilled, (state, action) => {
-        state.loading = false;
+        asyncReducers.fulfilled(state);
         state.languages = action.payload.result;
         state.total = action.payload.total;
       })
-      .addCase(fetchLanguages.rejected, rejectedReducer)
+      .addCase(fetchLanguages.rejected, asyncReducers.rejected)
 
       /* CREATE LANGUAGE */
-      .addCase(createLanguage.pending, pendingReducer)
+      .addCase(createLanguage.pending, asyncReducers.pending)
       .addCase(createLanguage.fulfilled, (state, action) => {
-        state.loading = false;
+        asyncReducers.fulfilled(state);
         state.languages.unshift(action.payload);
         state.total += 1;
       })
-      .addCase(createLanguage.rejected, rejectedReducer)
+      .addCase(createLanguage.rejected, asyncReducers.rejected)
 
       /* UPDATE LANGUAGE STATUS */
-      .addCase(updateLanguageStatus.pending, pendingReducer)
+      .addCase(updateLanguageStatus.pending, asyncReducers.pending)
       .addCase(updateLanguageStatus.fulfilled, (state, action) => {
-        state.loading = false;
+        asyncReducers.fulfilled(state);
         updateById(state.languages, action.payload);
       })
-      .addCase(updateLanguageStatus.rejected, rejectedReducer);
+      .addCase(updateLanguageStatus.rejected, asyncReducers.rejected);
   },
 });
 

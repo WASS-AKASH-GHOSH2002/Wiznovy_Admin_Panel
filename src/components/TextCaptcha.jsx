@@ -5,14 +5,27 @@ import { RefreshCw } from 'lucide-react';
 const TextCaptcha = ({ onCaptchaChange }) => {
   const [captchaText, setCaptchaText] = useState('');
   const [userInput, setUserInput] = useState('');
+  const [styleValues, setStyleValues] = useState([]);
 
   const generateCaptcha = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
+    
+    // Use crypto.getRandomValues for cryptographically secure random generation
+    const array = new Uint32Array(18); // 6 chars * 3 values (char, rotation, color)
+    crypto.getRandomValues(array);
+    
+    const newStyleValues = [];
     for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+      result += chars.charAt(array[i * 3] % chars.length);
+      newStyleValues.push({
+        rotation: (array[i * 3 + 1] % 20) - 10, // -10 to 9 degrees
+        hue: array[i * 3 + 2] % 360 // 0 to 359 degrees
+      });
     }
+    
     setCaptchaText(result);
+    setStyleValues(newStyleValues);
     setUserInput('');
   };
 
@@ -41,11 +54,11 @@ const TextCaptcha = ({ onCaptchaChange }) => {
         >
           {captchaText.split('').map((char, index) => (
             <span 
-              key={index}
+              key={`${captchaText}-${index}`}
               style={{
                 display: 'inline-block',
-                transform: `rotate(${Math.random() * 20 - 10}deg)`,
-                color: `hsl(${Math.random() * 360}, 70%, 80%)`
+                transform: `rotate(${styleValues[index]?.rotation || 0}deg)`,
+                color: `hsl(${styleValues[index]?.hue || 0}, 70%, 80%)`
               }}
             >
               {char}

@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 const LazyImage = ({ 
   src, 
-  alt = '', 
-  className = '', 
-  fallback = null,
+  alt, 
+  className, 
+  fallback,
   ...props 
 }) => {
   const [imageSrc, setImageSrc] = useState(fallback);
@@ -66,6 +67,20 @@ const LazyImage = ({
       )}
     </div>
   );
+};
+
+LazyImage.propTypes = {
+  src: PropTypes.string,
+  alt: PropTypes.string,
+  className: PropTypes.string,
+  fallback: PropTypes.string,
+};
+
+LazyImage.defaultProps = {
+  src: null,
+  alt: '',
+  className: '',
+  fallback: null,
 };
 
 export default LazyImage;

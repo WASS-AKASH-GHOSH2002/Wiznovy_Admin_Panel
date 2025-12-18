@@ -28,12 +28,11 @@ const ResetPassword = () => {
     }
   }, [email, otp, navigate]);
 
+  const PASSWORD_MIN_LENGTH = 6;
+  const PASSWORD_MISMATCH_ERROR = 'Passwords do not match';
+  
   const validatePassword = (password) => {
-    const minLength = password.length >= 6;
-
-    
-    return minLength;
-    
+    return password.length >= PASSWORD_MIN_LENGTH;
   };
 
   const handleChange = (e) => {
@@ -45,14 +44,14 @@ const ResetPassword = () => {
       if (!validatePassword(value)) {
         setErrors(prev => ({ 
           ...prev, 
-          newPassword: 'Password must be at least 6 characters long' 
+          newPassword: `Password must be at least ${PASSWORD_MIN_LENGTH} characters long` 
         }));
       }
     }
 
     if (name === 'confirmPassword' && value) {
       if (value !== passwords.newPassword) {
-        setErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
+        setErrors(prev => ({ ...prev, confirmPassword: PASSWORD_MISMATCH_ERROR }));
       }
     }
   };

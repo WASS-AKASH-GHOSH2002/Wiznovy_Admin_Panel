@@ -35,12 +35,17 @@ const CityManager = () => {
     setShowStatusModal(true);
   };
 
+  // Helper function to refresh cities data
+  const refreshCities = () => {
+    dispatch(fetchCities({ stateId: filters.stateId }));
+  };
+
   const confirmStatusUpdate = async () => {
     if (statusUpdateCity && newStatus) {
       const result = dispatch(updateCityStatus({ cityId: statusUpdateCity.id, status: newStatus }));
       if (result.type.endsWith('/fulfilled')) {
         toast.success('City status updated successfully!');
-        dispatch(fetchCities({ stateId: filters.stateId }));
+        refreshCities();
       } else {
         toast.error('Failed to update city status');
       }
@@ -56,7 +61,7 @@ const CityManager = () => {
   };
 
   const handleRefresh = () => {
-    dispatch(fetchCities({ stateId: filters.stateId }));
+    refreshCities();
   };
 
   const handleAddCity = () => {
@@ -71,7 +76,7 @@ const CityManager = () => {
       await dispatch(createCity(formData)).unwrap();
       setShowAddModal(false);
       setFormData({ name: '', stateId: '' });
-      dispatch(fetchCities({ stateId: filters.stateId }));
+      refreshCities();
     } catch (error) {
       console.error('Failed to create city:', error);
     } finally {
@@ -247,124 +252,123 @@ const CityManager = () => {
           </div>
         </div>
 
-        {/* Add City Modal */}
-        {showAddModal && (
+        {/* Modal Backdrop Component */}
+        {(showAddModal || showProfile || showStatusModal) && (
           <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white p-6 rounded-xl w-full max-w-md">
-              <h3 className="text-xl font-bold mb-4">Add New City</h3>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label htmlFor="cityName" className="block text-sm font-medium text-gray-700 mb-2">City Name</label>
-                  <input
-                    id="cityName"
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full border border-gray-300 p-2.5 rounded-lg"
-                    required
-                  />
+            {/* Add City Modal */}
+            {showAddModal && (
+              <div className="bg-white p-6 rounded-xl w-full max-w-md">
+                <h3 className="text-xl font-bold mb-4">Add New City</h3>
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-4">
+                    <label htmlFor="cityName" className="block text-sm font-medium text-gray-700 mb-2">City Name</label>
+                    <input
+                      id="cityName"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full border border-gray-300 p-2.5 rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label htmlFor="stateSelect" className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                    <select
+                      id="stateSelect"
+                      value={formData.stateId}
+                      onChange={(e) => setFormData({...formData, stateId: e.target.value})}
+                      className="w-full border border-gray-300 p-2.5 rounded-lg"
+                      required
+                    >
+                      <option value="">Select State</option>
+                      {states.map(state => (
+                        <option key={state.id} value={state.id}>{state.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                      className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Adding...
+                        </div>
+                      ) : 'Add City'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* View Profile Modal */}
+            {showProfile && selectedCity && (
+              <div className="bg-white p-4 sm:p-8 rounded-xl w-full max-w-md">
+                <h3 className="text-xl font-bold mb-4">City Details</h3>
+                <div className="space-y-2">
+                  <p><strong>Name:</strong> {selectedCity.name}</p>
+                  <p><strong>State:</strong> {selectedCity.state?.name || 'N/A'}</p>
+                  <p><strong>Status:</strong> {selectedCity.status}</p>
+                  <p><strong>Created:</strong> {new Date(selectedCity.createdAt).toLocaleDateString()}</p>
                 </div>
+                <button
+                  onClick={() => setShowProfile(false)}
+                  className="mt-4 w-full bg-gray-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+
+            {/* Status Update Modal */}
+            {showStatusModal && statusUpdateCity && (
+              <div className="bg-white p-6 rounded-xl w-full max-w-md">
+                <h3 className="text-xl font-bold mb-4">Update City Status</h3>
+                <p className="text-gray-600 mb-4">
+                  Update status for: <strong>{statusUpdateCity.name}</strong>
+                </p>
                 <div className="mb-4">
-                  <label htmlFor="stateSelect" className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                  <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
                   <select
-                    id="stateSelect"
-                    value={formData.stateId}
-                    onChange={(e) => setFormData({...formData, stateId: e.target.value})}
+                    id="statusSelect"
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
                     className="w-full border border-gray-300 p-2.5 rounded-lg"
-                    required
                   >
-                    <option value="">Select State</option>
-                    {states.map(state => (
-                      <option key={state.id} value={state.id}>{state.name}</option>
-                    ))}
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
                   </select>
                 </div>
                 <div className="flex gap-3">
                   <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
+                    onClick={() => {
+                      setShowStatusModal(false);
+                      setStatusUpdateCity(null);
+                      setNewStatus('');
+                    }}
                     className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
                   >
                     Cancel
                   </button>
                   <button
-                    type="submit"
-                    className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
-                    disabled={isSubmitting}
+                    onClick={confirmStatusUpdate}
+                    className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
                   >
-                    {isSubmitting ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Adding...
-                      </div>
-                    ) : 'Add City'}
+                    Update Status
                   </button>
                 </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* View Profile Modal */}
-        {showProfile && selectedCity && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white p-4 sm:p-8 rounded-xl w-full max-w-md">
-              <h3 className="text-xl font-bold mb-4">City Details</h3>
-              <div className="space-y-2">
-                <p><strong>Name:</strong> {selectedCity.name}</p>
-                <p><strong>State:</strong> {selectedCity.state?.name || 'N/A'}</p>
-                <p><strong>Status:</strong> {selectedCity.status}</p>
-                <p><strong>Created:</strong> {new Date(selectedCity.createdAt).toLocaleDateString()}</p>
               </div>
-              <button
-                onClick={() => setShowProfile(false)}
-                className="mt-4 w-full bg-gray-600 text-white px-4 py-2 rounded-lg"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Status Update Modal */}
-        {showStatusModal && statusUpdateCity && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white p-6 rounded-xl w-full max-w-md">
-              <h3 className="text-xl font-bold mb-4">Update City Status</h3>
-              <p className="text-gray-600 mb-4">
-                Update status for: <strong>{statusUpdateCity.name}</strong>
-              </p>
-              <div className="mb-4">
-                <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
-                <select
-                  id="statusSelect"
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full border border-gray-300 p-2.5 rounded-lg"
-                >
-                  <option value="ACTIVE">Active</option>
-                  <option value="INACTIVE">Inactive</option>
-                </select>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowStatusModal(false);
-                    setStatusUpdateCity(null);
-                    setNewStatus('');
-                  }}
-                  className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmStatusUpdate}
-                  className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                >
-                  Update Status
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         )}
       </div>

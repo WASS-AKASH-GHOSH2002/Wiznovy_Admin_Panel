@@ -4,6 +4,15 @@ import { Eye, RefreshCw, Download, Settings, Edit } from "lucide-react";
 import { exportUsersToPDF, exportUsersToCSV } from "../utils/downloadUtils";
 import { fetchUsers, updateUserStatus, bulkUpdateUserStatus, setSearch, setStatusFilter, updateUserContact } from "../store/userSlice";
 import { debounce } from "lodash";
+import { toast } from "react-toastify";
+
+const STATUS_OPTIONS = [
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'DEACTIVE', label: 'Deactive' },
+  { value: 'DELETED', label: 'Deleted' },
+  { value: 'SUSPENDED', label: 'Suspended' },
+  { value: 'PENDING', label: 'Pending' }
+];
 
 const getStatusClass = (status) => {
   if (status === "ACTIVE") return "bg-green-100 text-green-800";
@@ -12,6 +21,19 @@ const getStatusClass = (status) => {
   if (status === "DELETED") return "bg-gray-100 text-gray-800";
   return "bg-red-100 text-red-800";
 };
+
+const StatusOptions = () => (
+  STATUS_OPTIONS.map(option => (
+    <option key={option.value} value={option.value}>{option.label}</option>
+  ))
+);
+
+const LoadingSpinner = ({ text }) => (
+  <div className="flex items-center justify-center">
+    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+    {text}
+  </div>
+);
 
 const UserManagement = () => {
   const dispatch = useDispatch();
@@ -30,6 +52,8 @@ const UserManagement = () => {
   const [updateData, setUpdateData] = useState({ email: '', phoneNumber: '' });
   const [validationErrors, setValidationErrors] = useState({ email: '', phoneNumber: '' });
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [isStatusUpdating, setIsStatusUpdating] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -67,22 +91,35 @@ const UserManagement = () => {
     setShowStatusModal(true);
   };
 
+  // Helper function to refresh users data
+  const refreshUsers = () => {
+    const offset = (currentPage - 1) * itemsPerPage;
+    const fetchParams = { 
+      limit: itemsPerPage, 
+      offset,
+      ...(filters.search && { keyword: filters.search }),
+      ...(filters.status && { status: filters.status })
+    };
+    dispatch(fetchUsers(fetchParams));
+  };
+
   const confirmStatusUpdate = async () => {
     if (statusUpdateUser && newStatus) {
-      dispatch(updateUserStatus({ userId: statusUpdateUser.id, status: newStatus }));
-      setShowStatusModal(false);
-      setStatusUpdateUser(null);
-      setNewStatus('');
-      
-      // Refresh the current page after status update
-      const offset = (currentPage - 1) * itemsPerPage;
-      const fetchParams = { 
-        limit: itemsPerPage, 
-        offset,
-        ...(filters.search && { keyword: filters.search }),
-        ...(filters.status && { status: filters.status })
-      };
-      dispatch(fetchUsers(fetchParams));
+      setIsStatusUpdating(true);
+      try {
+        const result = await dispatch(updateUserStatus({ userId: statusUpdateUser.id, status: newStatus }));
+        if (result.type.endsWith('/fulfilled')) {
+          toast.success(`User status updated to ${newStatus}`);
+          refreshUsers();
+        } else {
+          toast.error('Failed to update user status');
+        }
+        setShowStatusModal(false);
+        setStatusUpdateUser(null);
+        setNewStatus('');
+      } finally {
+        setIsStatusUpdating(false);
+      }
     }
   };
 
@@ -149,14 +186,7 @@ const UserManagement = () => {
         }));
         
         if (result.type.endsWith('/fulfilled')) {
-          const offset = (currentPage - 1) * itemsPerPage;
-          const fetchParams = { 
-            limit: itemsPerPage, 
-            offset,
-            ...(filters.search && { keyword: filters.search }),
-            ...(filters.status && { status: filters.status })
-          };
-          dispatch(fetchUsers(fetchParams));
+          refreshUsers();
         }
         
         setShowUpdateModal(false);
@@ -171,20 +201,21 @@ const UserManagement = () => {
 
   const confirmBulkStatusUpdate = async () => {
     if (selectedUsers.length > 0 && bulkStatus) {
-      dispatch(bulkUpdateUserStatus({ ids: selectedUsers, status: bulkStatus }));
-      setShowBulkModal(false);
-      setSelectedUsers([]);
-      setBulkStatus('');
-      
-      // Refresh the current page after bulk update
-      const offset = (currentPage - 1) * itemsPerPage;
-      const fetchParams = { 
-        limit: itemsPerPage, 
-        offset,
-        ...(filters.search && { keyword: filters.search }),
-        ...(filters.status && { status: filters.status })
-      };
-      dispatch(fetchUsers(fetchParams));
+      setIsBulkUpdating(true);
+      try {
+        const result = await dispatch(bulkUpdateUserStatus({ ids: selectedUsers, status: bulkStatus }));
+        if (result.type.endsWith('/fulfilled')) {
+          toast.success(`Successfully updated ${selectedUsers.length} users to ${bulkStatus}`);
+          refreshUsers();
+        } else {
+          toast.error('Failed to update user status');
+        }
+        setShowBulkModal(false);
+        setSelectedUsers([]);
+        setBulkStatus('');
+      } finally {
+        setIsBulkUpdating(false);
+      }
     }
   };
 
@@ -194,14 +225,7 @@ const UserManagement = () => {
   };
 
   const handleRefresh = () => {
-    const offset = (currentPage - 1) * itemsPerPage;
-    const fetchParams = { 
-      limit: itemsPerPage, 
-      offset,
-      ...(filters.search && { keyword: filters.search }),
-      ...(filters.status && { status: filters.status })
-    };
-    dispatch(fetchUsers(fetchParams));
+    refreshUsers();
   };
 
 
@@ -467,11 +491,7 @@ const UserManagement = () => {
                 onChange={(e) => setNewStatus(e.target.value)}
                 className="w-full border border-gray-300 p-2.5 rounded-lg"
               >
-                <option value="ACTIVE">Active</option>
-                <option value="DEACTIVE">Deactive</option>
-                <option value="DELETED">Deleted</option>
-                <option value="SUSPENDED">Suspended</option>
-                <option value="PENDING">Pending</option>
+                <StatusOptions />
               </select>
             </div>
             <div className="flex gap-3">
@@ -487,9 +507,10 @@ const UserManagement = () => {
               </button>
               <button
                 onClick={confirmStatusUpdate}
-                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                disabled={isStatusUpdating}
+                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
               >
-                Update Status
+                {isStatusUpdating ? <LoadingSpinner text="Updating..." /> : 'Update Status'}
               </button>
             </div>
           </div>
@@ -513,11 +534,7 @@ const UserManagement = () => {
                 className="w-full border border-gray-300 p-2.5 rounded-lg"
               >
                 <option value="">Select Status</option>
-                <option value="ACTIVE">Active</option>
-                <option value="DEACTIVE">Deactive</option>
-                <option value="DELETED">Deleted</option>
-                <option value="SUSPENDED">Suspended</option>
-                <option value="PENDING">Pending</option>
+                <StatusOptions />
               </select>
             </div>
             <div className="flex gap-3">
@@ -532,10 +549,10 @@ const UserManagement = () => {
               </button>
               <button
                 onClick={confirmBulkStatusUpdate}
-                disabled={!bulkStatus}
+                disabled={!bulkStatus || isBulkUpdating}
                 className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
               >
-                Update Status
+                {isBulkUpdating ? <LoadingSpinner text="Updating..." /> : 'Update Status'}
               </button>
             </div>
           </div>
@@ -599,12 +616,7 @@ const UserManagement = () => {
                 disabled={!updateData.email.trim() || !updateData.phoneNumber.trim() || validationErrors.email || validationErrors.phoneNumber || !validateEmail(updateData.email) || isUpdating}
                 className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
               >
-                {isUpdating ? (
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Updating...
-                  </div>
-                ) : 'Update Contact'}
+                {isUpdating ? <LoadingSpinner text="Updating..." /> : 'Update Contact'}
               </button>
             </div>
           </div>
