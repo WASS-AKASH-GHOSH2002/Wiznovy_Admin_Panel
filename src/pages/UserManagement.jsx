@@ -390,6 +390,8 @@ const UserManagement = () => {
                       <button
                         onClick={() => handleViewProfile(user)}
                         className="text-blue-600 hover:text-blue-800"
+                        role="button"
+                        tabIndex={0}
                       >
                         <Eye size={18} />
                       </button>
@@ -397,6 +399,8 @@ const UserManagement = () => {
                         onClick={() => handleStatusUpdate(user)}
                         className="text-green-600 hover:text-green-800"
                         title="Update Status"
+                        role="button"
+                        tabIndex={0}
                       >
                         <Settings size={18} />
                       </button>
@@ -404,6 +408,8 @@ const UserManagement = () => {
                         onClick={() => handleUpdateContact(user)}
                         className="text-orange-600 hover:text-orange-800"
                         title="Update Contact"
+                        role="button"
+                        tabIndex={0}
                       >
                         <Edit size={18} />
                       </button>
@@ -482,7 +488,7 @@ const UserManagement = () => {
 
       {/* Status Update Modal */}
       {showStatusModal && statusUpdateUser && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={() => { setShowStatusModal(false); setStatusUpdateUser(null); setNewStatus(''); }}>
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={() => { setShowStatusModal(false); setStatusUpdateUser(null); setNewStatus(''); }} role="button" tabIndex={0}>
           <div className="bg-white rounded-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4">Update User Status</h3>
             <p className="text-gray-600 mb-4">
@@ -524,7 +530,7 @@ const UserManagement = () => {
 
       {/* Bulk Update Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={() => { setShowBulkModal(false); setBulkStatus(''); }}>
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={() => { setShowBulkModal(false); setBulkStatus(''); }} role="button" tabIndex={0}>
           <div className="bg-white p-6 rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4">Bulk Status Update</h3>
             <p className="text-gray-600 mb-4">
@@ -566,7 +572,7 @@ const UserManagement = () => {
 
       {/* Update Contact Modal */}
       {showUpdateModal && updateUser && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={() => { setShowUpdateModal(false); setUpdateUser(null); setUpdateData({ email: '', phoneNumber: '' }); setValidationErrors({ email: '', phoneNumber: '' }); }}>
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={() => { setShowUpdateModal(false); setUpdateUser(null); setUpdateData({ email: '', phoneNumber: '' }); setValidationErrors({ email: '', phoneNumber: '' }); }} role="button" tabIndex={0}>
           <div className="bg-white p-6 rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4">Update Contact</h3>
             <p className="text-gray-600 mb-4">

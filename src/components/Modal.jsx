@@ -29,10 +29,12 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl', posit
   const modalClasses = `bg-white rounded-lg shadow-xl w-full ${maxWidth}`;
 
   return (
-    <dialog 
-      open={isOpen}
+    <div 
+
       className="fixed inset-0 bg-transparent border-0 max-w-none max-h-none p-0 m-0"
       aria-labelledby={title ? "modal-title" : undefined}
+      role="dialog"
+      aria-modal="true"
       aria-label={title ? undefined : "Modal dialog"}
     >
       <button 
@@ -53,7 +55,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl', posit
           </div>
         </div>
       </button>
-    </dialog>
+    </div>
   );
 };
 

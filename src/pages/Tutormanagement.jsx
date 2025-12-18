@@ -51,10 +51,16 @@ const buildFetchParams = (itemsPerPage, currentPage, keyword, filters, selectedC
   const offset = (currentPage - 1) * itemsPerPage;
   const params = { limit: itemsPerPage, offset };
   
-  if (keyword) params.keyword = keyword;
-  if (filters.status) params.status = filters.status;
-  if (selectedCountry) params.countryId = selectedCountry;
-  if (selectedSubject) params.subjectId = selectedSubject;
+  const conditionalParams = {
+    keyword,
+    status: filters.status,
+    countryId: selectedCountry,
+    subjectId: selectedSubject
+  };
+  
+  Object.entries(conditionalParams).forEach(([key, value]) => {
+    if (value) params[key] = value;
+  });
   
   return params;
 };
@@ -537,6 +543,8 @@ const Tutormanagement = () => {
           onClick={() => setShowProfile(false)}
           aria-label="Close profile modal"
           type="button"
+          role="button"
+          tabIndex={0}
         >
           <div 
             className="bg-white p-8 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" 
@@ -562,9 +570,10 @@ const Tutormanagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Object.entries(selectedTutorDetails).filter(([key]) => key !== 'profileImage' && key !== 'id').map(([key, value]) => {
                     const displayValue = getDisplayValue(value);
+                    const formattedKey = key.replaceAll(/([A-Z])/g, ' $1').trim();
                     return (
                       <div key={key} className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-xs text-gray-500 uppercase mb-1">{key.replaceAll(/([A-Z])/g, ' $1').trim()}</p>
+                        <p className="text-xs text-gray-500 uppercase mb-1">{formattedKey}</p>
                         <p className="text-sm font-medium text-gray-800">{displayValue}</p>
                       </div>
                     );
@@ -591,6 +600,8 @@ const Tutormanagement = () => {
           onClick={() => setShowStatusModal(false)}
           aria-label="Close status modal"
           type="button"
+          role="button"
+          tabIndex={0}
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"
@@ -641,6 +652,8 @@ const Tutormanagement = () => {
           onClick={() => setShowBulkModal(false)}
           aria-label="Close bulk update modal"
           type="button"
+          role="button"
+          tabIndex={0}
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"
@@ -691,6 +704,8 @@ const Tutormanagement = () => {
           onClick={() => setShowUpdateModal(false)}
           aria-label="Close update contact modal"
           type="button"
+          role="button"
+          tabIndex={0}
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"

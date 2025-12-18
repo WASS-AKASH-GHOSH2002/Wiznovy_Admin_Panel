@@ -290,6 +290,12 @@ const CourseManager = () => {
     if (thumbnailFile) submitData.append('thumbnail', thumbnailFile);
   };
 
+  const getSubmitAction = () => {
+    return editingCourse 
+      ? updateCourse({ id: editingCourse.id, data: buildFormData() })
+      : createCourse(buildFormData());
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -299,11 +305,7 @@ const CourseManager = () => {
       handlePricing(submitData);
       addImageFiles(submitData);
       
-      const action = editingCourse 
-        ? updateCourse({ id: editingCourse.id, data: submitData })
-        : createCourse(submitData);
-      
-      const result = await dispatch(action);
+      const result = await dispatch(getSubmitAction());
       
       if (result.type.endsWith('/fulfilled')) {
         forceRefresh();
@@ -791,16 +793,16 @@ const CourseManager = () => {
                   <div className="flex justify-between items-center">
                     <StatusBadge status={course.status} onClick={() => handleStatusUpdate(course)} />
                     <div className="flex space-x-2">
-                      <ActionButton onClick={() => handleViewDetails(course)} className="text-green-600 hover:text-green-800 text-sm flex items-center" title="View Details">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <ActionButton onClick={() => handleViewDetails(course)} className="text-green-600 hover:text-green-800 text-sm flex items-center" title="View Details" role="button" tabIndex={0}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                       </ActionButton>
-                      <ActionButton onClick={() => navigate(`/courses/${course.id}/details`)} className="text-green-600 hover:text-green-800 text-sm">Details</ActionButton>
-                      <ActionButton onClick={() => handleEdit(course)} className="text-blue-600 hover:text-blue-800 text-sm">Edit</ActionButton>
-                      <ActionButton onClick={() => handleStatusUpdate(course)} className="text-purple-600 hover:text-purple-800 text-sm">Status</ActionButton>
-                      <ActionButton onClick={() => handleDelete(course)} className="text-red-600 hover:text-red-800 text-sm">Delete</ActionButton>
+                      <ActionButton onClick={() => navigate(`/courses/${course.id}/details`)} className="text-green-600 hover:text-green-800 text-sm" role="button" tabIndex={0}>Details</ActionButton>
+                      <ActionButton onClick={() => handleEdit(course)} className="text-blue-600 hover:text-blue-800 text-sm" role="button" tabIndex={0}>Edit</ActionButton>
+                      <ActionButton onClick={() => handleStatusUpdate(course)} className="text-purple-600 hover:text-purple-800 text-sm" role="button" tabIndex={0}>Status</ActionButton>
+                      <ActionButton onClick={() => handleDelete(course)} className="text-red-600 hover:text-red-800 text-sm" role="button" tabIndex={0}>Delete</ActionButton>
                     </div>
                   </div>
                 </div>
@@ -1155,8 +1157,7 @@ const CourseManager = () => {
                       </div>
                     ) : (() => {
                       if (thumbnailUpdating) return 'Uploading...';
-                      const actionText = editingCourse ? 'Update' : 'Create';
-                      return actionText;
+                      return editingCourse ? 'Update' : 'Create';
                     })()} Course
                   </button>
                 </div>
@@ -1181,18 +1182,24 @@ const CourseManager = () => {
                   <button
                     onClick={() => updateStatus('PENDING')}
                     className="p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm"
+                    role="button"
+                    tabIndex={0}
                   >
                     Set as Pending
                   </button>
                   <button
                     onClick={() => updateStatus('APPROVED')}
                     className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+                    role="button"
+                    tabIndex={0}
                   >
                     Approve Course
                   </button>
                   <button
                     onClick={() => updateStatus('REJECTED')}
                     className="p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
+                    role="button"
+                    tabIndex={0}
                   >
                     Reject Course
                   </button>

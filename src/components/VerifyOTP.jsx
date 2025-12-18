@@ -51,7 +51,7 @@ const VerifyOTP = () => {
      OTP HANDLERS
   ===================== */
   const handleOtpChange = (index, value) => {
-    if (!/^[0-9]?$/.test(value)) return;
+    if (!/^\d?$/.test(value)) return;
 
     const updatedOtp = [...otp];
     updatedOtp[index] = value;
@@ -157,7 +157,7 @@ const VerifyOTP = () => {
           <div className="flex justify-center gap-2">
             {otp.map((digit, index) => (
               <input
-                key={index}
+                key={`otp-${index}`}
                 ref={el => (inputRefs.current[index] = el)}
                 type="text"
                 inputMode="numeric"
