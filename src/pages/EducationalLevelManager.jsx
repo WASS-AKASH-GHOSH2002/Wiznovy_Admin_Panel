@@ -38,7 +38,7 @@ const EducationalLevelManager = () => {
     if (!qualification) return;
 
     const newStatus = qualification.status === "ACTIVE" ? "DEACTIVE" : "ACTIVE";
-    const result = await dispatch(updateQualificationStatus({ qualificationId, status: newStatus }));
+    const result = dispatch(updateQualificationStatus({ qualificationId, status: newStatus }));
     
     if (result.type.endsWith('/fulfilled')) {
       toast.success(`Educational level ${newStatus === 'ACTIVE' ? 'activated' : 'deactivated'} successfully!`);
@@ -83,7 +83,7 @@ const EducationalLevelManager = () => {
     e.preventDefault();
     if (!newQualification.name.trim()) return;
     
-    const result = await dispatch(createQualification(newQualification));
+    const result = dispatch(createQualification(newQualification));
     
     if (result.type.endsWith('/fulfilled')) {
       toast.success('Educational level created successfully!');
@@ -99,7 +99,7 @@ const EducationalLevelManager = () => {
     e.preventDefault();
     if (!editQualification.name.trim()) return;
     
-    const result = await dispatch(updateQualification({ 
+    const result = dispatch(updateQualification({ 
       qualificationId: selectedQualification.id, 
       qualificationData: editQualification 
     }));

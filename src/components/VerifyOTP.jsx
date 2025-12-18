@@ -1,53 +1,64 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Shield } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
-import swcLogo from "../assets/WIZNOVY.png";
+import swcLogo from '../assets/WIZNOVY.png';
+
+const OTP_LENGTH = 6;
+const RESEND_TIME = 120;
 
 const VerifyOTP = () => {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [resendLoading, setResendLoading] = useState(false);
-  const [countdown, setCountdown] = useState(120);
-  const [canResend, setCanResend] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const inputRefs = useRef([]);
-  
+
   const email = location.state?.email || '';
 
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [countdown, setCountdown] = useState(RESEND_TIME);
+  const [canResend, setCanResend] = useState(false);
+
+  /* =====================
+     REDIRECT SAFETY
+  ===================== */
   useEffect(() => {
     if (!email) {
       navigate('/forgot-password');
     }
   }, [email, navigate]);
 
+  /* =====================
+     COUNTDOWN TIMER
+  ===================== */
   useEffect(() => {
-    let timer;
-    if (countdown > 0) {
-      timer = setTimeout(() => {
-        setCountdown(prev => {
-          if (prev === 1) {
-            setCanResend(true);
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    if (countdown <= 0) return;
+
+    const timer = setTimeout(() => {
+      setCountdown(prev => {
+        if (prev === 1) setCanResend(true);
+        return prev - 1;
+      });
+    }, 1000);
+
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  /* =====================
+     OTP HANDLERS
+  ===================== */
   const handleOtpChange = (index, value) => {
-    if (value.length > 1 || !/^[0-9]*$/.test(value)) return;
-    
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
+    if (!/^[0-9]?$/.test(value)) return;
+
+    const updatedOtp = [...otp];
+    updatedOtp[index] = value;
+    setOtp(updatedOtp);
     setMessage('');
 
-    if (value && index < 5) {
+    if (value && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -58,8 +69,11 @@ const VerifyOTP = () => {
     }
   };
 
-  const isOtpComplete = otp.every(digit => digit !== '');
+  const isOtpComplete = otp.every(d => d !== '');
 
+  /* =====================
+     VERIFY OTP
+  ===================== */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isOtpComplete) return;
@@ -68,45 +82,58 @@ const VerifyOTP = () => {
     setMessage('');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
+      await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
         email,
         otp: otp.join('')
       });
 
-      navigate('/reset-password', { state: { email, otp: otp.join('') } });
+      navigate('/reset-password', {
+        state: { email, otp: otp.join('') }
+      });
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Invalid OTP. Please try again.');
+      setMessage(
+        error.response?.data?.message ||
+        'Invalid OTP. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  /* =====================
+     RESEND OTP
+  ===================== */
   const handleResendOtp = async () => {
     if (!canResend) return;
-    
+
     setResendLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/auth/forgotPass`, {
         email,
         role: 'ADMIN'
       });
+
       setMessage('New OTP has been sent to your email.');
       setCanResend(false);
-      setCountdown(120);
-    } catch (error) {
+      setCountdown(RESEND_TIME);
+      setOtp(Array(OTP_LENGTH).fill(''));
+    } catch {
       setMessage('Failed to resend OTP. Please try again.');
     } finally {
       setResendLoading(false);
     }
   };
 
+  /* =====================
+     UI
+  ===================== */
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#C4DAD2]">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md mx-4">
         <div className="text-center mb-8">
-          <img 
-            src={swcLogo} 
-            alt="SWC Logo" 
+          <img
+            src={swcLogo}
+            alt="Wiznovy Logo"
             className="w-36 h-36 mx-auto mt-4 mb-2 rounded-full object-cover"
           />
           <h2 className="text-3xl font-bold text-[#16423C]">Verify OTP</h2>
@@ -115,9 +142,13 @@ const VerifyOTP = () => {
         </div>
 
         {message && (
-          <div className={`mb-4 p-3 rounded text-sm ${
-            message.includes('sent') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}>
+          <div
+            className={`mb-4 p-3 rounded text-sm ${
+              message.includes('sent')
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+            }`}
+          >
             {message}
           </div>
         )}
@@ -127,42 +158,49 @@ const VerifyOTP = () => {
             {otp.map((digit, index) => (
               <input
                 key={index}
-                ref={el => inputRefs.current[index] = el}
+                ref={el => (inputRefs.current[index] = el)}
                 type="text"
                 inputMode="numeric"
-                pattern="[0-9]*"
                 maxLength="1"
                 className="w-12 h-12 text-center text-xl font-bold border-2 rounded-lg focus:border-[#16423C] focus:outline-none"
                 value={digit}
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 autoFocus={index === 0}
+                aria-label={`OTP digit ${index + 1}`}
               />
             ))}
           </div>
 
           <button
             type="submit"
-            className="w-full bg-[#16423C] hover:bg-[#C4DAD2] text-white font-semibold py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={loading || !isOtpComplete}
+            className="w-full bg-[#16423C] hover:bg-[#C4DAD2] text-white font-semibold py-2 rounded-lg transition disabled:opacity-50"
           >
             {loading ? 'Verifying...' : 'Verify OTP'}
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600 mb-2">Didn't receive the code?</p>
+          <p className="text-sm text-gray-600 mb-2">
+            Didn’t receive the code?
+          </p>
+
           {canResend ? (
             <button
               onClick={handleResendOtp}
-              className="text-[#16423C] hover:text-[#C4DAD2] underline disabled:opacity-50"
               disabled={resendLoading}
+              className="text-[#16423C] underline disabled:opacity-50"
             >
               {resendLoading ? 'Sending...' : 'Resend OTP'}
             </button>
           ) : (
             <p className="text-gray-500 text-sm">
-              Resend OTP in <span className="font-semibold text-[#16423C]">{countdown}</span> seconds
+              Resend OTP in{' '}
+              <span className="font-semibold text-[#16423C]">
+                {countdown}
+              </span>{' '}
+              seconds
             </p>
           )}
         </div>
@@ -170,7 +208,7 @@ const VerifyOTP = () => {
         <div className="mt-6 text-center">
           <button
             onClick={() => navigate('/forgot-password')}
-            className="flex items-center gap-2 text-[#16423C] hover:text-[#C4DAD2] mx-auto"
+            className="flex items-center gap-2 text-[#16423C] mx-auto hover:text-[#C4DAD2]"
           >
             <ArrowLeft size={16} />
             Back to Email

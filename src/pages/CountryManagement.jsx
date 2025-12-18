@@ -75,7 +75,7 @@ const CountryManagement = () => {
 
   const confirmStatusUpdate = async () => {
     if (statusUpdateCountry && newStatus) {
-      await dispatch(updateCountryStatus({ countryId: statusUpdateCountry.id, status: newStatus }));
+      dispatch(updateCountryStatus({ countryId: statusUpdateCountry.id, status: newStatus }));
       setShowStatusModal(false);
       setStatusUpdateCountry(null);
       setNewStatus('');
@@ -103,7 +103,7 @@ const CountryManagement = () => {
 
   const confirmBulkStatusUpdate = async () => {
     if (selectedCountries.length > 0 && bulkStatus) {
-      await dispatch(bulkUpdateCountryStatus({ ids: selectedCountries, status: bulkStatus }));
+      dispatch(bulkUpdateCountryStatus({ ids: selectedCountries, status: bulkStatus }));
       setShowBulkModal(false);
       setSelectedCountries([]);
       setBulkStatus('');
@@ -129,18 +129,7 @@ const CountryManagement = () => {
     dispatch(fetchCountries(params));
   };
 
-  const handleSearch = () => {
-    setCurrentPage(1);
-    const params = { 
-      limit: itemsPerPage,
-      offset: 0,
-      keyword: filters.search
-    };
-    if (filters.status) {
-      params.status = filters.status;
-    }
-    dispatch(fetchCountries(params));
-  };
+
 
   const handleCreateCountry = async (e) => {
     e.preventDefault();
@@ -164,7 +153,7 @@ const CountryManagement = () => {
     setIsSubmitting(true);
     
     try {
-      await dispatch(createCountry(newCountry));
+      dispatch(createCountry(newCountry));
       setNewCountry({ name: '', code: '' });
       setShowCreateForm(false);
     } finally {
@@ -204,7 +193,7 @@ const CountryManagement = () => {
     formData.append('file', selectedImageFile);
     
     try {
-      const response = await api.put(`/country/image/${selectedCountryForImage.id}`, formData, {
+      await api.put(`/country/image/${selectedCountryForImage.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -242,23 +231,19 @@ const CountryManagement = () => {
     
     setIsUpdating(true);
     try {
-      const result = await dispatch(updateCountry({ 
+      await dispatch(updateCountry({ 
         countryId: editCountry.id, 
         name: editData.name.trim(), 
         code: editData.code.trim().toUpperCase() 
-      }));
+      })).unwrap();
       
-      if (result.type.endsWith('/fulfilled')) {
-        setShowEditModal(false);
-        setEditCountry(null);
-        setEditData({ name: '', code: '' });
-        toast.success('Country updated successfully!');
-      } else {
-        const errorMessage = result.payload?.message || 'Failed to update country';
-        toast.error(errorMessage);
-      }
+      setShowEditModal(false);
+      setEditCountry(null);
+      setEditData({ name: '', code: '' });
+      toast.success('Country updated successfully!');
     } catch (error) {
-      toast.error('Failed to update country');
+      const errorMessage = error?.message || 'Failed to update country';
+      toast.error(errorMessage);
     } finally {
       setIsUpdating(false);
     }
