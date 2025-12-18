@@ -131,8 +131,8 @@ const CourseDetails = () => {
 
   const normalizeUrl = (url) => {
     if (!url) return null;
-    let normalized = url.replace(/\\/g, '/');
-    return normalized.replace(/http:\//g, 'http://');
+    let normalized = url.replaceAll(/\\/g, '/');
+    return normalized.replaceAll(/http:\//g, 'http://');
   };
 
   const handleFileAction = (material, action) => {
@@ -592,7 +592,7 @@ const CourseDetails = () => {
             {units.map((unit) => {
               console.log('Unit data:', unit);
               console.log('Unit imgUrl:', unit.imgUrl);
-              const normalizedUrl = unit.imgUrl ? unit.imgUrl.replace(/\\/g, '/') : null;
+              const normalizedUrl = unit.imgUrl ? unit.imgUrl.replaceAll(/\\/g, '/') : null;
               console.log('Normalized URL:', normalizedUrl);
               return (
               <div key={unit.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -968,8 +968,9 @@ const CourseDetails = () => {
         <form onSubmit={handleCreateUnit}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <label htmlFor="create-unit-name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                     <input
+                      id="create-unit-name"
                       type="text"
                       name="name"
                       value={formData.name}
@@ -981,8 +982,9 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="create-unit-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                     <textarea
+                      id="create-unit-description"
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
@@ -994,7 +996,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Unit Image</label>
+                    <label htmlFor="unit-image-upload" className="block text-sm font-medium text-gray-700 mb-1">Unit Image</label>
                     
                     {imagePreview ? (
                       <div className="relative mb-3">
@@ -1074,8 +1076,9 @@ const CourseDetails = () => {
         <form onSubmit={handleUpdateUnit}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <label htmlFor="edit-unit-name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                     <input
+                      id="edit-unit-name"
                       type="text"
                       name="name"
                       value={formData.name}
@@ -1087,8 +1090,9 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="edit-unit-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                     <textarea
+                      id="edit-unit-description"
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
@@ -1180,8 +1184,9 @@ const CourseDetails = () => {
               <form onSubmit={handleVideoSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label htmlFor="video-title" className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
                     <input
+                      id="video-title"
                       type="text"
                       name="title"
                       value={videoFormData.title}
@@ -1193,8 +1198,9 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes) *</label>
+                    <label htmlFor="video-duration" className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes) *</label>
                     <input
+                      id="video-duration"
                       type="number"
                       name="duration"
                       value={videoFormData.duration}
@@ -1207,8 +1213,9 @@ const CourseDetails = () => {
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="video-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                     <textarea
+                      id="video-description"
                       name="description"
                       value={videoFormData.description}
                       onChange={handleVideoInputChange}

@@ -548,7 +548,11 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50" 
           onClick={() => setShowProfile(false)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowProfile(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              setShowProfile(false);
+            }
+          }}
           role="button"
           tabIndex={0}
           aria-label="Close profile modal"
@@ -604,7 +608,11 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowStatusModal(false)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowStatusModal(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              setShowStatusModal(false);
+            }
+          }}
           role="button"
           tabIndex={0}
           aria-label="Close status modal"
@@ -656,7 +664,11 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowBulkModal(false)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowBulkModal(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              setShowBulkModal(false);
+            }
+          }}
           role="button"
           tabIndex={0}
           aria-label="Close bulk update modal"
@@ -708,7 +720,11 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowUpdateModal(false)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowUpdateModal(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              setShowUpdateModal(false);
+            }
+          }}
           role="button"
           tabIndex={0}
           aria-label="Close update contact modal"

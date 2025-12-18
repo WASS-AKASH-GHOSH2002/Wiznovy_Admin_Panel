@@ -2,6 +2,29 @@ import React, { useEffect, useState } from "react";
 import { api } from "../config/axios";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
+// Helper functions to reduce duplicate code
+const getStatusBadgeClass = (status) => {
+  return status === "ACTIVE" 
+    ? "px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+    : "px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800";
+};
+
+const getToggleButtonClass = (status) => {
+  return status === "ACTIVE"
+    ? "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-white hover:bg-amber-600"
+    : "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600";
+};
+
+const getFilterButtonClass = (isActive) => {
+  return isActive
+    ? "bg-blue-600 text-white shadow-md"
+    : "bg-gray-100 text-gray-700 hover:bg-gray-200";
+};
+
+const getEmptyStateMessage = (searchTerm) => {
+  return searchTerm ? "Try a different search term" : "Try changing the status filter";
+};
+
 const FacultyArea = () => {
   const [staffs, setStaffs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -102,11 +125,7 @@ const FacultyArea = () => {
       <div className="flex gap-3 mb-6">
         <button
           onClick={() => setStatusFilter("ACTIVE")}
-          className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            statusFilter === "ACTIVE"
-              ? "bg-blue-600 text-white shadow-md"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
+          className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${getFilterButtonClass(statusFilter === "ACTIVE")}`}
         >
           Active Staff
         </button>
@@ -132,13 +151,7 @@ const FacultyArea = () => {
             No {statusFilter.toLowerCase()} staff found.
           </p>
           <p className="text-gray-400 text-sm mt-2">
-            {(() => {
-              if (searchTerm) {
-                return "Try a different search term";
-              } else {
-                return "Try changing the status filter";
-              }
-            })()}
+            {getEmptyStateMessage(searchTerm)}
           </p>
         </div>
       ) : (
@@ -164,15 +177,7 @@ const FacultyArea = () => {
                   </td>
                   <td className="p-4">{s.phoneNumber}</td>
                   <td className="p-4">
-                    <span
-                      className={(() => {
-                        if (s.status === "ACTIVE") {
-                          return "px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800";
-                        } else {
-                          return "px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800";
-                        }
-                      })()}
-                    >
+                    <span className={getStatusBadgeClass(s.status)}>
                       {s.status}
                     </span>
                   </td>
@@ -185,13 +190,7 @@ const FacultyArea = () => {
                             s.status === "ACTIVE" ? "DEACTIVE" : "ACTIVE"
                           )
                         }
-                        className={(() => {
-                          if (s.status === "ACTIVE") {
-                            return "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-white hover:bg-amber-600";
-                          } else {
-                            return "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600";
-                          }
-                        })()}
+                        className={getToggleButtonClass(s.status)}
                       >
                         {s.status === "ACTIVE" ? "DEACTIVE" : "Activate"}
                       </button>

@@ -15,7 +15,7 @@ const VerifyOTP = () => {
 
   const email = location.state?.email || '';
 
-  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
+  const [otp, setOtp] = useState(new Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
@@ -116,7 +116,7 @@ const VerifyOTP = () => {
       setMessage('New OTP has been sent to your email.');
       setCanResend(false);
       setCountdown(RESEND_TIME);
-      setOtp(Array(OTP_LENGTH).fill(''));
+      setOtp(new Array(OTP_LENGTH).fill(''));
     } catch {
       setMessage('Failed to resend OTP. Please try again.');
     } finally {
