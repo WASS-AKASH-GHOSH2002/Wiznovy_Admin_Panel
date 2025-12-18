@@ -12,10 +12,8 @@ import {
   Users,
   Laptop,
   Home,
-  Settings,
   MessageCircle,
   Newspaper,
-  QrCode,
   ChevronDown,
   ChevronUp,
   PcCase,
@@ -37,17 +35,15 @@ import UserManagement from "../pages/UserManagement";
 
 
 
-import CouponManager from "../pages/CouponManager";
+
 import CourseManager from "../pages/CourseManager";
 
-import FaqManager from "../pages/FaqSection";
-import ContactUsAdmin from "../pages/Contact_us";
-import AdminFeedback from "../pages/Feedback";
-import { API_BASE_URL } from "../config/api";
-import NotificationManager from "../pages/NotificationManager";
-import SettingsPage from "../pages/Settings";
 
-import Menu_permission from "../pages/Menu_permission";
+import { API_BASE_URL } from "../config/api";
+
+
+
+import MenuPermission from "../pages/Menu_permission";
 import Tutormanagement from "../pages/Tutormanagement";
 import CountryManagement from "../pages/CountryManagement";
 import StateManagement from "../pages/StateManagement";
@@ -64,65 +60,52 @@ import CityManager from "../pages/CityManager";
 const totalCourses = 4;
 const totalLectures = 1;
 
-const getStats = (statsData) => {
-  const {
-    facultyCount,
-    activeStaffCount,
-    inactiveStaffCount,
-    totalUsersCount,
-    activeUsersCount,
-    inactiveUsersCount,
-    totalCoursesCount,
-    totalFeedbackCount,
-    totalNewsCount
-  } = statsData;
-  
-  return [
+const getStats = (counts) => [
   {
     title: "All Users",
-    count: totalUsersCount,
+    count: counts.totalUsersCount,
     color: "border-red-400 text-red-500",
     icon: <User />,
     path: "/users",
   },
   {
     title: "Active Users",
-    count: activeUsersCount,
+    count: counts.activeUsersCount,
     color: "border-green-400 text-green-500",
     icon: <Users />,
     path: "/users?status=active",
   },
   {
     title: "Inactive Users",
-    count: inactiveUsersCount,
+    count: counts.inactiveUsersCount,
     color: "border-red-400 text-red-500",
     icon: <Users />,
     path: "/users?status=inactive",
   },
   {
     title: "Admin & Staff",
-    count: facultyCount,
+    count: counts.facultyCount,
     color: "border-blue-300 text-blue-500",
     icon: <Users />,
     path: "/faculty/all",
   },
   {
     title: "Active Staff",
-    count: activeStaffCount,
+    count: counts.activeStaffCount,
     color: "border-green-400 text-green-500",
     icon: <Users />,
     path: "/faculty/all?status=active",
   },
   {
     title: "Inactive Staff",
-    count: inactiveStaffCount,
+    count: counts.inactiveStaffCount,
     color: "border-red-400 text-red-500",
     icon: <Users />,
     path: "/faculty/all?status=inactive",
   },
   {
     title: "Total courses",
-    count: totalCoursesCount,
+    count: counts.totalCoursesCount,
     color: "border-yellow-300 text-yellow-500",
     icon: <Home />,
     path: "/courses/show",
@@ -137,20 +120,19 @@ const getStats = (statsData) => {
   // },
   {
     title: "Total Feedback",
-    count: totalFeedbackCount,
+    count: counts.totalFeedbackCount,
     color: "border-indigo-300 text-indigo-500",
     icon: <ShieldCheck />,
     path: "/feedback",
   },
   {
     title: "Total News",
-    count: totalNewsCount,
+    count: counts.totalNewsCount,
     color: "border-pink-300 text-pink-500",
     icon: <Newspaper />,
     path: "/news-management",
   },
 ];
-};
 
 const facultyMenuItems = [
   { label: "All Admin&Staff", path: "/faculty/all" },
@@ -186,8 +168,8 @@ const additionalMenuItems = [
   // { label: "Contact Us", path: "/contact-us", icon: <PhoneCall size={18} /> },
   // { label: "Feedback Management", path: "/feedback", icon: <ShieldCheck size={18} /> },
   // { label: "News Management", path: "/news-management", icon: <Newspaper size={18} /> },
-  { label: "Notification Manager", path: "/notification-manager", icon: <QrCode size={18} /> },
-  { label: "Settings", path: "/settings", icon: <Settings size={18} /> },
+
+
 ];
 
 export default function DashboardPage() {
@@ -244,7 +226,7 @@ export default function DashboardPage() {
           },
         });
 
-        if (activeStaffRes.status === 200 && activeStaffRes.data?.result && inactiveStaffRes.status === 200 && inactiveStaffRes.data?.result) {
+        if (activeStaffRes.status === 200 && activeStaffRes.data && inactiveStaffRes.status === 200 && inactiveStaffRes.data) {
           const activeStaffData = activeStaffRes.data.result || [];
           const inactiveStaffData = inactiveStaffRes.data.result || [];
           const allStaff = [...activeStaffData, ...inactiveStaffData];
@@ -319,7 +301,7 @@ export default function DashboardPage() {
 
       } catch (error) {
         console.error("Error fetching stats:", error.message);
-        if (error.response && error.response.status === 401) {
+        if (error.response?.status === 401) {
           dispatch(logoutUser());
           navigate("/login");
         }
@@ -510,7 +492,7 @@ export default function DashboardPage() {
           <Route path="/topics" element={<TopicManager />} />
           <Route path="/faculty/all" element={<AllFaculty facultyList={facultyList} setFacultyList={setFacultyList} />} />
           <Route path="/faculty/add" element={<FacultyArea facultyList={facultyList} setFacultyList={setFacultyList} />} />
-          <Route path="/menu-permission/:accountId" element={<Menu_permission />} />
+          <Route path="/menu-permission/:accountId" element={<MenuPermission />} />
           <Route path="/courses/show" element={<CourseManager courseList={courseList} setCourseList={setCourseList} />} />
           <Route path="/courses/:courseId/details" element={<CourseDetails />} />
           <Route path="/courses/add" element={<PlaceholderPage page="Add Course" />} />
@@ -518,21 +500,12 @@ export default function DashboardPage() {
           {/* <Route path="/study-material" element={<Study_material />} /> */}
       
           <Route path="/subject" element={<SubjectsNew />} />
-          <Route path="/faqs" element={<FaqManager />} />
-          <Route path="/contact-us" element={<ContactUsAdmin />} />
-          <Route path="/feedback" element={<AdminFeedback />} />
 
-          <Route path="/notification-manager" element={
-            
-              <NotificationManager />
-          } />
-          <Route path="/coupons" element={
-            
-              <CouponManager />
-           
-          } />
 
-          <Route path="/settings" element={<SettingsPage />} />
+
+
+
+
           <Route path="*" element={<PlaceholderPage page="404 - Not Found" />} />
         </Routes>
       </main>
@@ -556,17 +529,7 @@ function OverviewSection({ facultyCount, activeStaffCount, inactiveStaffCount, t
       <h2 className="text-xl font-semibold mb-4 text-gray-800">Quick Overview</h2>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {getStats({
-          facultyCount,
-          activeStaffCount,
-          inactiveStaffCount,
-          totalUsersCount,
-          activeUsersCount,
-          inactiveUsersCount,
-          totalCoursesCount,
-          totalFeedbackCount,
-          totalNewsCount
-        }).map((item) => (
+        {getStats({ facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount }).map((item) => (
           <button
             key={item.path}
             onClick={() => {
@@ -629,8 +592,8 @@ function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isAc
   
   return (
     <div>
-      <div
-        className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition ${
+      <button
+        className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition w-full text-left ${
           isActive 
             ? 'bg-[#16423C] text-white' 
             : 'hover:bg-blue-100 text-gray-800'
@@ -640,8 +603,6 @@ function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isAc
           if (onClick && !hasDropdown) onClick();
         }}
         onKeyDown={handleKeyDown}
-        role="button"
-        tabIndex={0}
       >
         <div className="flex items-center gap-3">
           {icon && <span>{icon}</span>}
@@ -652,7 +613,7 @@ function SidebarItem({ icon, label, onClick, hasDropdown = false, children, isAc
             {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </span>
         )}
-      </div>
+      </button>
       {hasDropdown && open && (
         <div className="ml-4 mt-1 space-y-1 text-sm border-l border-gray-200 pl-3">{children}</div>
       )}
@@ -678,15 +639,13 @@ function DropdownItem({ label, onClick }) {
   };
   
   return (
-    <div
-      className="px-2 py-1 rounded-md hover:bg-gray-200 cursor-pointer text-gray-700 transition"
+    <button
+      className="px-2 py-1 rounded-md hover:bg-gray-200 cursor-pointer text-gray-700 transition w-full text-left"
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      role="button"
-      tabIndex={0}
     >
       {label}
-    </div>
+    </button>
   );
 }
 

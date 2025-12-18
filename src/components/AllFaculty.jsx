@@ -2,16 +2,6 @@ import React, { useEffect, useState } from "react";
 import { api } from "../config/axios";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
-const getStatusButtonClass = (status) => {
-  return status === "ACTIVE"
-    ? "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-white hover:bg-amber-600"
-    : "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600";
-};
-
-const getStatusButtonText = (status) => {
-  return status === "ACTIVE" ? "DEACTIVE" : "Activate";
-};
-
 const FacultyArea = () => {
   const [staffs, setStaffs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +30,7 @@ const FacultyArea = () => {
   }, [statusFilter]);
 
   const toggleStatus = async (id, status) => {
-    if (window.confirm(`Are you sure you want to ${status === "ACTIVE" ? "activate" : "deactivate"} this staff member?`)) {
+    if (globalThis.confirm(`Are you sure you want to ${status === "ACTIVE" ? "activate" : "deactivate"} this staff member?`)) {
       await api.put(`/account/staff/status/${id}`, { status });
       fetchStaffs();
     }
@@ -53,7 +43,7 @@ const FacultyArea = () => {
     if (!/[a-z]/.test(password) || !/[A-Z]/.test(password)) {
       return "Password must contain both uppercase and lowercase letters";
     }
-    if (!/[0-9]/.test(password)) {
+    if (!/\d/.test(password)) {
       return "Password must contain at least one number";
     }
     return "";
@@ -187,9 +177,15 @@ const FacultyArea = () => {
                             s.status === "ACTIVE" ? "DEACTIVE" : "ACTIVE"
                           )
                         }
-                        className={getStatusButtonClass(s.status)}
+                        className={(() => {
+                          const baseClasses = "px-3 py-1.5 rounded-lg text-xs font-medium transition-all";
+                          const statusClasses = s.status === "ACTIVE"
+                            ? "bg-amber-500 text-white hover:bg-amber-600"
+                            : "bg-green-500 text-white hover:bg-green-600";
+                          return `${baseClasses} ${statusClasses}`;
+                        })()}
                       >
-                        {getStatusButtonText(s.status)}
+                        {s.status === "ACTIVE" ? "DEACTIVE" : "Activate"}
                       </button>
                       <button
                         onClick={() => setSelected(s.id)}

@@ -1,37 +1,82 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '../config/axios';
 
+/* =====================
+   ASYNC THUNKS
+===================== */
+
 export const fetchLanguages = createAsyncThunk(
   'languages/fetchLanguages',
-  async (params = {}) => {
-    const { limit = 50, offset = 0, keyword = '', status = '' } = params;
-    const queryParams = new URLSearchParams({
-      limit: limit.toString(),
-      offset: offset.toString(),
-      ...(keyword && { keyword }),
-      ...(status && { status })
-    });
-    
-    const response = await api.get(`/languages/all?${queryParams}`);
-    return response.data;
+  async (params, { rejectWithValue }) => {
+    try {
+      const { limit = 50, offset = 0, keyword = '', status = '' } = params || {};
+
+      const queryParams = new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+        ...(keyword && { keyword }),
+        ...(status && { status }),
+      });
+
+      const response = await api.get(`/languages/all?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
 export const createLanguage = createAsyncThunk(
   'languages/createLanguage',
-  async (languageData) => {
-    const response = await api.post('/languages', languageData);
-    return response.data;
+  async (languageData, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/languages', languageData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
 export const updateLanguageStatus = createAsyncThunk(
   'languages/updateLanguageStatus',
-  async ({ languageId, status }) => {
-    const response = await api.patch(`/languages/${languageId}/status`, { status });
-    return response.data;
+  async ({ languageId, status }, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(
+        `/languages/${languageId}/status`,
+        { status }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
+
+/* =====================
+   REDUCER HELPERS
+===================== */
+
+const pendingReducer = (state) => {
+  state.loading = true;
+  state.error = null;
+};
+
+const rejectedReducer = (state, action) => {
+  state.loading = false;
+  state.error = action.payload || action.error?.message;
+};
+
+const updateById = (list, payload) => {
+  const index = list.findIndex(item => item.id === payload.id);
+  if (index !== -1) {
+    list[index] = payload;
+  }
+};
+
+/* =====================
+   SLICE
+===================== */
 
 const languageSlice = createSlice({
   name: 'languages',
@@ -42,8 +87,8 @@ const languageSlice = createSlice({
     error: null,
     filters: {
       search: '',
-      status: ''
-    }
+      status: '',
+    },
   },
   reducers: {
     setSearch: (state, action) => {
@@ -51,34 +96,37 @@ const languageSlice = createSlice({
     },
     setStatusFilter: (state, action) => {
       state.filters.status = action.payload;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchLanguages.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+
+      /* FETCH LANGUAGES */
+      .addCase(fetchLanguages.pending, pendingReducer)
       .addCase(fetchLanguages.fulfilled, (state, action) => {
         state.loading = false;
         state.languages = action.payload.result;
         state.total = action.payload.total;
       })
-      .addCase(fetchLanguages.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      })
+      .addCase(fetchLanguages.rejected, rejectedReducer)
+
+      /* CREATE LANGUAGE */
+      .addCase(createLanguage.pending, pendingReducer)
       .addCase(createLanguage.fulfilled, (state, action) => {
+        state.loading = false;
         state.languages.unshift(action.payload);
         state.total += 1;
       })
+      .addCase(createLanguage.rejected, rejectedReducer)
+
+      /* UPDATE LANGUAGE STATUS */
+      .addCase(updateLanguageStatus.pending, pendingReducer)
       .addCase(updateLanguageStatus.fulfilled, (state, action) => {
-        const index = state.languages.findIndex(lang => lang.id === action.payload.id);
-        if (index !== -1) {
-          state.languages[index] = action.payload;
-        }
-      });
-  }
+        state.loading = false;
+        updateById(state.languages, action.payload);
+      })
+      .addCase(updateLanguageStatus.rejected, rejectedReducer);
+  },
 });
 
 export const { setSearch, setStatusFilter } = languageSlice.actions;

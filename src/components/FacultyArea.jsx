@@ -1,16 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../config/axios";
 
-const getActionButtonClass = (status) => {
-  return status === "ACTIVE"
-    ? "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-white hover:bg-amber-600"
-    : "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600";
-};
-
-const getActionButtonText = (status) => {
-  return status === "ACTIVE" ? "Deactivate" : "Activate";
-};
-
 const FacultyArea = () => {
   const [activeTab, setActiveTab] = useState("manage");
   const [staffs, setStaffs] = useState([]);
@@ -187,11 +177,13 @@ const FacultyArea = () => {
                       <td className="p-4">{s.phoneNumber}</td>
                       <td className="p-4">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                            s.status === "ACTIVE"
+                          className={(() => {
+                            const baseClasses = "px-2.5 py-1 rounded-full text-xs font-medium";
+                            const statusClasses = s.status === "ACTIVE"
                               ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
+                              : "bg-red-100 text-red-800";
+                            return `${baseClasses} ${statusClasses}`;
+                          })()}
                         >
                           {s.status}
                         </span>
@@ -205,9 +197,15 @@ const FacultyArea = () => {
                                 s.status === "ACTIVE" ? "DEACTIVE" : "ACTIVE"
                               )
                             }
-                            className={getActionButtonClass(s.status)}
+                            className={(() => {
+                              const baseClasses = "px-3 py-1.5 rounded-lg text-xs font-medium transition-all";
+                              const statusClasses = s.status === "ACTIVE"
+                                ? "bg-amber-500 text-white hover:bg-amber-600"
+                                : "bg-green-500 text-white hover:bg-green-600";
+                              return `${baseClasses} ${statusClasses}`;
+                            })()}
                           >
-                            {getActionButtonText(s.status)}
+                            {s.status === "ACTIVE" ? "Deactivate" : "Activate"}
                           </button>
                           <button
                             onClick={() => setSelected(s.id)}

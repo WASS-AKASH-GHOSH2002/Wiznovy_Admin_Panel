@@ -38,22 +38,11 @@ const PageManager = () => {
     setShowViewModal(true);
   };
 
-  const handleEdit = (page) => {
-    setSelectedPage(page);
-    setFormData({
-      title: page.title,
-      pageType: page.pageType,
-      desc: page.desc
-    });
-    if (page.imageUrl) {
-      setImagePreview(page.imageUrl);
-    }
-    setShowEditForm(true);
-  };
+
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this page?')) {
-      const result = await dispatch(deletePage(id));
+    if (globalThis.confirm('Are you sure you want to delete this page?')) {
+      const result = dispatch(deletePage(id));
       if (result.type.endsWith('/fulfilled')) {
         toast.success('Page deleted successfully!');
         const offset = (currentPage - 1) * itemsPerPage;
@@ -120,7 +109,7 @@ const PageManager = () => {
     
       let result;
       if (showEditForm && selectedPage) {
-        result = await dispatch(updatePage({ id: selectedPage.id, pageData: submitData }));
+        result = dispatch(updatePage({ id: selectedPage.id, pageData: submitData }));
         if (result.type.endsWith('/fulfilled')) {
           toast.success('Page updated successfully!');
           setShowEditForm(false);
@@ -129,7 +118,7 @@ const PageManager = () => {
           return;
         }
       } else {
-        result = await dispatch(createPage(submitData));
+        result = dispatch(createPage(submitData));
         if (result.type.endsWith('/fulfilled')) {
           toast.success('Page created successfully!');
           setShowCreateForm(false);
@@ -165,7 +154,7 @@ const PageManager = () => {
         desc: formData.desc
       };
       
-      const result = await dispatch(updatePageDetails({ id: selectedPage.id, pageData: submitData }));
+      const result = dispatch(updatePageDetails({ id: selectedPage.id, pageData: submitData }));
       if (result.type.endsWith('/fulfilled')) {
         toast.success('Page text updated successfully!');
         setShowUpdateTextModal(false);
@@ -189,7 +178,7 @@ const PageManager = () => {
       const submitData = new FormData();
       submitData.append('file', imageFile);
       
-      const result = await dispatch(updatePage({ id: selectedPage.id, pageData: submitData }));
+      const result = dispatch(updatePage({ id: selectedPage.id, pageData: submitData }));
       if (result.type.endsWith('/fulfilled')) {
         toast.success('Page image updated successfully!');
         setShowUpdateImageModal(false);
@@ -523,7 +512,7 @@ const PageManager = () => {
                         <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
                           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                         </svg>
-                        <p className="text-xs text-gray-500">Upload Image</p>
+                        <span className="text-xs text-gray-500">Upload Image</span>
                       </div>
                       <input 
                         id="pageImageUpload"
@@ -730,12 +719,12 @@ const PageManager = () => {
           <div className="max-h-96 overflow-y-auto">
             <div className="space-y-4">
               <div>
-                <label htmlFor="viewTitle" className="block text-sm font-medium text-gray-700">Title</label>
-                <p id="viewTitle" className="text-gray-900 font-medium">{selectedPage.title}</p>
+                <span className="block text-sm font-medium text-gray-700">Title</span>
+                <p className="text-gray-900 font-medium">{selectedPage.title}</p>
               </div>
               <div>
-                <label htmlFor="viewPageType" className="block text-sm font-medium text-gray-700">Page Type</label>
-                <span id="viewPageType" className={`px-2 py-1 text-xs rounded-full ${
+                <span className="block text-sm font-medium text-gray-700">Page Type</span>
+                <span className={`px-2 py-1 text-xs rounded-full ${
                   selectedPage.pageType === "USER" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
                 }`}>
                   {selectedPage.pageType}
@@ -743,24 +732,24 @@ const PageManager = () => {
               </div>
               {selectedPage.imageUrl && (
                 <div>
-                  <label htmlFor="viewImage" className="block text-sm font-medium text-gray-700">Image</label>
-                  <img id="viewImage" src={normalizeImageUrl(selectedPage.imageUrl)} alt={selectedPage.title} className="w-32 h-32 object-cover rounded-lg" />
+                  <span className="block text-sm font-medium text-gray-700">Image</span>
+                  <img src={normalizeImageUrl(selectedPage.imageUrl)} alt={selectedPage.title} className="w-32 h-32 object-cover rounded-lg" />
                 </div>
               )}
               <div>
-                <label htmlFor="viewDescription" className="block text-sm font-medium text-gray-700">Description</label>
-                <div id="viewDescription" className="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
+                <span className="block text-sm font-medium text-gray-700">Description</span>
+                <div className="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
                   <p className="text-gray-900 whitespace-pre-wrap">{selectedPage.desc}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="viewCreatedAt" className="block text-sm font-medium text-gray-700">Created At</label>
-                  <p id="viewCreatedAt" className="text-gray-900">{new Date(selectedPage.createdAt).toLocaleString()}</p>
+                  <span className="block text-sm font-medium text-gray-700">Created At</span>
+                  <p className="text-gray-900">{new Date(selectedPage.createdAt).toLocaleString()}</p>
                 </div>
                 <div>
-                  <label htmlFor="viewUpdatedAt" className="block text-sm font-medium text-gray-700">Updated At</label>
-                  <p id="viewUpdatedAt" className="text-gray-900">{new Date(selectedPage.updatedAt).toLocaleString()}</p>
+                  <span className="block text-sm font-medium text-gray-700">Updated At</span>
+                  <p className="text-gray-900">{new Date(selectedPage.updatedAt).toLocaleString()}</p>
                 </div>
               </div>
             </div>

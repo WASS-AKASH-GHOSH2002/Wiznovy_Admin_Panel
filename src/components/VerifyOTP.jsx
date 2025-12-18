@@ -68,7 +68,7 @@ const VerifyOTP = () => {
     setMessage('');
 
     try {
-      await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
+      const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
         email,
         otp: otp.join('')
       });
@@ -126,7 +126,7 @@ const VerifyOTP = () => {
           <div className="flex justify-center gap-2">
             {otp.map((digit, index) => (
               <input
-                key={`otp-input-${index}`}
+                key={index}
                 ref={el => inputRefs.current[index] = el}
                 type="text"
                 inputMode="numeric"

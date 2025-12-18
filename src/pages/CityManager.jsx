@@ -37,7 +37,7 @@ const CityManager = () => {
 
   const confirmStatusUpdate = async () => {
     if (statusUpdateCity && newStatus) {
-      const result = await dispatch(updateCityStatus({ cityId: statusUpdateCity.id, status: newStatus }));
+      const result = dispatch(updateCityStatus({ cityId: statusUpdateCity.id, status: newStatus }));
       if (result.type.endsWith('/fulfilled')) {
         toast.success('City status updated successfully!');
         dispatch(fetchCities({ stateId: filters.stateId }));

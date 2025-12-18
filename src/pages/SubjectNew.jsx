@@ -31,25 +31,18 @@ const SubjectNew = () => {
     setShowProfile(true);
   };
 
-  const handleRefresh = () => {
+  const handleRefreshAndSearch = () => {
     dispatch(fetchSubjects({ 
       keyword: filters.search, 
       status: filters.status 
     }));
   };
 
-  const handleSearch = () => {
-    dispatch(fetchSubjects({ 
-      keyword: filters.search, 
-      status: filters.status 
-    }));
-  };
-
-  const handleCreateSubject = async (e) => {
+  const handleCreateSubject = (e) => {
     e.preventDefault();
     if (!newSubject.name.trim()) return;
     
-    await dispatch(createSubject(newSubject));
+    dispatch(createSubject(newSubject));
     setNewSubject({ name: '', description: '' });
     setShowCreateForm(false);
   };
@@ -71,7 +64,7 @@ const SubjectNew = () => {
         <div className="text-center">
           <p className="text-red-500 mb-4">Error: {error}</p>
           <button
-            onClick={handleRefresh}
+            onClick={handleRefreshAndSearch}
             className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
           >
             Try Again
@@ -94,7 +87,7 @@ const SubjectNew = () => {
               <Plus size={18} /> Add Subject
             </button>
             <button
-              onClick={handleRefresh}
+              onClick={handleRefreshAndSearch}
               className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center gap-2"
             >
               <RefreshCw size={18} /> Refresh
@@ -122,7 +115,7 @@ const SubjectNew = () => {
             <option value="INACTIVE">Inactive</option>
           </select>
           <button
-            onClick={handleSearch}
+            onClick={handleRefreshAndSearch}
             className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
           >
             Search

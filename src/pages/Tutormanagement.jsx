@@ -3,9 +3,23 @@ import { useDispatch, useSelector } from "react-redux";
 import { Eye, RefreshCw, FileText, Download, Settings, Edit } from "lucide-react";
 import { toast } from 'react-toastify';
 import { exportTutorsToPDF, exportTutorsToCSV } from "../utils/downloadUtils";
-import { fetchTutors, updateTutorStatus, bulkUpdateTutorStatus, setSearch, setStatusFilter, updateTutorContact, fetchTutorDetails } from "../store/tutorSlice";
+import { fetchTutors, updateTutorStatus, bulkUpdateTutorStatus, setStatusFilter, updateTutorContact, fetchTutorDetails } from "../store/tutorSlice";
 import { fetchCountries } from "../store/countrySlice";
 import { fetchSubjects } from "../store/subjectSlice";
+
+const getStatusClass = (status) => {
+  if (status === "ACTIVE") return "bg-green-100 text-green-800";
+  if (status === "PENDING") return "bg-yellow-100 text-yellow-800";
+  if (status === "SUSPENDED") return "bg-orange-100 text-orange-800";
+  if (status === "DELETED") return "bg-gray-100 text-gray-800";
+  return "bg-red-100 text-red-800";
+};
+
+const getDisplayValue = (value) => {
+  if (value === null || value === undefined) return "N/A";
+  if (typeof value === 'object') return value?.name || "N/A";
+  return String(value);
+};
 
 const Tutormanagement = () => {
   const dispatch = useDispatch();
@@ -27,6 +41,7 @@ const Tutormanagement = () => {
   const [updateTutor, setUpdateTutor] = useState(null);
   const [updateData, setUpdateData] = useState({ email: '', phoneNumber: '' });
   const [validationErrors, setValidationErrors] = useState({ email: '', phoneNumber: '' });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     dispatch(fetchCountries({ limit: 100, status: '' }));
@@ -83,7 +98,7 @@ const Tutormanagement = () => {
 
   const confirmStatusUpdate = async () => {
     if (statusUpdateTutor && newStatus) {
-      const result = await dispatch(updateTutorStatus({ tutorId: statusUpdateTutor.id, status: newStatus }));
+      const result = dispatch(updateTutorStatus({ tutorId: statusUpdateTutor.id, status: newStatus }));
       
       if (result.type.endsWith('/fulfilled')) {
         toast.success('Tutor status updated successfully!');
@@ -129,7 +144,7 @@ const Tutormanagement = () => {
 
   const confirmBulkStatusUpdate = async () => {
     if (selectedTutors.length > 0 && bulkStatus) {
-      const result = await dispatch(bulkUpdateTutorStatus({ ids: selectedTutors, status: bulkStatus }));
+      const result = dispatch(bulkUpdateTutorStatus({ ids: selectedTutors, status: bulkStatus }));
       
       if (result.type.endsWith('/fulfilled')) {
         toast.success(`${selectedTutors.length} tutor(s) status updated successfully!`);
@@ -178,7 +193,7 @@ const Tutormanagement = () => {
   };
 
   const handlePhoneChange = (e) => {
-    const value = e.target.value.replaceAll(/[^0-9]/g, '');
+    const value = e.target.value.replaceAll(/\D/g, '');
     setUpdateData(prev => ({ ...prev, phoneNumber: value }));
     if (value && value.length < 10) {
       setValidationErrors(prev => ({ ...prev, phoneNumber: 'Phone number must be at least 10 digits' }));
@@ -190,39 +205,45 @@ const Tutormanagement = () => {
   const confirmUpdateContact = async () => {
     if (updateTutor && updateData.email.trim() && updateData.phoneNumber.trim() && 
         validateEmail(updateData.email) && !validationErrors.email && !validationErrors.phoneNumber) {
-      const result = await dispatch(updateTutorContact({ 
-        id: updateTutor.id, 
-        email: updateData.email.trim(),
-        phoneNumber: updateData.phoneNumber.trim()
-      }));
+      setIsUpdating(true);
       
-      if (result.type.endsWith('/fulfilled')) {
-        toast.success('Contact updated successfully!');
-        const offset = (currentPage - 1) * itemsPerPage;
-        const fetchParams = { 
-          limit: itemsPerPage, 
-          offset,
-          ...(keyword && { keyword: keyword }),
-          ...(filters.status && { status: filters.status }),
-          ...(selectedCountry && { countryId: selectedCountry }),
-          ...(selectedSubject && { subjectId: selectedSubject })
-        };
-        dispatch(fetchTutors(fetchParams));
-      } else {
-        toast.error('Failed to update contact');
+      try {
+        const result = await dispatch(updateTutorContact({ 
+          id: updateTutor.id, 
+          email: updateData.email.trim(),
+          phoneNumber: updateData.phoneNumber.trim()
+        }));
+        
+        if (result.type.endsWith('/fulfilled')) {
+          toast.success('Contact updated successfully!');
+          const offset = (currentPage - 1) * itemsPerPage;
+          const fetchParams = { 
+            limit: itemsPerPage, 
+            offset,
+            ...(keyword && { keyword: keyword }),
+            ...(filters.status && { status: filters.status }),
+            ...(selectedCountry && { countryId: selectedCountry }),
+            ...(selectedSubject && { subjectId: selectedSubject })
+          };
+          dispatch(fetchTutors(fetchParams));
+        } else {
+          toast.error('Failed to update contact');
+        }
+        
+        setShowUpdateModal(false);
+        setUpdateTutor(null);
+        setUpdateData({ email: '', phoneNumber: '' });
+        setValidationErrors({ email: '', phoneNumber: '' });
+      } finally {
+        setIsUpdating(false);
       }
-      
-      setShowUpdateModal(false);
-      setUpdateTutor(null);
-      setUpdateData({ email: '', phoneNumber: '' });
-      setValidationErrors({ email: '', phoneNumber: '' });
     }
   };
 
   const handleViewProfile = async (tutor) => {
     setSelectedTutor(tutor);
     setShowProfile(true);
-    await dispatch(fetchTutorDetails(tutor.id));
+    dispatch(fetchTutorDetails(tutor.id));
   };
 
   const handleRefresh = () => {
@@ -424,13 +445,7 @@ const Tutormanagement = () => {
                   </td>
                   <td className="p-2 sm:p-4 text-sm sm:text-base hidden md:table-cell">${tutor.tutorDetail?.hourlyRate || "0.00"}/hr</td>
                   <td className="p-2 sm:p-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      tutor.status === "ACTIVE" ? "bg-green-100 text-green-800" : 
-                      tutor.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
-                      tutor.status === "SUSPENDED" ? "bg-orange-100 text-orange-800" :
-                      tutor.status === "DELETED" ? "bg-gray-100 text-gray-800" :
-                      "bg-red-100 text-red-800"
-                    }`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusClass(tutor.status)}`}>
                       {tutor.status}
                     </span>
                   </td>
@@ -521,15 +536,10 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50" 
           onClick={() => setShowProfile(false)}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setShowProfile(false)}
-          role="dialog"
-          aria-modal="true"
-          tabIndex={-1}
         >
           <div 
             className="bg-white p-8 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" 
             onClick={(e) => e.stopPropagation()}
-            role="document"
           >
             <h3 className="text-xl font-bold mb-4">Tutor Profile</h3>
             {detailsLoading ? (
@@ -550,14 +560,7 @@ const Tutormanagement = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Object.entries(selectedTutorDetails).filter(([key]) => key !== 'profileImage' && key !== 'id').map(([key, value]) => {
-                    let displayValue = "N/A";
-                    if (value !== null && value !== undefined) {
-                      if (typeof value === 'object') {
-                        displayValue = value?.name || "N/A";
-                      } else {
-                        displayValue = String(value);
-                      }
-                    }
+                    const displayValue = getDisplayValue(value);
                     return (
                       <div key={key} className="bg-gray-50 p-3 rounded-lg">
                         <p className="text-xs text-gray-500 uppercase mb-1">{key.replaceAll(/([A-Z])/g, ' $1').trim()}</p>
@@ -585,10 +588,6 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowStatusModal(false)}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setShowStatusModal(false)}
-          role="dialog"
-          aria-modal="true"
-          tabIndex={-1}
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"
@@ -640,10 +639,6 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowBulkModal(false)}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setShowBulkModal(false)}
-          role="dialog"
-          aria-modal="true"
-          tabIndex={-1}
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"
@@ -696,10 +691,6 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowUpdateModal(false)}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setShowUpdateModal(false)}
-          role="dialog"
-          aria-modal="true"
-          tabIndex={-1}
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"
@@ -755,10 +746,15 @@ const Tutormanagement = () => {
               </button>
               <button
                 onClick={confirmUpdateContact}
-                disabled={!updateData.email.trim() || !updateData.phoneNumber.trim() || validationErrors.email || validationErrors.phoneNumber || !validateEmail(updateData.email)}
+                disabled={!updateData.email.trim() || !updateData.phoneNumber.trim() || validationErrors.email || validationErrors.phoneNumber || !validateEmail(updateData.email) || isUpdating}
                 className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
               >
-                Update Contact
+                {isUpdating ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Updating...
+                  </div>
+                ) : 'Update Contact'}
               </button>
             </div>
           </div>

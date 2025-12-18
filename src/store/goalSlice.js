@@ -2,211 +2,192 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 
-// Goal API thunks
+/* =====================
+   AXIOS HELPER
+===================== */
+
+const authRequest = async (method, url, data) => {
+  const token = localStorage.getItem('token');
+
+  const response = await axios({
+    method,
+    url: `${API_BASE_URL}${url}`,
+    data,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+};
+
+/* =====================
+   THUNKS
+===================== */
+
 export const createGoal = createAsyncThunk(
   'goals/create',
   async (goalData, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API_BASE_URL}/goal`, goalData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return await authRequest('post', '/goal', goalData);
+    } catch (e) {
+      return rejectWithValue(e.response?.data || e.message);
     }
-  }
+  },
 );
 
 export const getAllGoals = createAsyncThunk(
   'goals/getAll',
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/goal/all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return await authRequest('get', '/goal/all');
+    } catch (e) {
+      return rejectWithValue(e.response?.data || e.message);
     }
-  }
+  },
 );
 
 export const getGoalById = createAsyncThunk(
   'goals/getById',
   async (goalId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/goal/${goalId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return await authRequest('get', `/goal/${goalId}`);
+    } catch (e) {
+      return rejectWithValue(e.response?.data || e.message);
     }
-  }
+  },
 );
 
 export const updateGoal = createAsyncThunk(
   'goals/update',
   async ({ goalId, goalData }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(`${API_BASE_URL}/goal/${goalId}`, goalData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return await authRequest('patch', `/goal/${goalId}`, goalData);
+    } catch (e) {
+      return rejectWithValue(e.response?.data || e.message);
     }
-  }
+  },
 );
 
 export const updateGoalStatus = createAsyncThunk(
   'goals/updateStatus',
   async ({ goalId, status }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(`${API_BASE_URL}/goal/status/${goalId}`, { status }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return await authRequest('patch', `/goal/status/${goalId}`, { status });
+    } catch (e) {
+      return rejectWithValue(e.response?.data || e.message);
     }
-  }
+  },
 );
 
 export const deleteGoal = createAsyncThunk(
   'goals/delete',
   async (goalId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_BASE_URL}/goal/${goalId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await authRequest('delete', `/goal/${goalId}`);
       return goalId;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+    } catch (e) {
+      return rejectWithValue(e.response?.data || e.message);
     }
-  }
+  },
 );
 
-const initialState = {
-  goals: [],
-  currentGoal: null,
-  loading: false,
-  error: null
+/* =====================
+   REDUCER HELPERS
+===================== */
+
+const pending = (state) => {
+  state.loading = true;
+  state.error = null;
 };
+
+const rejected = (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+};
+
+/* =====================
+   SLICE
+===================== */
 
 const goalSlice = createSlice({
   name: 'goals',
-  initialState,
+  initialState: {
+    goals: [],
+    currentGoal: null,
+    loading: false,
+    error: null,
+  },
   reducers: {
     clearError: (state) => {
       state.error = null;
     },
     clearCurrentGoal: (state) => {
       state.currentGoal = null;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Create Goal
-      .addCase(createGoal.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+
+      /* CREATE */
+      .addCase(createGoal.pending, pending)
       .addCase(createGoal.fulfilled, (state, action) => {
         state.loading = false;
         state.goals.push(action.payload);
       })
-      .addCase(createGoal.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Get All Goals
-      .addCase(getAllGoals.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      .addCase(createGoal.rejected, rejected)
+
+      /* GET ALL */
+      .addCase(getAllGoals.pending, pending)
       .addCase(getAllGoals.fulfilled, (state, action) => {
         state.loading = false;
-        state.goals = action.payload.result || action.payload;
+        state.goals = action.payload?.result || action.payload;
       })
-      .addCase(getAllGoals.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Get Goal By ID
-      .addCase(getGoalById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      .addCase(getAllGoals.rejected, rejected)
+
+      /* GET BY ID */
+      .addCase(getGoalById.pending, pending)
       .addCase(getGoalById.fulfilled, (state, action) => {
         state.loading = false;
         state.currentGoal = action.payload;
       })
-      .addCase(getGoalById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Update Goal
-      .addCase(updateGoal.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      .addCase(getGoalById.rejected, rejected)
+
+      /* UPDATE */
+      .addCase(updateGoal.pending, pending)
       .addCase(updateGoal.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.goals.findIndex(goal => goal.id === action.payload.id);
-        if (index !== -1) {
-          state.goals[index] = action.payload;
-        }
+        const i = state.goals.findIndex(g => g.id === action.payload.id);
+        if (i !== -1) state.goals[i] = action.payload;
         if (state.currentGoal?.id === action.payload.id) {
           state.currentGoal = action.payload;
         }
       })
-      .addCase(updateGoal.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Update Goal Status
-      .addCase(updateGoalStatus.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      .addCase(updateGoal.rejected, rejected)
+
+      /* UPDATE STATUS */
+      .addCase(updateGoalStatus.pending, pending)
       .addCase(updateGoalStatus.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.goals.findIndex(goal => goal.id === action.payload.id);
-        if (index !== -1) {
-          state.goals[index] = action.payload;
-        }
+        const i = state.goals.findIndex(g => g.id === action.payload.id);
+        if (i !== -1) state.goals[i] = action.payload;
         if (state.currentGoal?.id === action.payload.id) {
           state.currentGoal = action.payload;
         }
       })
-      .addCase(updateGoalStatus.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Delete Goal
-      .addCase(deleteGoal.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      .addCase(updateGoalStatus.rejected, rejected)
+
+      /* DELETE */
+      .addCase(deleteGoal.pending, pending)
       .addCase(deleteGoal.fulfilled, (state, action) => {
         state.loading = false;
-        state.goals = state.goals.filter(goal => goal.id !== action.payload);
+        state.goals = state.goals.filter(g => g.id !== action.payload);
         if (state.currentGoal?.id === action.payload) {
           state.currentGoal = null;
         }
       })
-      .addCase(deleteGoal.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
-  }
+      .addCase(deleteGoal.rejected, rejected);
+  },
 });
 
 export const { clearError, clearCurrentGoal } = goalSlice.actions;

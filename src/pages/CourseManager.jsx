@@ -24,19 +24,112 @@ import { normalizeImageUrl } from '../utils/imageUtils';
 import { validateImageFile } from '../utils/fileValidation';
 import Modal from '../components/Modal';
 
-const getAccessTypeClass = (accessType) => {
-  return accessType === 'FREE' 
-    ? 'bg-green-100 text-green-800' 
-    : 'bg-purple-100 text-purple-800';
+const StatusBadge = ({ status, onClick }) => {
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+      case 'APPROVED': return 'bg-blue-100 text-blue-800';
+      case 'REJECTED': return 'bg-red-100 text-red-800';
+      case 'DELETED': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={`px-2 py-1 rounded text-xs cursor-pointer hover:opacity-80 ${getStatusStyles(status)}`}
+    >
+      {status}
+    </button>
+  );
 };
 
-const getStatusClass = (status) => {
-  switch (status) {
-    case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-    case 'APPROVED': return 'bg-green-100 text-green-800';
-    case 'REJECTED': return 'bg-red-100 text-red-800';
-    default: return 'bg-gray-100 text-gray-800';
+StatusBadge.propTypes = {
+  status: PropTypes.string.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
+
+const ActionButton = ({ onClick, className, title, children }) => (
+  <button onClick={onClick} className={className} title={title}>
+    {children}
+  </button>
+);
+
+ActionButton.propTypes = {
+  onClick: PropTypes.func.isRequired,
+  className: PropTypes.string,
+  title: PropTypes.string,
+  children: PropTypes.node.isRequired,
+};
+
+const ImageUpload = ({ type, preview, onUpload, onRemove, inputRef, disabled }) => (
+  <div>
+    <label htmlFor={`${type}Upload`} className="block text-sm font-medium text-gray-700 mb-1">
+      Course {type === 'thumbnail' ? 'Thumbnail' : 'Image'}
+      {inputRef.current?.files?.[0] && (
+        <span className="ml-2 text-green-600 text-xs">✓ File selected</span>
+      )}
+    </label>
+    {preview ? (
+      <div className="relative mb-3">
+        <img src={preview} alt={`${type} preview`} className="w-full h-32 object-cover rounded-md" />
+        <button type="button" onClick={onRemove} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    ) : (
+      <div className="flex items-center justify-center w-full">
+        <label htmlFor={`${type}Upload`} className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+          <div className="flex flex-col items-center justify-center pt-2 pb-2">
+            <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
+              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+            </svg>
+            <p className="text-xs text-gray-500">Upload {type === 'thumbnail' ? 'Thumbnail' : 'Image'}</p>
+          </div>
+          <input id={`${type}Upload`} type="file" className="hidden" onChange={onUpload} accept="image/*" ref={inputRef} disabled={disabled} />
+        </label>
+      </div>
+    )}
+  </div>
+);
+
+ImageUpload.propTypes = {
+  type: PropTypes.string.isRequired,
+  preview: PropTypes.string,
+  onUpload: PropTypes.func.isRequired,
+  onRemove: PropTypes.func.isRequired,
+  inputRef: PropTypes.object.isRequired,
+  disabled: PropTypes.bool,
+};
+
+const PriceDisplay = ({ course }) => {
+  if (course.accessType === 'FREE') {
+    return <span className="text-green-600 font-medium">Free</span>;
   }
+  const hasDiscount = course.discountPrice !== course.price && course.discountPrice > 0;
+  return (
+    <div className="flex flex-col items-end">
+      {hasDiscount ? (
+        <>
+          <span className="text-red-600 line-through text-sm">${course.price}</span>
+          <span className="text-green-600 font-medium">${course.discountPrice}</span>
+        </>
+      ) : (
+        <span className="text-green-600 font-medium">${course.price}</span>
+      )}
+    </div>
+  );
+};
+
+PriceDisplay.propTypes = {
+  course: PropTypes.shape({
+    accessType: PropTypes.string.isRequired,
+    price: PropTypes.number.isRequired,
+    discountPrice: PropTypes.number.isRequired,
+  }).isRequired,
 };
 
 const CourseManager = () => {
@@ -208,10 +301,12 @@ const CourseManager = () => {
       );
       
       if (result.type.endsWith('/fulfilled')) {
-        await forceRefresh();
+        forceRefresh();
         setShowModal(false);
         resetForm();
         toast.success(editingCourse ? 'Course updated successfully!' : 'Course created successfully!');
+      } else {
+        toast.error('Failed to ' + (editingCourse ? 'update' : 'create') + ' course');
       }
     } catch (error) {
       console.error('Form submission error:', error);
@@ -298,8 +393,14 @@ const CourseManager = () => {
       whatYouWillLearn: course.whatYouWillLearn || '',
       validityDays: course.validityDays || 0,
       authorMessage: course.authorMessage || 'Welcome to this comprehensive course',
-      startDate: course.startDate ? (course.startDate.includes('T') ? course.startDate.slice(0, 16) : course.startDate) : new Date().toISOString().slice(0, 16),
-      endDate: course.endDate ? (course.endDate.includes('T') ? course.endDate.slice(0, 16) : course.endDate) : new Date().toISOString().slice(0, 16),
+      startDate: (() => {
+        if (!course.startDate) return new Date().toISOString().slice(0, 16);
+        return course.startDate.includes('T') ? course.startDate.slice(0, 16) : course.startDate;
+      })(),
+      endDate: (() => {
+        if (!course.endDate) return new Date().toISOString().slice(0, 16);
+        return course.endDate.includes('T') ? course.endDate.slice(0, 16) : course.endDate;
+      })(),
       thumbnail: course.thumbnailUrl || course.thumbnail || '',
       tutorId: course.tutorId || '',
       subjectId: course.subjectId || '',
@@ -336,11 +437,13 @@ const CourseManager = () => {
     
     if (result.type.endsWith('/fulfilled')) {
       // Force refresh all data to show deletion
-      await forceRefresh();
+      forceRefresh();
       setShowDeleteModal(false);
       setSelectedCourse(null);
       setDeleteReason('');
       toast.success('Course deleted successfully!');
+    } else {
+      toast.error('Failed to delete course');
     }
   };
 
@@ -381,10 +484,12 @@ const CourseManager = () => {
       
       if (result.type.endsWith('/fulfilled')) {
         // Force refresh all data to show updated thumbnail
-        await forceRefresh();
+        forceRefresh();
         setShowThumbnailModal(false);
         setSelectedCourse(null);
         toast.success('Thumbnail updated successfully!');
+      } else {
+        toast.error('Failed to update thumbnail');
       }
     } finally {
       dispatch(setThumbnailUpdating(false));
@@ -398,6 +503,8 @@ const CourseManager = () => {
       setShowStatusModal(false);
       setSelectedCourse(null);
       toast.success('Course status updated successfully!');
+    } else {
+      toast.error('Failed to update course status');
     }
   };
 
@@ -466,9 +573,8 @@ const CourseManager = () => {
     dispatch(setFilters({ [key]: value, offset: 0 }));
   };
 
-  const forceRefresh = async () => {
-
-    await dispatch(fetchCourses(filters));
+  const forceRefresh = () => {
+    dispatch(fetchCourses(filters));
     dispatch(fetchTutors({ limit: 100, status: 'ACTIVE' }));
     dispatch(fetchSubjects({ limit: 100, status: 'ACTIVE' }));
   };
@@ -481,113 +587,7 @@ const CourseManager = () => {
     dispatch(setFilters({ offset: newOffset }));
   };
 
-  const StatusBadge = ({ status, onClick }) => {
-    const getStatusStyles = (status) => {
-      switch (status) {
-        case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-        case 'APPROVED': return 'bg-blue-100 text-blue-800';
-        case 'REJECTED': return 'bg-red-100 text-red-800';
-        case 'DELETED': return 'bg-gray-100 text-gray-800';
-        default: return 'bg-gray-100 text-gray-800';
-      }
-    };
 
-    return (
-      <button
-        onClick={onClick}
-        className={`px-2 py-1 rounded text-xs cursor-pointer hover:opacity-80 ${getStatusStyles(status)}`}
-      >
-        {status}
-      </button>
-    );
-  };
-
-  StatusBadge.propTypes = {
-    status: PropTypes.string.isRequired,
-    onClick: PropTypes.func.isRequired,
-  };
-
-  const ActionButton = ({ onClick, className, title, children }) => (
-    <button onClick={onClick} className={className} title={title}>
-      {children}
-    </button>
-  );
-
-  ActionButton.propTypes = {
-    onClick: PropTypes.func.isRequired,
-    className: PropTypes.string,
-    title: PropTypes.string,
-    children: PropTypes.node.isRequired,
-  };
-
-  const ImageUpload = ({ type, preview, onUpload, onRemove, inputRef, disabled }) => (
-    <div>
-      <label htmlFor={`${type}Upload`} className="block text-sm font-medium text-gray-700 mb-1">
-        Course {type === 'thumbnail' ? 'Thumbnail' : 'Image'}
-        {inputRef.current?.files[0] && (
-          <span className="ml-2 text-green-600 text-xs">✓ File selected</span>
-        )}
-      </label>
-      {preview ? (
-        <div className="relative mb-3">
-          <img src={preview} alt={`${type} preview`} className="w-full h-32 object-cover rounded-md" />
-          <button type="button" onClick={onRemove} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center justify-center w-full">
-          <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-            <div className="flex flex-col items-center justify-center pt-2 pb-2">
-              <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-              </svg>
-              <p className="text-xs text-gray-500">Upload {type === 'thumbnail' ? 'Thumbnail' : 'Image'}</p>
-            </div>
-            <input id={`${type}Upload`} type="file" className="hidden" onChange={onUpload} accept="image/*" ref={inputRef} disabled={disabled} />
-          </label>
-        </div>
-      )}
-    </div>
-  );
-
-  ImageUpload.propTypes = {
-    type: PropTypes.string.isRequired,
-    preview: PropTypes.string,
-    onUpload: PropTypes.func.isRequired,
-    onRemove: PropTypes.func.isRequired,
-    inputRef: PropTypes.object.isRequired,
-    disabled: PropTypes.bool,
-  };
-
-  const PriceDisplay = ({ course }) => {
-    if (course.accessType === 'FREE') {
-      return <span className="text-green-600 font-medium">Free</span>;
-    }
-    const hasDiscount = course.discountPrice !== course.price && course.discountPrice > 0;
-    return (
-      <div className="flex flex-col items-end">
-        {hasDiscount ? (
-          <>
-            <span className="text-red-600 line-through text-sm">${course.price}</span>
-            <span className="text-green-600 font-medium">${course.discountPrice}</span>
-          </>
-        ) : (
-          <span className="text-green-600 font-medium">${course.price}</span>
-        )}
-      </div>
-    );
-  };
-
-  PriceDisplay.propTypes = {
-    course: PropTypes.shape({
-      accessType: PropTypes.string.isRequired,
-      price: PropTypes.number.isRequired,
-      discountPrice: PropTypes.number.isRequired,
-    }).isRequired,
-  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -750,9 +750,16 @@ const CourseManager = () => {
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-semibold text-gray-800">{course.name}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs ${getAccessTypeClass(course.accessType)}`}>
-                      {course.accessType}
-                    </span>
+                    {(() => {
+                      const accessTypeClass = course.accessType === 'FREE' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-purple-100 text-purple-800';
+                      return (
+                        <span className={`px-2 py-1 rounded-full text-xs ${accessTypeClass}`}>
+                          {course.accessType}
+                        </span>
+                      );
+                    })()}
                   </div>
                   
                   <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -769,7 +776,7 @@ const CourseManager = () => {
                     <div className="text-sm text-gray-600">
                       <span className="font-medium">Tutor:</span> {course.tutor?.tutorDetail?.name || 'N/A'}
                       {course.tutor?.tutorDetail?.tutorId && (
-                        <span className="text-gray-500 ml-2">({course.tutor?.tutorDetail?.tutorId})</span>
+                        <span className="text-gray-500 ml-2">({course.tutor.tutorDetail.tutorId})</span>
                       )}
                     </div>
                   </div>
@@ -890,7 +897,7 @@ const CourseManager = () => {
                             name="price"
                             value={formData.price}
                             onChange={(e) => {
-                              const value = e.target.value.replaceAll(/[^0-9.]/g, '');
+                              const value = e.target.value.replaceAll(/\D/g, '');
                               handleInputChange({ target: { name: 'price', value } });
                             }}
                             required
@@ -922,7 +929,7 @@ const CourseManager = () => {
                               name="discountPrice"
                               value={formData.discountPrice}
                               onChange={(e) => {
-                                const value = e.target.value.replaceAll(/[^0-9.]/g, '');
+                                const value = e.target.value.replaceAll(/\D/g, '');
                                 handleInputChange({ target: { name: 'discountPrice', value } });
                               }}
                               required
@@ -1030,7 +1037,7 @@ const CourseManager = () => {
                       name="totalDuration"
                       value={formData.totalDuration}
                       onChange={(e) => {
-                        const value = e.target.value.replaceAll(/[^0-9]/g, '');
+                        const value = e.target.value.replaceAll(/\D/g, '');
                         handleInputChange({ target: { name: 'totalDuration', value } });
                       }}
                       required
@@ -1046,7 +1053,7 @@ const CourseManager = () => {
                       name="totalLectures"
                       value={formData.totalLectures}
                       onChange={(e) => {
-                        const value = e.target.value.replaceAll(/[^0-9]/g, '');
+                        const value = e.target.value.replaceAll(/\D/g, '');
                         handleInputChange({ target: { name: 'totalLectures', value } });
                       }}
                       required
@@ -1062,7 +1069,7 @@ const CourseManager = () => {
                       name="validityDays"
                       value={formData.validityDays}
                       onChange={(e) => {
-                        const value = e.target.value.replaceAll(/[^0-9]/g, '');
+                        const value = e.target.value.replaceAll(/\D/g, '');
                         handleInputChange({ target: { name: 'validityDays', value } });
                       }}
                       required
@@ -1077,7 +1084,10 @@ const CourseManager = () => {
                       id="startDate"
                       type="datetime-local"
                       name="startDate"
-                      value={formData.startDate && formData.startDate.includes('T') ? formData.startDate.slice(0, 16) : formData.startDate}
+                      value={(() => {
+                        if (!formData.startDate) return '';
+                        return formData.startDate.includes('T') ? formData.startDate.slice(0, 16) : formData.startDate;
+                      })()}
                       onChange={handleInputChange}
                       required
                       className="w-full p-2 border border-gray-300 rounded-md"
@@ -1090,7 +1100,10 @@ const CourseManager = () => {
                       id="endDate"
                       type="datetime-local"
                       name="endDate"
-                      value={formData.endDate && formData.endDate.includes('T') ? formData.endDate.slice(0, 16) : formData.endDate}
+                      value={(() => {
+                        if (!formData.endDate) return '';
+                        return formData.endDate.includes('T') ? formData.endDate.slice(0, 16) : formData.endDate;
+                      })()}
                       onChange={handleInputChange}
                       required
                       className="w-full p-2 border border-gray-300 rounded-md"
@@ -1133,7 +1146,10 @@ const CourseManager = () => {
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                         {editingCourse ? 'Updating...' : 'Creating...'}
                       </div>
-                    ) : thumbnailUpdating ? 'Uploading...' : (editingCourse ? 'Update' : 'Create')} Course
+                    ) : (() => {
+                      if (thumbnailUpdating) return 'Uploading...';
+                      return editingCourse ? 'Update' : 'Create';
+                    })()} Course
                   </button>
                 </div>
               </form>
@@ -1141,7 +1157,24 @@ const CourseManager = () => {
 
       {/* Status Update Modal */}
       {showStatusModal && selectedCourse && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowStatusModal(false);
+              setSelectedCourse(null);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setShowStatusModal(false);
+              setSelectedCourse(null);
+            }
+          }}
+          tabIndex={-1}
+        >
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4">Update Course Status</h3>
@@ -1187,7 +1220,24 @@ const CourseManager = () => {
 
       {/* Thumbnail Update Modal */}
       {showThumbnailModal && selectedCourse && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowThumbnailModal(false);
+              setSelectedCourse(null);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setShowThumbnailModal(false);
+              setSelectedCourse(null);
+            }
+          }}
+          tabIndex={-1}
+        >
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4">Update Course Thumbnail</h3>
@@ -1226,7 +1276,26 @@ const CourseManager = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedCourse && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowDeleteModal(false);
+              setSelectedCourse(null);
+              setDeleteReason('');
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setShowDeleteModal(false);
+              setSelectedCourse(null);
+              setDeleteReason('');
+            }
+          }}
+          tabIndex={-1}
+        >
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4 text-red-600">Delete Course</h3>
@@ -1331,12 +1400,31 @@ const CourseManager = () => {
                           {selectedCourseDetails.description || 'No description available'}
                         </p>
                         <div className="flex flex-wrap gap-3">
-                          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getAccessTypeClass(selectedCourseDetails.accessType)}`}>
-                            {selectedCourseDetails.accessType}
-                          </span>
-                          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusClass(selectedCourseDetails.status)}`}>
-                            {selectedCourseDetails.status}
-                          </span>
+                          {(() => {
+                            const accessTypeClass = selectedCourseDetails.accessType === 'FREE' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-purple-100 text-purple-800';
+                            return (
+                              <span className={`px-4 py-2 rounded-full text-sm font-medium ${accessTypeClass}`}>
+                                {selectedCourseDetails.accessType}
+                              </span>
+                            );
+                          })()}
+                          {(() => {
+                            let statusClass = 'bg-gray-100 text-gray-800';
+                            if (selectedCourseDetails.status === 'PENDING') {
+                              statusClass = 'bg-yellow-100 text-yellow-800';
+                            } else if (selectedCourseDetails.status === 'APPROVED') {
+                              statusClass = 'bg-green-100 text-green-800';
+                            } else if (selectedCourseDetails.status === 'REJECTED') {
+                              statusClass = 'bg-red-100 text-red-800';
+                            }
+                            return (
+                              <span className={`px-4 py-2 rounded-full text-sm font-medium ${statusClass}`}>
+                                {selectedCourseDetails.status}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>

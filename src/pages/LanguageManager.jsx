@@ -31,25 +31,18 @@ const LanguageManager = () => {
     setShowProfile(true);
   };
 
-  const handleRefresh = () => {
+  const handleRefreshAndSearch = () => {
     dispatch(fetchLanguages({ 
       keyword: filters.search, 
       status: filters.status 
     }));
   };
 
-  const handleSearch = () => {
-    dispatch(fetchLanguages({ 
-      keyword: filters.search, 
-      status: filters.status 
-    }));
-  };
-
-  const handleCreateLanguage = async (e) => {
+  const handleCreateLanguage = (e) => {
     e.preventDefault();
     if (!newLanguage.name.trim()) return;
     
-    await dispatch(createLanguage(newLanguage));
+    dispatch(createLanguage(newLanguage));
     setNewLanguage({ name: '' });
     setShowCreateForm(false);
     dispatch(fetchLanguages({ limit: itemsPerPage, offset: (currentPage - 1) * itemsPerPage }));
@@ -72,7 +65,7 @@ const LanguageManager = () => {
         <div className="text-center">
           <p className="text-red-500 mb-4">Error: {error}</p>
           <button
-            onClick={handleRefresh}
+            onClick={handleRefreshAndSearch}
             className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
           >
             Try Again
@@ -95,7 +88,7 @@ const LanguageManager = () => {
               <Plus size={18} /> Add Language
             </button>
             <button
-              onClick={handleRefresh}
+              onClick={handleRefreshAndSearch}
               className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center gap-2"
             >
               <RefreshCw size={18} /> Refresh
@@ -123,7 +116,7 @@ const LanguageManager = () => {
             <option value="INACTIVE">Inactive</option>
           </select>
           <button
-            onClick={handleSearch}
+            onClick={handleRefreshAndSearch}
             className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
           >
             Search

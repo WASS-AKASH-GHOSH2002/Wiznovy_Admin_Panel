@@ -3,7 +3,6 @@ import { API_BASE_URL } from "../config/api";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
-// Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -11,7 +10,7 @@ const api = axios.create({
   },
 });
 
-// Interceptor to attach token automatically
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -22,6 +21,10 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
+
+const getStatusColor = (status) => {
+  return status === 'ACTIVE' ? 'text-green-600' : 'text-red-600';
+};
 
 const UserPermissionsPage = () => {
   const { accountId } = useParams();
@@ -90,15 +93,16 @@ const UserPermissionsPage = () => {
             delete: { status: false, id: null }
           };
           
-          permissions.forEach(perm => {
+          for (const perm of permissions) {
             switch (perm.permissionId) {
               case 1: permissionsObj[menu.id].write = { status: perm.status, id: perm.id }; break;
               case 2: permissionsObj[menu.id].read = { status: perm.status, id: perm.id }; break;
               case 3: permissionsObj[menu.id].update = { status: perm.status, id: perm.id }; break;
               case 4: permissionsObj[menu.id].delete = { status: perm.status, id: perm.id }; break;
             }
-          });
+          }
         } catch (err) {
+          console.error(`Error fetching permissions for menu ${menu.id}:`, err);
           // Initialize empty permissions if none exist
           permissionsObj[menu.id] = {
             read: { status: false, id: null },
@@ -146,7 +150,7 @@ const UserPermissionsPage = () => {
       
       const menuArray = [];
       
-      Object.keys(userPermissions).forEach(menuId => {
+      for (const menuId of Object.keys(userPermissions)) {
         const menuPerms = userPermissions[menuId];
         const userPermissionArray = [];
         
@@ -157,7 +161,7 @@ const UserPermissionsPage = () => {
           { type: 'delete', id: 4 }
         ];
         
-        permissionTypes.forEach(({ type, id }) => {
+        for (const { type, id } of permissionTypes) {
           userPermissionArray.push({
             id: menuPerms[type]?.id || 0,
             accountId: accountId,
@@ -166,18 +170,18 @@ const UserPermissionsPage = () => {
             status: menuPerms[type]?.status || false,
             permission: { id: id }
           });
-        });
+        }
         
         menuArray.push({
           id: Number.parseInt(menuId, 10),
           userPermission: userPermissionArray
         });
-      });
+      }
       
       const requestData = { menu: menuArray };
       
       // Use any ID (backend doesn't use this param, just needs it in URL)
-      const response = await api.put(`/user-permissions/1`, requestData);
+      await api.put(`/user-permissions/1`, requestData);
       
       setMessage("✅ All permissions saved successfully!");
       await fetchUserPermissions();
@@ -223,14 +227,14 @@ const UserPermissionsPage = () => {
     
     setUserPermissions(prev => {
       const updated = { ...prev };
-      Object.keys(updated).forEach(menuId => {
+      for (const menuId of Object.keys(updated)) {
         updated[menuId] = {
           read: { ...updated[menuId]?.read, status: !allSelected },
           write: { ...updated[menuId]?.write, status: !allSelected },
           update: { ...updated[menuId]?.update, status: !allSelected },
           delete: { ...updated[menuId]?.delete, status: !allSelected }
         };
-      });
+      }
       return updated;
     });
   };
@@ -283,7 +287,7 @@ const UserPermissionsPage = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Status</p>
-                <p className={`font-medium ${user.status === 'ACTIVE' ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`font-medium ${getStatusColor(user.status)}`}>
                   {user.status}
                 </p>
               </div>
@@ -322,12 +326,18 @@ const UserPermissionsPage = () => {
             </p>
           </div>
           
-          {loading && menus.length === 0 ? (
-            <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-            </div>
-          ) : menus.length > 0 ? (
-            <div className="space-y-4">
+          {(() => {
+            if (loading && menus.length === 0) {
+              return (
+                <div className="flex justify-center py-10">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                </div>
+              );
+            }
+            
+            if (menus.length > 0) {
+              return (
+                <div className="space-y-4">
               {menus.map((menu) => (
                 <div key={menu.id} className="border p-4 rounded-lg">
                   <div className="flex justify-between items-center mb-3">
@@ -354,7 +364,7 @@ const UserPermissionsPage = () => {
                       { type: 'write', label: 'Write', id: 1 },
                       { type: 'update', label: 'Update', id: 3 },
                       { type: 'delete', label: 'Delete', id: 4 }
-                    ].map(({ type, label, id }) => (
+                    ].map(({ type, label }) => (
                       <div key={type} className="flex items-center">
                         <input
                           type="checkbox"
@@ -381,10 +391,12 @@ const UserPermissionsPage = () => {
                   </div>
                 </div>
               ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">No menus found.</p>
-          )}
+                </div>
+              );
+            }
+            
+            return <p className="text-gray-500">No menus found.</p>;
+          })()}
         </div>
       </div>
     </div>

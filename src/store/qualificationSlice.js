@@ -1,45 +1,97 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '../config/axios';
 
+/* =====================
+   ASYNC THUNKS
+===================== */
+
 export const fetchQualifications = createAsyncThunk(
   'qualifications/fetchQualifications',
-  async (params = {}) => {
-    const { limit = 50, offset = 0, keyword = '', status = '' } = params;
-    const queryParams = new URLSearchParams({
-      limit: limit.toString(),
-      offset: offset.toString(),
-      ...(keyword && { keyword }),
-      ...(status && { status })
-    });
-    
-    const response = await api.get(`/qualification/list?${queryParams}`);
-    return response.data;
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const { limit = 50, offset = 0, keyword = '', status = '' } = params;
+
+      const queryParams = new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+        ...(keyword && { keyword }),
+        ...(status && { status }),
+      });
+
+      const response = await api.get(`/qualification/list?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
 export const createQualification = createAsyncThunk(
   'qualifications/createQualification',
-  async (qualificationData) => {
-    const response = await api.post('/qualification', qualificationData);
-    return response.data;
+  async (qualificationData, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/qualification', qualificationData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
 export const updateQualification = createAsyncThunk(
   'qualifications/updateQualification',
-  async ({ qualificationId, qualificationData }) => {
-    const response = await api.patch(`/qualification/${qualificationId}`, qualificationData);
-    return response.data;
+  async ({ qualificationId, qualificationData }, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(
+        `/qualification/${qualificationId}`,
+        qualificationData
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
 export const updateQualificationStatus = createAsyncThunk(
   'qualifications/updateQualificationStatus',
-  async ({ qualificationId, status }) => {
-    const response = await api.put(`/qualification/status/${qualificationId}`, { status });
-    return response.data;
+  async ({ qualificationId, status }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(
+        `/qualification/status/${qualificationId}`,
+        { status }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
+
+/* =====================
+   REDUCER HELPERS
+===================== */
+
+const pendingReducer = (state) => {
+  state.loading = true;
+  state.error = null;
+};
+
+const rejectedReducer = (state, action) => {
+  state.loading = false;
+  state.error = action.payload || action.error?.message;
+};
+
+const updateById = (list, payload) => {
+  const index = list.findIndex(item => item.id === payload.id);
+  if (index !== -1) {
+    list[index] = payload;
+  }
+};
+
+/* =====================
+   SLICE
+===================== */
 
 const qualificationSlice = createSlice({
   name: 'qualifications',
@@ -50,8 +102,8 @@ const qualificationSlice = createSlice({
     error: null,
     filters: {
       search: '',
-      status: ''
-    }
+      status: '',
+    },
   },
   reducers: {
     setSearch: (state, action) => {
@@ -59,40 +111,45 @@ const qualificationSlice = createSlice({
     },
     setStatusFilter: (state, action) => {
       state.filters.status = action.payload;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchQualifications.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+
+      /* FETCH */
+      .addCase(fetchQualifications.pending, pendingReducer)
       .addCase(fetchQualifications.fulfilled, (state, action) => {
         state.loading = false;
         state.qualifications = action.payload.result;
         state.total = action.payload.total;
       })
-      .addCase(fetchQualifications.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      })
+      .addCase(fetchQualifications.rejected, rejectedReducer)
+
+      /* CREATE */
+      .addCase(createQualification.pending, pendingReducer)
       .addCase(createQualification.fulfilled, (state, action) => {
+        state.loading = false;
         state.qualifications.unshift(action.payload);
         state.total += 1;
       })
+      .addCase(createQualification.rejected, rejectedReducer)
+
+      /* UPDATE */
+      .addCase(updateQualification.pending, pendingReducer)
       .addCase(updateQualification.fulfilled, (state, action) => {
-        const index = state.qualifications.findIndex(qual => qual.id === action.payload.id);
-        if (index !== -1) {
-          state.qualifications[index] = action.payload;
-        }
+        state.loading = false;
+        updateById(state.qualifications, action.payload);
       })
+      .addCase(updateQualification.rejected, rejectedReducer)
+
+      /* UPDATE STATUS */
+      .addCase(updateQualificationStatus.pending, pendingReducer)
       .addCase(updateQualificationStatus.fulfilled, (state, action) => {
-        const index = state.qualifications.findIndex(qual => qual.id === action.payload.id);
-        if (index !== -1) {
-          state.qualifications[index] = action.payload;
-        }
-      });
-  }
+        state.loading = false;
+        updateById(state.qualifications, action.payload);
+      })
+      .addCase(updateQualificationStatus.rejected, rejectedReducer);
+  },
 });
 
 export const { setSearch, setStatusFilter } = qualificationSlice.actions;

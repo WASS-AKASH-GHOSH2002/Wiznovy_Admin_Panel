@@ -1,9 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Eye, RefreshCw, Download, Settings, Trash2, Edit } from "lucide-react";
+import { Eye, RefreshCw, Download, Settings, Edit } from "lucide-react";
 import { exportUsersToPDF, exportUsersToCSV } from "../utils/downloadUtils";
 import { fetchUsers, updateUserStatus, bulkUpdateUserStatus, setSearch, setStatusFilter, updateUserContact } from "../store/userSlice";
 import { debounce } from "lodash";
+
+const getStatusClass = (status) => {
+  if (status === "ACTIVE") return "bg-green-100 text-green-800";
+  if (status === "PENDING") return "bg-yellow-100 text-yellow-800";
+  if (status === "SUSPENDED") return "bg-orange-100 text-orange-800";
+  if (status === "DELETED") return "bg-gray-100 text-gray-800";
+  return "bg-red-100 text-red-800";
+};
 
 const UserManagement = () => {
   const dispatch = useDispatch();
@@ -21,6 +29,7 @@ const UserManagement = () => {
   const [updateUser, setUpdateUser] = useState(null);
   const [updateData, setUpdateData] = useState({ email: '', phoneNumber: '' });
   const [validationErrors, setValidationErrors] = useState({ email: '', phoneNumber: '' });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -60,7 +69,7 @@ const UserManagement = () => {
 
   const confirmStatusUpdate = async () => {
     if (statusUpdateUser && newStatus) {
-      await dispatch(updateUserStatus({ userId: statusUpdateUser.id, status: newStatus }));
+      dispatch(updateUserStatus({ userId: statusUpdateUser.id, status: newStatus }));
       setShowStatusModal(false);
       setStatusUpdateUser(null);
       setNewStatus('');
@@ -108,7 +117,7 @@ const UserManagement = () => {
   };
 
   const handleEmailChange = (e) => {
-    const value = e.target.value.replace(/[^a-zA-Z.@]/g, '');
+    const value = e.target.value.replaceAll(/[^a-zA-Z.@]/g, '');
     setUpdateData(prev => ({ ...prev, email: value }));
     if (value && !validateEmail(value)) {
       setValidationErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
@@ -118,7 +127,7 @@ const UserManagement = () => {
   };
 
   const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
+    const value = e.target.value.replaceAll(/\D/g, '');
     setUpdateData(prev => ({ ...prev, phoneNumber: value }));
     if (value && value.length < 10) {
       setValidationErrors(prev => ({ ...prev, phoneNumber: 'Phone number must be at least 10 digits' }));
@@ -130,33 +139,39 @@ const UserManagement = () => {
   const confirmUpdateContact = async () => {
     if (updateUser && updateData.email.trim() && updateData.phoneNumber.trim() && 
         validateEmail(updateData.email) && !validationErrors.email && !validationErrors.phoneNumber) {
-      const result = await dispatch(updateUserContact({ 
-        id: updateUser.id, 
-        email: updateData.email.trim(),
-        phoneNumber: updateData.phoneNumber.trim()
-      }));
+      setIsUpdating(true);
       
-      if (result.type.endsWith('/fulfilled')) {
-        const offset = (currentPage - 1) * itemsPerPage;
-        const fetchParams = { 
-          limit: itemsPerPage, 
-          offset,
-          ...(filters.search && { keyword: filters.search }),
-          ...(filters.status && { status: filters.status })
-        };
-        dispatch(fetchUsers(fetchParams));
+      try {
+        const result = await dispatch(updateUserContact({ 
+          id: updateUser.id, 
+          email: updateData.email.trim(),
+          phoneNumber: updateData.phoneNumber.trim()
+        }));
+        
+        if (result.type.endsWith('/fulfilled')) {
+          const offset = (currentPage - 1) * itemsPerPage;
+          const fetchParams = { 
+            limit: itemsPerPage, 
+            offset,
+            ...(filters.search && { keyword: filters.search }),
+            ...(filters.status && { status: filters.status })
+          };
+          dispatch(fetchUsers(fetchParams));
+        }
+        
+        setShowUpdateModal(false);
+        setUpdateUser(null);
+        setUpdateData({ email: '', phoneNumber: '' });
+        setValidationErrors({ email: '', phoneNumber: '' });
+      } finally {
+        setIsUpdating(false);
       }
-      
-      setShowUpdateModal(false);
-      setUpdateUser(null);
-      setUpdateData({ email: '', phoneNumber: '' });
-      setValidationErrors({ email: '', phoneNumber: '' });
     }
   };
 
   const confirmBulkStatusUpdate = async () => {
     if (selectedUsers.length > 0 && bulkStatus) {
-      await dispatch(bulkUpdateUserStatus({ ids: selectedUsers, status: bulkStatus }));
+      dispatch(bulkUpdateUserStatus({ ids: selectedUsers, status: bulkStatus }));
       setShowBulkModal(false);
       setSelectedUsers([]);
       setBulkStatus('');
@@ -189,19 +204,7 @@ const UserManagement = () => {
     dispatch(fetchUsers(fetchParams));
   };
 
-  const handleDeleteUser = (user) => {
-    dispatch(updateUserStatus({ userId: user.id, status: 'DELETED' }));
-    
-    // Refresh the current page after deletion
-    const offset = (currentPage - 1) * itemsPerPage;
-    const fetchParams = { 
-      limit: itemsPerPage, 
-      offset,
-      ...(filters.search && { keyword: filters.search }),
-      ...(filters.status && { status: filters.status })
-    };
-    dispatch(fetchUsers(fetchParams));
-  };
+
 
   if (loading) {
     return (
@@ -277,8 +280,9 @@ const UserManagement = () => {
 
         <div className="flex gap-4 mb-6">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
+            <label htmlFor="searchUsers" className="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
             <input
+              id="searchUsers"
               type="text"
               placeholder="Search by name, email, or phone number..."
               value={searchInput}
@@ -287,8 +291,9 @@ const UserManagement = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
+            <label htmlFor="filterStatus" className="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
             <select
+              id="filterStatus"
               value={filters.status}
               onChange={(e) => dispatch(setStatusFilter(e.target.value))}
               className="border border-gray-300 p-2.5 rounded-lg"
@@ -347,13 +352,7 @@ const UserManagement = () => {
                   <td className="p-4">{user.phoneNumber}</td>
                   <td className="p-4">{user.userDetail?.gender || "N/A"}</td>
                   <td className="p-4">
-                    <span className={`px-3 py-1 text-xs rounded-full ${
-                      user.status === "ACTIVE" ? "bg-green-100 text-green-800" : 
-                      user.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
-                      user.status === "SUSPENDED" ? "bg-orange-100 text-orange-800" :
-                      user.status === "DELETED" ? "bg-gray-100 text-gray-800" :
-                      "bg-red-100 text-red-800"
-                    }`}>
+                    <span className={`px-3 py-1 text-xs rounded-full ${getStatusClass(user.status)}`}>
                       {user.status}
                     </span>
                   </td>
@@ -461,8 +460,9 @@ const UserManagement = () => {
               Update status for: <strong>{statusUpdateUser.userDetail?.name || statusUpdateUser.email}</strong>
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+              <label htmlFor="selectStatus" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
               <select
+                id="selectStatus"
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
                 className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -505,8 +505,9 @@ const UserManagement = () => {
               Update status for <strong>{selectedUsers.length}</strong> selected users
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
+              <label htmlFor="bulkStatus" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
               <select
+                id="bulkStatus"
                 value={bulkStatus}
                 onChange={(e) => setBulkStatus(e.target.value)}
                 className="w-full border border-gray-300 p-2.5 rounded-lg"
@@ -551,8 +552,9 @@ const UserManagement = () => {
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                <label htmlFor="updateEmail" className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                 <input
+                  id="updateEmail"
                   type="email"
                   value={updateData.email}
                   onChange={handleEmailChange}
@@ -565,8 +567,9 @@ const UserManagement = () => {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                <label htmlFor="updatePhone" className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
                 <input
+                  id="updatePhone"
                   type="tel"
                   value={updateData.phoneNumber}
                   onChange={handlePhoneChange}
@@ -593,10 +596,15 @@ const UserManagement = () => {
               </button>
               <button
                 onClick={confirmUpdateContact}
-                disabled={!updateData.email.trim() || !updateData.phoneNumber.trim() || validationErrors.email || validationErrors.phoneNumber || !validateEmail(updateData.email)}
+                disabled={!updateData.email.trim() || !updateData.phoneNumber.trim() || validationErrors.email || validationErrors.phoneNumber || !validateEmail(updateData.email) || isUpdating}
                 className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
               >
-                Update Contact
+                {isUpdating ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Updating...
+                  </div>
+                ) : 'Update Contact'}
               </button>
             </div>
           </div>

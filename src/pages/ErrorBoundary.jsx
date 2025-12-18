@@ -1,5 +1,6 @@
 // ErrorBoundary.js
 import React from 'react';
+import PropTypes from 'prop-types';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -31,7 +32,7 @@ class ErrorBoundary extends React.Component {
             </p>
             <details className="text-left mb-4 bg-gray-100 p-3 rounded">
               <summary className="cursor-pointer font-medium">Error Details</summary>
-              <p className="mt-2 text-sm">{this.state.error && this.state.error.toString()}</p>
+              <p className="mt-2 text-sm">{this.state.error?.toString()}</p>
             </details>
             <button 
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -47,5 +48,9 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node.isRequired
+};
 
 export default ErrorBoundary;

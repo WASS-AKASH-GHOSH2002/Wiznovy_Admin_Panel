@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
-import { Eye, RefreshCw, Settings, Plus } from "lucide-react";
+import { RefreshCw, Settings, Plus } from "lucide-react";
 import {
   fetchStates,
   createState,
@@ -39,11 +40,19 @@ const StatusBadge = ({ status }) => {
   );
 };
 
+StatusBadge.propTypes = {
+  status: PropTypes.string.isRequired,
+};
+
 const ModalWrapper = ({ children }) => (
   <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50 p-4">
     {children}
   </div>
 );
+
+ModalWrapper.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 /* ===================== MAIN ===================== */
 
@@ -54,8 +63,7 @@ const StateManagement = () => {
   );
   const { countries } = useSelector((state) => state.countries);
 
-  const [selectedState, setSelectedState] = useState(null);
-  const [showProfile, setShowProfile] = useState(false);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [statusUpdateState, setStatusUpdateState] = useState(null);
@@ -65,8 +73,8 @@ const StateManagement = () => {
     code: "",
     countryId: "",
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const reloadStates = () => {
     const offset = (currentPage - 1) * itemsPerPage;
@@ -220,9 +228,6 @@ const StateManagement = () => {
                   <StatusBadge status={state.status} />
                 </td>
                 <td className="p-3 flex gap-2">
-                  <button onClick={() => setSelectedState(state)}>
-                    <Eye size={16} />
-                  </button>
                   <button onClick={() => handleStatusUpdate(state)}>
                     <Settings size={16} />
                   </button>
