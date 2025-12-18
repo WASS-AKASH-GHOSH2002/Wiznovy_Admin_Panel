@@ -61,7 +61,7 @@ const LoginPage = () => {
       return;
     }
 
-    const result = dispatch(loginUser(credentials));
+    const result = await dispatch(loginUser(credentials));
     
     if (result?.success) {
       // Check if email is provided in response (indicates OTP verification required)
@@ -70,10 +70,12 @@ const LoginPage = () => {
         navigate('/login-otp-verify', { state: { email: result.email } });
       }
       // If no email but success, user is already logged in (handled by authThunks)
-    } else if (result?.error?.includes('unauthorized') || result?.error?.includes('Invalid')) {
-      setLocalError('Invalid admin credentials. This email is not authorized for admin access.');
     } else if (result?.error) {
-      setLocalError(result.error);
+      if (result.error.includes('unauthorized') || result.error.includes('Invalid')) {
+        setLocalError('Invalid admin credentials. This email is not authorized for admin access.');
+      } else {
+        setLocalError(result.error);
+      }
     }
   };
 

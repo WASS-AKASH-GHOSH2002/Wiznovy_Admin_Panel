@@ -244,6 +244,84 @@ const UserPermissionsPage = () => {
     return Object.keys(userPermissions).length > 0 && Object.keys(userPermissions).every(menuId => isAllSelected(menuId));
   };
 
+  // Render loading spinner
+  const renderLoadingSpinner = () => (
+    <div className="flex justify-center py-10">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+    </div>
+  );
+
+  // Render permission checkbox
+  const renderPermissionCheckbox = (menu, type, label) => (
+    <div key={type} className="flex items-center">
+      <input
+        type="checkbox"
+        id={`${type}-${menu.id}`}
+        checked={userPermissions[menu.id]?.[type]?.status || false}
+        onChange={() => togglePermissionStatus(menu.id, type)}
+        className="h-4 w-4 text-blue-600 rounded"
+        disabled={loading}
+      />
+      <label htmlFor={`${type}-${menu.id}`} className="ml-2 text-sm text-gray-700">
+        {label}
+      </label>
+    </div>
+  );
+
+  // Render single menu item
+  const renderMenuItem = (menu) => (
+    <div key={menu.id} className="border p-4 rounded-lg">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="font-semibold text-lg">{menu.name}</h4>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id={`select-all-${menu.id}`}
+            checked={isAllSelected(menu.id)}
+            onChange={() => toggleAllPermissions(menu.id)}
+            className="h-4 w-4 text-blue-600 rounded"
+            disabled={loading}
+          />
+          <label htmlFor={`select-all-${menu.id}`} className="text-sm font-medium text-blue-600">
+            Select All
+          </label>
+          <span className="text-sm text-gray-500">ID: {menu.id}</span>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        {[
+          { type: 'read', label: 'Read', id: 2 },
+          { type: 'write', label: 'Write', id: 1 },
+          { type: 'update', label: 'Update', id: 3 },
+          { type: 'delete', label: 'Delete', id: 4 }
+        ].map(({ type, label }) => renderPermissionCheckbox(menu, type, label))}
+      </div>
+      
+      <div className="flex justify-between items-center">
+        <span className="text-sm text-gray-500">Menu ID: {menu.id}</span>
+        <span className="text-sm text-gray-500">User ID: {accountId}</span>
+      </div>
+    </div>
+  );
+
+  // Render menus content based on state
+  const renderMenusContent = () => {
+    if (loading && menus.length === 0) {
+      return renderLoadingSpinner();
+    }
+    
+    if (menus.length > 0) {
+      return (
+        <div className="space-y-4">
+          {menus.map(renderMenuItem)}
+        </div>
+      );
+    }
+    
+    return <p className="text-gray-500">No menus found.</p>;
+  };
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="bg-white shadow rounded-lg p-6 max-w-6xl mx-auto">
@@ -326,77 +404,7 @@ const UserPermissionsPage = () => {
             </p>
           </div>
           
-          {(() => {
-            if (loading && menus.length === 0) {
-              return (
-                <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-                </div>
-              );
-            }
-            
-            if (menus.length > 0) {
-              return (
-                <div className="space-y-4">
-              {menus.map((menu) => (
-                <div key={menu.id} className="border p-4 rounded-lg">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-semibold text-lg">{menu.name}</h4>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id={`select-all-${menu.id}`}
-                        checked={isAllSelected(menu.id)}
-                        onChange={() => toggleAllPermissions(menu.id)}
-                        className="h-4 w-4 text-blue-600 rounded"
-                        disabled={loading}
-                      />
-                      <label htmlFor={`select-all-${menu.id}`} className="text-sm font-medium text-blue-600">
-                        Select All
-                      </label>
-                      <span className="text-sm text-gray-500">ID: {menu.id}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    {[
-                      { type: 'read', label: 'Read', id: 2 },
-                      { type: 'write', label: 'Write', id: 1 },
-                      { type: 'update', label: 'Update', id: 3 },
-                      { type: 'delete', label: 'Delete', id: 4 }
-                    ].map(({ type, label }) => (
-                      <div key={type} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`${type}-${menu.id}`}
-                          checked={userPermissions[menu.id]?.[type]?.status || false}
-                          onChange={() => togglePermissionStatus(menu.id, type)}
-                          className="h-4 w-4 text-blue-600 rounded"
-                          disabled={loading}
-                        />
-                        <label htmlFor={`${type}-${menu.id}`} className="ml-2 text-sm text-gray-700">
-                          {label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">
-                      Menu ID: {menu.id}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      User ID: {accountId}
-                    </span>
-                  </div>
-                </div>
-              ))}
-                </div>
-              );
-            }
-            
-            return <p className="text-gray-500">No menus found.</p>;
-          })()}
+          {renderMenusContent()}
         </div>
       </div>
     </div>
