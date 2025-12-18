@@ -49,20 +49,14 @@ const getDisplayValue = (value) => {
 
 const buildFetchParams = (itemsPerPage, currentPage, keyword, filters, selectedCountry, selectedSubject) => {
   const offset = (currentPage - 1) * itemsPerPage;
-  const params = { limit: itemsPerPage, offset };
-  
-  const conditionalParams = {
-    keyword,
-    status: filters.status,
-    countryId: selectedCountry,
-    subjectId: selectedSubject
+  return {
+    limit: itemsPerPage,
+    offset,
+    ...(keyword && { keyword }),
+    ...(filters.status && { status: filters.status }),
+    ...(selectedCountry && { countryId: selectedCountry }),
+    ...(selectedSubject && { subjectId: selectedSubject })
   };
-  
-  Object.entries(conditionalParams).forEach(([key, value]) => {
-    if (value) params[key] = value;
-  });
-  
-  return params;
 };
 
 const Tutormanagement = () => {
@@ -143,15 +137,18 @@ const Tutormanagement = () => {
     if (statusUpdateTutor && newStatus) {
       setIsStatusUpdating(true);
       try {
-        await dispatch(updateTutorStatus({ tutorId: statusUpdateTutor.id, status: newStatus })).unwrap();
-        toast.success(`Tutor status updated to ${newStatus}`);
-        refreshTutors();
+        const result = await dispatch(updateTutorStatus({ tutorId: statusUpdateTutor.id, status: newStatus }));
+        
+        if (result.type.endsWith('/fulfilled')) {
+          toast.success(`Tutor status updated to ${newStatus}`);
+          refreshTutors();
+        } else {
+          toast.error('Failed to update tutor status');
+        }
+        
         setShowStatusModal(false);
         setStatusUpdateTutor(null);
         setNewStatus('');
-      } catch (error) {
-        console.error('Status update failed:', error);
-        toast.error('Failed to update tutor status');
       } finally {
         setIsStatusUpdating(false);
       }
@@ -180,15 +177,18 @@ const Tutormanagement = () => {
     if (selectedTutors.length > 0 && bulkStatus) {
       setIsBulkUpdating(true);
       try {
-        await dispatch(bulkUpdateTutorStatus({ ids: selectedTutors, status: bulkStatus })).unwrap();
-        toast.success(`Successfully updated ${selectedTutors.length} tutors to ${bulkStatus}`);
-        refreshTutors();
+        const result = await dispatch(bulkUpdateTutorStatus({ ids: selectedTutors, status: bulkStatus }));
+        
+        if (result.type.endsWith('/fulfilled')) {
+          toast.success(`Successfully updated ${selectedTutors.length} tutors to ${bulkStatus}`);
+          refreshTutors();
+        } else {
+          toast.error('Failed to update tutors status');
+        }
+        
         setShowBulkModal(false);
         setSelectedTutors([]);
         setBulkStatus('');
-      } catch (error) {
-        console.error('Bulk status update failed:', error);
-        toast.error('Failed to update tutors status');
       } finally {
         setIsBulkUpdating(false);
       }
@@ -233,21 +233,23 @@ const Tutormanagement = () => {
       setIsUpdating(true);
       
       try {
-        await dispatch(updateTutorContact({ 
+        const result = await dispatch(updateTutorContact({ 
           id: updateTutor.id, 
           email: updateData.email.trim(),
           phoneNumber: updateData.phoneNumber.trim()
-        })).unwrap();
+        }));
         
-        toast.success('Contact updated successfully!');
-        refreshTutors();
+        if (result.type.endsWith('/fulfilled')) {
+          toast.success('Contact updated successfully!');
+          refreshTutors();
+        } else {
+          toast.error('Failed to update contact');
+        }
+        
         setShowUpdateModal(false);
         setUpdateTutor(null);
         setUpdateData({ email: '', phoneNumber: '' });
         setValidationErrors({ email: '', phoneNumber: '' });
-      } catch (error) {
-        console.error('Contact update failed:', error);
-        toast.error('Failed to update contact');
       } finally {
         setIsUpdating(false);
       }
@@ -445,7 +447,12 @@ const Tutormanagement = () => {
                     <div className="flex items-center gap-1">
                       <span className="text-sm sm:text-base">{tutor.tutorDetail?.averageRating || "0.00"}</span>
                       <span className="text-yellow-500">★</span>
-                      <span className="text-gray-500 text-xs hidden sm:inline">({tutor.tutorDetail?.totalRatings || 0})</span>
+                      {(() => {
+                        const totalRatings = tutor.tutorDetail?.totalRatings || 0;
+                        return (
+                          <span className="text-gray-500 text-xs hidden sm:inline">({totalRatings})</span>
+                        );
+                      })()}
                     </div>
                   </td>
                   <td className="p-2 sm:p-4 text-sm sm:text-base hidden md:table-cell">${tutor.tutorDetail?.hourlyRate || "0.00"}/hr</td>
@@ -538,19 +545,23 @@ const Tutormanagement = () => {
 
       {/* Profile Modal */}
       {showProfile && selectedTutor && (
-        <button 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 border-0" 
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50" 
           onClick={() => setShowProfile(false)}
-          aria-label="Close profile modal"
-          type="button"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              setShowProfile(false);
+            }
+          }}
           role="button"
           tabIndex={0}
+          aria-label="Close profile modal"
         >
           <div 
             className="bg-white p-8 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" 
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-4 text-left">Tutor Profile</h3>
+            <h3 className="text-xl font-bold mb-4">Tutor Profile</h3>
             {detailsLoading ? (
               <div className="text-center py-8">
                 <RefreshCw className="animate-spin h-8 w-8 mx-auto text-blue-500" />
@@ -570,10 +581,9 @@ const Tutormanagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Object.entries(selectedTutorDetails).filter(([key]) => key !== 'profileImage' && key !== 'id').map(([key, value]) => {
                     const displayValue = getDisplayValue(value);
-                    const formattedKey = key.replaceAll(/([A-Z])/g, ' $1').trim();
                     return (
                       <div key={key} className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-xs text-gray-500 uppercase mb-1">{formattedKey}</p>
+                        <p className="text-xs text-gray-500 uppercase mb-1">{key.replaceAll(/([A-Z])/g, ' $1').trim()}</p>
                         <p className="text-sm font-medium text-gray-800">{displayValue}</p>
                       </div>
                     );
@@ -590,29 +600,33 @@ const Tutormanagement = () => {
               Close
             </button>
           </div>
-        </button>
+        </div>
       )}
 
       {/* Status Update Modal */}
       {showStatusModal && statusUpdateTutor && (
-        <button 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 border-0"
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowStatusModal(false)}
-          aria-label="Close status modal"
-          type="button"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              setShowStatusModal(false);
+            }
+          }}
           role="button"
           tabIndex={0}
+          aria-label="Close status modal"
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-4 text-left">Update Tutor Status</h3>
-            <p className="text-gray-600 mb-4 text-left">
+            <h3 className="text-xl font-bold mb-4">Update Tutor Status</h3>
+            <p className="text-gray-600 mb-4">
               Update status for: <strong>{statusUpdateTutor.tutorDetail?.name || statusUpdateTutor.email}</strong>
             </p>
-            <div className="mb-4 ">
-              <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Status</label>
+            <div className="mb-4">
+              <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
               <select
                 id="statusSelect"
                 value={newStatus}
@@ -642,29 +656,33 @@ const Tutormanagement = () => {
               </button>
             </div>
           </div>
-        </button>
+        </div>
       )}
 
       {/* Bulk Update Modal */}
       {showBulkModal && (
-        <button 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 border-0"
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowBulkModal(false)}
-          aria-label="Close bulk update modal"
-          type="button"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              setShowBulkModal(false);
+            }
+          }}
           role="button"
           tabIndex={0}
+          aria-label="Close bulk update modal"
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-4 text-left">Bulk Status Update</h3>
+            <h3 className="text-xl font-bold mb-4">Bulk Status Update</h3>
             <p className="text-gray-600 mb-4">
               Update status for <strong>{selectedTutors.length}</strong> selected tutors
             </p>
             <div className="mb-4">
-              <label htmlFor="bulkStatusSelect" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Status</label>
+              <label htmlFor="bulkStatusSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Status</label>
               <select
                 id="bulkStatusSelect"
                 value={bulkStatus}
@@ -694,30 +712,34 @@ const Tutormanagement = () => {
               </button>
             </div>
           </div>
-        </button>
+        </div>
       )}
 
       {/* Update Contact Modal */}
       {showUpdateModal && updateTutor && (
-        <button 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 border-0"
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowUpdateModal(false)}
-          aria-label="Close update contact modal"
-          type="button"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              setShowUpdateModal(false);
+            }
+          }}
           role="button"
           tabIndex={0}
+          aria-label="Close update contact modal"
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-4 text-left">Update Contact</h3>
-            <p className="text-gray-600 mb-4 text-left">
+            <h3 className="text-xl font-bold mb-4">Update Contact</h3>
+            <p className="text-gray-600 mb-4">
               Update contact for: <strong>{updateTutor.tutorDetail?.name || updateTutor.email}</strong>
             </p>
             <div className="space-y-4">
               <div>
-                <label htmlFor="updateEmail" className="block text-sm font-medium text-gray-700 mb-2 text-left">Email *</label>
+                <label htmlFor="updateEmail" className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                 <input
                   id="updateEmail"
                   type="email"
@@ -732,7 +754,7 @@ const Tutormanagement = () => {
                 )}
               </div>
               <div>
-                <label htmlFor="updatePhone" className="block text-sm font-medium text-gray-700 mb-2 text-left">Phone Number *</label>
+                <label htmlFor="updatePhone" className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
                 <input
                   id="updatePhone"
                   type="tel"
@@ -768,7 +790,7 @@ const Tutormanagement = () => {
               </button>
             </div>
           </div>
-        </button>
+        </div>
       )}
     </div>
   );

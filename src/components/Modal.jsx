@@ -29,16 +29,14 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl', posit
   const modalClasses = `bg-white rounded-lg shadow-xl w-full ${maxWidth}`;
 
   return (
-    <div 
-
+    <dialog 
+      open={isOpen}
       className="fixed inset-0 bg-transparent border-0 max-w-none max-h-none p-0 m-0"
       aria-labelledby={title ? "modal-title" : undefined}
-      role="dialog"
-      aria-modal="true"
       aria-label={title ? undefined : "Modal dialog"}
     >
       <button 
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex ${positionClasses} z-50 p-4 overflow-y-auto border-0`}
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex ${positionClasses} z-50 p-4 overflow-y-auto border-0 cursor-default`}
         onClick={onClose}
         aria-label="Close modal"
         type="button"
@@ -49,13 +47,13 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl', posit
         >
           <div className="p-6">
             {title && (
-              <h2 id="modal-title" className="text-2xl font-bold mb-4 text-left">{title}</h2>
+              <h2 id="modal-title" className="text-2xl font-bold mb-4">{title}</h2>
             )}
             {children}
           </div>
         </div>
       </button>
-    </div>
+    </dialog>
   );
 };
 

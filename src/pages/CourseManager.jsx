@@ -290,12 +290,6 @@ const CourseManager = () => {
     if (thumbnailFile) submitData.append('thumbnail', thumbnailFile);
   };
 
-  const getSubmitAction = () => {
-    return editingCourse 
-      ? updateCourse({ id: editingCourse.id, data: buildFormData() })
-      : createCourse(buildFormData());
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -305,7 +299,11 @@ const CourseManager = () => {
       handlePricing(submitData);
       addImageFiles(submitData);
       
-      const result = await dispatch(getSubmitAction());
+      const action = editingCourse 
+        ? updateCourse({ id: editingCourse.id, data: submitData })
+        : createCourse(submitData);
+      
+      const result = await dispatch(action);
       
       if (result.type.endsWith('/fulfilled')) {
         forceRefresh();
@@ -793,16 +791,16 @@ const CourseManager = () => {
                   <div className="flex justify-between items-center">
                     <StatusBadge status={course.status} onClick={() => handleStatusUpdate(course)} />
                     <div className="flex space-x-2">
-                      <ActionButton onClick={() => handleViewDetails(course)} className="text-green-600 hover:text-green-800 text-sm flex items-center" title="View Details" role="button" tabIndex={0}>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <ActionButton onClick={() => handleViewDetails(course)} className="text-green-600 hover:text-green-800 text-sm flex items-center" title="View Details">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                       </ActionButton>
-                      <ActionButton onClick={() => navigate(`/courses/${course.id}/details`)} className="text-green-600 hover:text-green-800 text-sm" role="button" tabIndex={0}>Details</ActionButton>
-                      <ActionButton onClick={() => handleEdit(course)} className="text-blue-600 hover:text-blue-800 text-sm" role="button" tabIndex={0}>Edit</ActionButton>
-                      <ActionButton onClick={() => handleStatusUpdate(course)} className="text-purple-600 hover:text-purple-800 text-sm" role="button" tabIndex={0}>Status</ActionButton>
-                      <ActionButton onClick={() => handleDelete(course)} className="text-red-600 hover:text-red-800 text-sm" role="button" tabIndex={0}>Delete</ActionButton>
+                      <ActionButton onClick={() => navigate(`/courses/${course.id}/details`)} className="text-green-600 hover:text-green-800 text-sm">Details</ActionButton>
+                      <ActionButton onClick={() => handleEdit(course)} className="text-blue-600 hover:text-blue-800 text-sm">Edit</ActionButton>
+                      <ActionButton onClick={() => handleStatusUpdate(course)} className="text-purple-600 hover:text-purple-800 text-sm">Status</ActionButton>
+                      <ActionButton onClick={() => handleDelete(course)} className="text-red-600 hover:text-red-800 text-sm">Delete</ActionButton>
                     </div>
                   </div>
                 </div>
@@ -867,7 +865,7 @@ const CourseManager = () => {
         <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label htmlFor="courseName" className="block text-sm font-medium text-gray-700 mb-1 text-left">Name *</label>
+                    <label htmlFor="courseName" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                     <input
                       id="courseName"
                       type="text"
@@ -880,7 +878,7 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="accessType" className="block text-sm font-medium text-gray-700 mb-1 text-left">Access Type *</label>
+                    <label htmlFor="accessType" className="block text-sm font-medium text-gray-700 mb-1">Access Type *</label>
                     <select
                       id="accessType"
                       name="accessType"
@@ -897,7 +895,7 @@ const CourseManager = () => {
                   {formData.accessType === 'PAID' && (
                     <>
                       <div>
-                        <label htmlFor="coursePrice" className="block text-sm font-medium text-gray-700 mb-1 text-left">Price ($) *</label>
+                        <label htmlFor="coursePrice" className="block text-sm font-medium text-gray-700 mb-1">Price ($) *</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                           <input
@@ -924,7 +922,7 @@ const CourseManager = () => {
                             onChange={toggleDiscount}
                             className="mr-2"
                           />
-                          <label htmlFor="applyDiscount" className="text-sm font-medium text-gray-700 text-left">
+                          <label htmlFor="applyDiscount" className="text-sm font-medium text-gray-700">
                             Apply Discount
                           </label>
                         </div>
@@ -964,7 +962,7 @@ const CourseManager = () => {
 
                   
                   <div>
-                    <label htmlFor="subjectId" className="block text-sm font-medium text-gray-700 mb-1 text-left">Subject *</label>
+                    <label htmlFor="subjectId" className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
                     <select
                       id="subjectId"
                       name="subjectId"
@@ -983,7 +981,7 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="tutorId" className="block text-sm font-medium text-gray-700 mb-1 text-left">Tutor *</label>
+                    <label htmlFor="tutorId" className="block text-sm font-medium text-gray-700 mb-1">Tutor *</label>
                     <select
                       id="tutorId"
                       name="tutorId"
@@ -1024,7 +1022,7 @@ const CourseManager = () => {
                   />
                   
                   <div className="md:col-span-2">
-                    <label htmlFor="courseDescription" className="block text-sm font-medium text-gray-700 mb-1 text-left">Description *</label>
+                    <label htmlFor="courseDescription" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                     <textarea
                       id="courseDescription"
                       name="description"
@@ -1039,7 +1037,7 @@ const CourseManager = () => {
 
                   
                   <div>
-                    <label htmlFor="totalDuration" className="block text-sm font-medium text-gray-700 mb-1 text-left">Total Duration (minutes) *</label>
+                    <label htmlFor="totalDuration" className="block text-sm font-medium text-gray-700 mb-1">Total Duration (minutes) *</label>
                     <input
                       id="totalDuration"
                       type="text"
@@ -1055,7 +1053,7 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="totalLectures" className="block text-sm font-medium text-gray-700 mb-1 text-left">Total Lectures *</label>
+                    <label htmlFor="totalLectures" className="block text-sm font-medium text-gray-700 mb-1">Total Lectures *</label>
                     <input
                       id="totalLectures"
                       type="text"
@@ -1071,7 +1069,7 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="validityDays" className="block text-sm font-medium text-gray-700 mb-1 text-left">Validity Days *</label>
+                    <label htmlFor="validityDays" className="block text-sm font-medium text-gray-700 mb-1">Validity Days *</label>
                     <input
                       id="validityDays"
                       type="text"
@@ -1088,7 +1086,7 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1 text-left">Start Date *</label>
+                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
                     <input
                       id="startDate"
                       type="datetime-local"
@@ -1104,7 +1102,7 @@ const CourseManager = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1 text-left">End Date *</label>
+                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
                     <input
                       id="endDate"
                       type="datetime-local"
@@ -1120,7 +1118,7 @@ const CourseManager = () => {
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label htmlFor="authorMessage" className="block text-sm font-medium text-gray-700 mb-1 text-left">Author Message *</label>
+                    <label htmlFor="authorMessage" className="block text-sm font-medium text-gray-700 mb-1">Author Message *</label>
                     <textarea
                       id="authorMessage"
                       name="authorMessage"
@@ -1157,7 +1155,8 @@ const CourseManager = () => {
                       </div>
                     ) : (() => {
                       if (thumbnailUpdating) return 'Uploading...';
-                      return editingCourse ? 'Update' : 'Create';
+                      const actionText = editingCourse ? 'Update' : 'Create';
+                      return actionText;
                     })()} Course
                   </button>
                 </div>
@@ -1171,10 +1170,10 @@ const CourseManager = () => {
           className="fixed inset-0 bg-transparent border-0 max-w-none max-h-none p-0 m-0"
           aria-labelledby="status-modal-title"
         >
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={() => { setShowStatusModal(false); setSelectedCourse(null); }}>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
               <div className="p-6">
-                <h3 id="status-modal-title" className="text-lg font-bold mb-4 text-left">Update Course Status</h3>
+                <h3 id="status-modal-title" className="text-lg font-bold mb-4">Update Course Status</h3>
                 <p className="text-gray-600 mb-4">Course: {selectedCourse.name}</p>
                 <p className="text-sm text-gray-500 mb-6">Current Status: {selectedCourse.status}</p>
                 
@@ -1182,24 +1181,18 @@ const CourseManager = () => {
                   <button
                     onClick={() => updateStatus('PENDING')}
                     className="p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm"
-                    role="button"
-                    tabIndex={0}
                   >
                     Set as Pending
                   </button>
                   <button
                     onClick={() => updateStatus('APPROVED')}
                     className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
-                    role="button"
-                    tabIndex={0}
                   >
                     Approve Course
                   </button>
                   <button
                     onClick={() => updateStatus('REJECTED')}
                     className="p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
-                    role="button"
-                    tabIndex={0}
                   >
                     Reject Course
                   </button>
@@ -1219,7 +1212,22 @@ const CourseManager = () => {
               </div>
             </div>
           </div>
-
+          <div 
+            className="fixed inset-0 -z-10"
+            onClick={() => {
+              setShowStatusModal(false);
+              setSelectedCourse(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') {
+                setShowStatusModal(false);
+                setSelectedCourse(null);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
+          />
         </dialog>
       )}
 
@@ -1230,10 +1238,10 @@ const CourseManager = () => {
           className="fixed inset-0 bg-transparent border-0 max-w-none max-h-none p-0 m-0"
           aria-labelledby="thumbnail-modal-title"
         >
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={() => { setShowThumbnailModal(false); setSelectedCourse(null); }}>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
               <div className="p-6">
-                <h3 id="thumbnail-modal-title" className="text-lg font-bold mb-4 text-left">Update Course Thumbnail</h3>
+                <h3 id="thumbnail-modal-title" className="text-lg font-bold mb-4">Update Course Thumbnail</h3>
                 <p className="text-gray-600 mb-4">Course: <strong>{selectedCourse.name}</strong></p>
                 
                 <div className="mb-4">
@@ -1265,7 +1273,22 @@ const CourseManager = () => {
               </div>
             </div>
           </div>
-
+          <div 
+            className="fixed inset-0 -z-10"
+            onClick={() => {
+              setShowThumbnailModal(false);
+              setSelectedCourse(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') {
+                setShowThumbnailModal(false);
+                setSelectedCourse(null);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
+          />
         </dialog>
       )}
 
@@ -1276,10 +1299,10 @@ const CourseManager = () => {
           className="fixed inset-0 bg-transparent border-0 max-w-none max-h-none p-0 m-0"
           aria-labelledby="delete-modal-title"
         >
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={() => { setShowDeleteModal(false); setSelectedCourse(null); setDeleteReason(''); }}>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
               <div className="p-6">
-                <h3 id="delete-modal-title" className="text-lg font-bold mb-4 text-red-600 text-left">Delete Course</h3>
+                <h3 id="delete-modal-title" className="text-lg font-bold mb-4 text-red-600">Delete Course</h3>
                 <p className="text-gray-600 mb-4">Course: <strong>{selectedCourse.name}</strong></p>
                 <p className="text-sm text-gray-500 mb-4">This will mark the course as DELETED. Please provide a reason:</p>
                 
@@ -1315,7 +1338,24 @@ const CourseManager = () => {
               </div>
             </div>
           </div>
-
+          <div 
+            className="fixed inset-0 -z-10"
+            onClick={() => {
+              setShowDeleteModal(false);
+              setSelectedCourse(null);
+              setDeleteReason('');
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') {
+                setShowDeleteModal(false);
+                setSelectedCourse(null);
+                setDeleteReason('');
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
+          />
         </dialog>
       )}
 
@@ -1327,13 +1367,13 @@ const CourseManager = () => {
           style={{zIndex: 9999}}
           aria-labelledby="details-modal-title"
         >
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" onClick={() => { setShowDetailsModal(false); setSelectedCourse(null); dispatch(clearCourseDetails()); }}>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 id="details-modal-title" className="text-2xl font-bold text-left">Course Details</h3>
+                  <h3 id="details-modal-title" className="text-2xl font-bold">Course Details</h3>
                   <p className="text-blue-100 mt-1">Complete course information</p>
                 </div>
                 <button
@@ -1512,7 +1552,24 @@ const CourseManager = () => {
             </div>
           </div>
           </div>
-
+          <div 
+            className="fixed inset-0 -z-10"
+            onClick={() => {
+              setShowDetailsModal(false);
+              setSelectedCourse(null);
+              dispatch(clearCourseDetails());
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') {
+                setShowDetailsModal(false);
+                setSelectedCourse(null);
+                dispatch(clearCourseDetails());
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
+          />
         </dialog>
       )}
     </div>
