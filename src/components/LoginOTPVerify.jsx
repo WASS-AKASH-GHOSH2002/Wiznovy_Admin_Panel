@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { ArrowLeft, Shield } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
-import { loginSuccess } from '../store/auth/authSlice';
+import { loginSuccess } from '../store/authSlice';
 import swcLogo from "../assets/WIZNOVY.png";
 import { toast } from 'react-toastify';
 
@@ -44,7 +44,7 @@ const LoginOTPVerify = () => {
   }, [countdown]);
 
   const handleOtpChange = (index, value) => {
-    if (value.length > 1 || !/^[0-9]*$/.test(value)) return;
+    if (value.length > 1 || !/^\d*$/.test(value)) return;
     
     const newOtp = [...otp];
     newOtp[index] = value;
@@ -89,6 +89,7 @@ const LoginOTPVerify = () => {
         setCountdown(120);
       }
     } catch (error) {
+      console.error('Resend OTP error:', error);
       setMessage('Failed to resend OTP. Please try again.');
     } finally {
       setResendLoading(false);
@@ -164,7 +165,7 @@ const LoginOTPVerify = () => {
           <div className="flex justify-center gap-2">
             {otp.map((digit, index) => (
               <input
-                key={index}
+                key={`otp-${index}`}
                 ref={el => inputRefs.current[index] = el}
                 type="text"
                 inputMode="numeric"

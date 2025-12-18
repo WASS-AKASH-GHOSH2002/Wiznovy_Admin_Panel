@@ -470,7 +470,7 @@ const CourseManager = () => {
       return;
     }
     
-    // Show loading state
+    
     dispatch(setThumbnailUpdating(true));
     
     try {
@@ -483,7 +483,7 @@ const CourseManager = () => {
       }));
       
       if (result.type.endsWith('/fulfilled')) {
-        // Force refresh all data to show updated thumbnail
+       
         forceRefresh();
         setShowThumbnailModal(false);
         setSelectedCourse(null);

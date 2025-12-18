@@ -82,7 +82,7 @@ const FacultyArea = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 flex items-center">
           <span className="bg-blue-100 p-2 rounded-lg mr-3">👨‍💼</span>
-          Staff Management
+          {" "}Staff Management
         </h2>
         <div className="flex items-center space-x-4">
           <div className="relative">
@@ -132,7 +132,13 @@ const FacultyArea = () => {
             No {statusFilter.toLowerCase()} staff found.
           </p>
           <p className="text-gray-400 text-sm mt-2">
-            {searchTerm ? "Try a different search term" : "Try changing the status filter"}
+            {(() => {
+              if (searchTerm) {
+                return "Try a different search term";
+              } else {
+                return "Try changing the status filter";
+              }
+            })()}
           </p>
         </div>
       ) : (
@@ -159,11 +165,13 @@ const FacultyArea = () => {
                   <td className="p-4">{s.phoneNumber}</td>
                   <td className="p-4">
                     <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                        s.status === "ACTIVE"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                      className={(() => {
+                        if (s.status === "ACTIVE") {
+                          return "px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800";
+                        } else {
+                          return "px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800";
+                        }
+                      })()}
                     >
                       {s.status}
                     </span>
@@ -178,11 +186,11 @@ const FacultyArea = () => {
                           )
                         }
                         className={(() => {
-                          const baseClasses = "px-3 py-1.5 rounded-lg text-xs font-medium transition-all";
-                          const statusClasses = s.status === "ACTIVE"
-                            ? "bg-amber-500 text-white hover:bg-amber-600"
-                            : "bg-green-500 text-white hover:bg-green-600";
-                          return `${baseClasses} ${statusClasses}`;
+                          if (s.status === "ACTIVE") {
+                            return "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-white hover:bg-amber-600";
+                          } else {
+                            return "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600";
+                          }
                         })()}
                       >
                         {s.status === "ACTIVE" ? "DEACTIVE" : "Activate"}

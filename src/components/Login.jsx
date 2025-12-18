@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { loginUser } from '../store/auth/authThunks';
+import { loginUser } from '../store/authThunks';
 import { Lock, User, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import swcLogo from "../assets/WIZNOVY.png";
 import TextCaptcha from './TextCaptcha';
@@ -61,21 +61,19 @@ const LoginPage = () => {
       return;
     }
 
-    const result = await dispatch(loginUser(credentials));
+    const result = dispatch(loginUser(credentials));
     
     if (result?.success) {
-      // Check if email is provided in response (indicates valid admin)
+      // Check if email is provided in response (indicates OTP verification required)
       if (result.email) {
         toast.success('OTP sent to your email. Please verify to continue.');
         navigate('/login-otp-verify', { state: { email: result.email } });
-      } else {
-        setLocalError('Invalid admin credentials. Please check your email and password.');
       }
-    } else {
-      // Handle specific error cases
-      if (result?.error?.includes('unauthorized') || result?.error?.includes('Invalid')) {
-        setLocalError('Invalid admin credentials. This email is not authorized for admin access.');
-      }
+      // If no email but success, user is already logged in (handled by authThunks)
+    } else if (result?.error?.includes('unauthorized') || result?.error?.includes('Invalid')) {
+      setLocalError('Invalid admin credentials. This email is not authorized for admin access.');
+    } else if (result?.error) {
+      setLocalError(result.error);
     }
   };
 
@@ -193,8 +191,8 @@ const LoginPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Captcha</label>
-              <TextCaptcha onCaptchaChange={setIsCaptchaValid} />
+              <label htmlFor="captcha" className="block text-sm font-medium text-gray-700 mb-2">Captcha</label>
+              <TextCaptcha id="captcha" onCaptchaChange={setIsCaptchaValid} />
             </div>
           </div>
 

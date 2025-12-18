@@ -14,7 +14,7 @@ const ForgotPassword = () => {
   const navigate = useNavigate();
 
   const validateEmail = (email) => {
-    // Only allow letters, numbers, dots, and @
+   
     const emailRegex = /^[a-zA-Z0-9.]+@[a-zA-Z0-9.]+\.[a-zA-Z]+$/;
     return emailRegex.test(email);
   };
@@ -22,8 +22,8 @@ const ForgotPassword = () => {
   const isValidEmail = email.trim() && validateEmail(email);
 
   const handleEmailChange = (e) => {
-    // Filter input to only allow letters, numbers, dots, and @
-    const filteredValue = e.target.value.replace(/[^a-zA-Z0-9.@]/g, '');
+   
+    const filteredValue = e.target.value.replaceAll(/[^a-zA-Z0-9.@]/g, '');
     setEmail(filteredValue);
     setEmailError('');
     setMessage('');
@@ -41,7 +41,7 @@ const ForgotPassword = () => {
     setMessage('');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/forgotPass`, {
+      await axios.post(`${API_BASE_URL}/auth/forgotPass`, {
         email,
         role: 'ADMIN'
       });
@@ -49,7 +49,7 @@ const ForgotPassword = () => {
       toast.success('Password reset link sent successfully to your email!');
       navigate('/verify-otp', { state: { email } });
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Failed to send reset email. Please try again.');
+      setMessage(error?.response?.data?.message || 'Failed to send reset email. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ const ForgotPassword = () => {
 
         {(message || emailError) && (
           <div className={`mb-4 p-3 rounded text-sm relative ${
-            message && message.includes('sent') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            message?.includes('sent') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
           }`}>
             <button
               onClick={() => {

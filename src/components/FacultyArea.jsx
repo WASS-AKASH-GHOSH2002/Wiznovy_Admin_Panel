@@ -178,11 +178,11 @@ const FacultyArea = () => {
                       <td className="p-4">
                         <span
                           className={(() => {
-                            const baseClasses = "px-2.5 py-1 rounded-full text-xs font-medium";
-                            const statusClasses = s.status === "ACTIVE"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800";
-                            return `${baseClasses} ${statusClasses}`;
+                            if (s.status === "ACTIVE") {
+                              return "px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800";
+                            } else {
+                              return "px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800";
+                            }
                           })()}
                         >
                           {s.status}
@@ -198,11 +198,11 @@ const FacultyArea = () => {
                               )
                             }
                             className={(() => {
-                              const baseClasses = "px-3 py-1.5 rounded-lg text-xs font-medium transition-all";
-                              const statusClasses = s.status === "ACTIVE"
-                                ? "bg-amber-500 text-white hover:bg-amber-600"
-                                : "bg-green-500 text-white hover:bg-green-600";
-                              return `${baseClasses} ${statusClasses}`;
+                              if (s.status === "ACTIVE") {
+                                return "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-white hover:bg-amber-600";
+                              } else {
+                                return "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600";
+                              }
                             })()}
                           >
                             {s.status === "ACTIVE" ? "Deactivate" : "Activate"}
@@ -437,11 +437,13 @@ const FacultyArea = () => {
           </form>
           {msg && (
             <div
-              className={`mt-4 p-3 rounded-lg text-center ${
-                msg.includes("✅")
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
-              }`}
+              className={(() => {
+                if (msg.includes("✅")) {
+                  return "mt-4 p-3 rounded-lg text-center bg-green-100 text-green-700";
+                } else {
+                  return "mt-4 p-3 rounded-lg text-center bg-red-100 text-red-700";
+                }
+              })()}
             >
               {msg}
             </div>

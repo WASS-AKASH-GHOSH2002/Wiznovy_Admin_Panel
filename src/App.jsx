@@ -10,7 +10,7 @@ import ProtectedRoute from './components/ProtectecRoute';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useEffect } from 'react';
-import { initializeAuth } from './store/auth/authThunks';
+import { initializeAuth } from './store/authThunks';
 import './App.css'; 
 function App() {
   

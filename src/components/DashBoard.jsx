@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { logoutUser } from "../store/auth/authThunks";
+import { logoutUser } from "../store/authThunks";
 import WiznovyLogo from "../assets/WIZNOVY.png";
 import LazyImage from "./LazyImage";
 import axios from "axios";

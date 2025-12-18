@@ -7,7 +7,6 @@ export const loginUser = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   
   try {
-    
     const params = new URLSearchParams();
     params.append('loginId', credentials.loginId);
     params.append('password', credentials.password);
@@ -19,6 +18,21 @@ export const loginUser = (credentials) => async (dispatch) => {
       },
     });
 
+    // Check if response indicates OTP is required
+    if (response.data.requiresOTP || response.data.email) {
+      // Store temporary data for OTP verification
+      localStorage.setItem('tempEmail', response.data.email || credentials.loginId);
+      localStorage.setItem('tempLoginId', credentials.loginId);
+      localStorage.setItem('tempPassword', credentials.password);
+      if (response.data.user) {
+        localStorage.setItem('tempUser', JSON.stringify(response.data.user));
+      }
+      
+      dispatch(loginFailure(''));
+      return { success: true, email: response.data.email || credentials.loginId };
+    }
+
+    // Direct login without OTP
     const { token, user: userData } = response.data;
     const authUser = { ...userData, token };
     
