@@ -23,39 +23,32 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl', posit
   if (!isOpen) return null;
 
   const positionClasses = position === 'center' 
-    ? 'items-center' 
-    : 'items-start';
+    ? 'items-center justify-center' 
+    : 'items-start justify-center pt-8';
   
-  const modalClasses = position === 'center'
-    ? `bg-white rounded-lg shadow-xl w-full ${maxWidth}`
-    : `bg-white rounded-lg shadow-xl w-full ${maxWidth} my-8`;
-
-
+  const modalClasses = `bg-white rounded-lg shadow-xl w-full ${maxWidth}`;
 
   return (
-    <div 
-      className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center ${positionClasses} z-50 p-4 overflow-y-auto`}
+    <dialog 
+      open={isOpen}
+      className="fixed inset-0 bg-transparent border-0 max-w-none max-h-none p-0 m-0"
       onClick={onClose}
-      onKeyDown={(e) => e.key === 'Enter' && onClose()}
-      role="dialog"
-      aria-modal="true"
       aria-labelledby={title ? "modal-title" : undefined}
-      tabIndex={-1}
     >
-      <div 
-        className={modalClasses}
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-        role="document"
-      >
-        <div className="p-6">
-          {title && (
-            <h2 id="modal-title" className="text-2xl font-bold mb-4">{title}</h2>
-          )}
-          {children}
+      <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex ${positionClasses} z-50 p-4 overflow-y-auto`}>
+        <div 
+          className={modalClasses}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-6">
+            {title && (
+              <h2 id="modal-title" className="text-2xl font-bold mb-4">{title}</h2>
+            )}
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 };
 

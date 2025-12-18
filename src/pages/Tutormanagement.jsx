@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, RefreshCw, FileText, Download, Settings, Edit } from "lucide-react";
 import { toast } from 'react-toastify';
@@ -36,10 +37,26 @@ const LoadingSpinner = ({ text }) => (
   </div>
 );
 
+LoadingSpinner.propTypes = {
+  text: PropTypes.string.isRequired,
+};
+
 const getDisplayValue = (value) => {
   if (value === null || value === undefined) return "N/A";
   if (typeof value === 'object') return value?.name || "N/A";
   return String(value);
+};
+
+const buildFetchParams = (itemsPerPage, currentPage, keyword, filters, selectedCountry, selectedSubject) => {
+  const offset = (currentPage - 1) * itemsPerPage;
+  return {
+    limit: itemsPerPage,
+    offset,
+    ...(keyword && { keyword }),
+    ...(filters.status && { status: filters.status }),
+    ...(selectedCountry && { countryId: selectedCountry }),
+    ...(selectedSubject && { subjectId: selectedSubject })
+  };
 };
 
 const Tutormanagement = () => {
@@ -100,16 +117,7 @@ const Tutormanagement = () => {
   }, [tutors, searchKeyword]);
 
   useEffect(() => {
-    const offset = (currentPage - 1) * itemsPerPage;
-    const fetchParams = { 
-      limit: itemsPerPage, 
-      offset,
-      ...(keyword && { keyword: keyword }),
-      ...(filters.status && { status: filters.status }),
-      ...(selectedCountry && { countryId: selectedCountry }),
-      ...(selectedSubject && { subjectId: selectedSubject })
-    };
-    
+    const fetchParams = buildFetchParams(itemsPerPage, currentPage, keyword, filters, selectedCountry, selectedSubject);
     dispatch(fetchTutors(fetchParams));
   }, [dispatch, keyword, filters.status, selectedCountry, selectedSubject, currentPage, itemsPerPage]);
 
@@ -121,15 +129,7 @@ const Tutormanagement = () => {
 
   // Helper function to refresh tutors data
   const refreshTutors = () => {
-    const offset = (currentPage - 1) * itemsPerPage;
-    const fetchParams = { 
-      limit: itemsPerPage, 
-      offset,
-      ...(keyword && { keyword: keyword }),
-      ...(filters.status && { status: filters.status }),
-      ...(selectedCountry && { countryId: selectedCountry }),
-      ...(selectedSubject && { subjectId: selectedSubject })
-    };
+    const fetchParams = buildFetchParams(itemsPerPage, currentPage, keyword, filters, selectedCountry, selectedSubject);
     dispatch(fetchTutors(fetchParams));
   };
 
@@ -447,7 +447,12 @@ const Tutormanagement = () => {
                     <div className="flex items-center gap-1">
                       <span className="text-sm sm:text-base">{tutor.tutorDetail?.averageRating || "0.00"}</span>
                       <span className="text-yellow-500">★</span>
-                      <span className="text-gray-500 text-xs hidden sm:inline">({tutor.tutorDetail?.totalRatings || 0})</span>
+                      {(() => {
+                        const totalRatings = tutor.tutorDetail?.totalRatings || 0;
+                        return (
+                          <span className="text-gray-500 text-xs hidden sm:inline">({totalRatings})</span>
+                        );
+                      })()}
                     </div>
                   </td>
                   <td className="p-2 sm:p-4 text-sm sm:text-base hidden md:table-cell">${tutor.tutorDetail?.hourlyRate || "0.00"}/hr</td>
@@ -543,6 +548,10 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50" 
           onClick={() => setShowProfile(false)}
+          onKeyDown={(e) => e.key === 'Enter' && setShowProfile(false)}
+          role="button"
+          tabIndex={0}
+          aria-label="Close profile modal"
         >
           <div 
             className="bg-white p-8 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" 
@@ -595,6 +604,10 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowStatusModal(false)}
+          onKeyDown={(e) => e.key === 'Enter' && setShowStatusModal(false)}
+          role="button"
+          tabIndex={0}
+          aria-label="Close status modal"
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"
@@ -643,6 +656,10 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowBulkModal(false)}
+          onKeyDown={(e) => e.key === 'Enter' && setShowBulkModal(false)}
+          role="button"
+          tabIndex={0}
+          aria-label="Close bulk update modal"
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"
@@ -691,6 +708,10 @@ const Tutormanagement = () => {
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
           onClick={() => setShowUpdateModal(false)}
+          onKeyDown={(e) => e.key === 'Enter' && setShowUpdateModal(false)}
+          role="button"
+          tabIndex={0}
+          aria-label="Close update contact modal"
         >
           <div 
             className="bg-white p-6 rounded-xl w-full max-w-md"

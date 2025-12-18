@@ -31,7 +31,7 @@ export const fetchSubjects = createAsyncThunk(
         params: {
           limit,
           offset,
-          status: statusFilter !== 'all' ? statusFilter : undefined,
+          status: statusFilter === 'all' ? undefined : statusFilter,
           keyword: search,
         },
         headers: {
@@ -91,7 +91,7 @@ export const updateSubjectStatus = createAsyncThunk(
   async ({ id, status }, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
-      const response = await axios.put(`${API_BASE_URL}/subject-master/status/${id}`, { status }, {
+      await axios.put(`${API_BASE_URL}/subject-master/status/${id}`, { status }, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

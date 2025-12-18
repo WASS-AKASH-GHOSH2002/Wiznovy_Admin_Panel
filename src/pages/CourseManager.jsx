@@ -63,38 +63,43 @@ ActionButton.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-const ImageUpload = ({ type, preview, onUpload, onRemove, inputRef, disabled }) => (
-  <div>
-    <label htmlFor={`${type}Upload`} className="block text-sm font-medium text-gray-700 mb-1">
-      Course {type === 'thumbnail' ? 'Thumbnail' : 'Image'}
-      {inputRef.current?.files?.[0] && (
-        <span className="ml-2 text-green-600 text-xs">✓ File selected</span>
-      )}
-    </label>
-    {preview ? (
-      <div className="relative mb-3">
-        <img src={preview} alt={`${type} preview`} className="w-full h-32 object-cover rounded-md" />
-        <button type="button" onClick={onRemove} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </button>
-      </div>
-    ) : (
-      <div className="flex items-center justify-center w-full">
-        <label htmlFor={`${type}Upload`} className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-          <div className="flex flex-col items-center justify-center pt-2 pb-2">
-            <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
-              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+const ImageUpload = ({ type, preview, onUpload, onRemove, inputRef, disabled }) => {
+  const uploadId = `${type}Upload`;
+  const labelText = type === 'thumbnail' ? 'Thumbnail' : 'Image';
+  
+  return (
+    <div>
+      <label htmlFor={uploadId} className="block text-sm font-medium text-gray-700 mb-1">
+        Course {labelText}
+        {inputRef.current?.files?.[0] && (
+          <span className="ml-2 text-green-600 text-xs">✓ File selected</span>
+        )}
+      </label>
+      {preview ? (
+        <div className="relative mb-3">
+          <img src={preview} alt={`${type} preview`} className="w-full h-32 object-cover rounded-md" />
+          <button type="button" onClick={onRemove} className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
-            <p className="text-xs text-gray-500">Upload {type === 'thumbnail' ? 'Thumbnail' : 'Image'}</p>
-          </div>
-          <input id={`${type}Upload`} type="file" className="hidden" onChange={onUpload} accept="image/*" ref={inputRef} disabled={disabled} />
-        </label>
-      </div>
-    )}
-  </div>
-);
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center w-full">
+          <label htmlFor={uploadId} className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+            <div className="flex flex-col items-center justify-center pt-2 pb-2">
+              <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+              </svg>
+              <p className="text-xs text-gray-500">Upload {labelText}</p>
+            </div>
+            <input id={uploadId} type="file" className="hidden" onChange={onUpload} accept="image/*" ref={inputRef} disabled={disabled} />
+          </label>
+        </div>
+      )}
+    </div>
+  );
+};
 
 ImageUpload.propTypes = {
   type: PropTypes.string.isRequired,
@@ -294,19 +299,21 @@ const CourseManager = () => {
       handlePricing(submitData);
       addImageFiles(submitData);
       
-      const result = await dispatch(
-        editingCourse 
-          ? updateCourse({ id: editingCourse.id, data: submitData })
-          : createCourse(submitData)
-      );
+      const action = editingCourse 
+        ? updateCourse({ id: editingCourse.id, data: submitData })
+        : createCourse(submitData);
+      
+      const result = await dispatch(action);
       
       if (result.type.endsWith('/fulfilled')) {
         forceRefresh();
         setShowModal(false);
         resetForm();
-        toast.success(editingCourse ? 'Course updated successfully!' : 'Course created successfully!');
+        const successMessage = editingCourse ? 'Course updated successfully!' : 'Course created successfully!';
+        toast.success(successMessage);
       } else {
-        toast.error('Failed to ' + (editingCourse ? 'update' : 'create') + ' course');
+        const errorAction = editingCourse ? 'update' : 'create';
+        toast.error(`Failed to ${errorAction} course`);
       }
     } catch (error) {
       console.error('Form submission error:', error);
@@ -1148,7 +1155,8 @@ const CourseManager = () => {
                       </div>
                     ) : (() => {
                       if (thumbnailUpdating) return 'Uploading...';
-                      return editingCourse ? 'Update' : 'Create';
+                      const actionText = editingCourse ? 'Update' : 'Create';
+                      return actionText;
                     })()} Course
                   </button>
                 </div>
@@ -1157,202 +1165,215 @@ const CourseManager = () => {
 
       {/* Status Update Modal */}
       {showStatusModal && selectedCourse && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowStatusModal(false);
-              setSelectedCourse(null);
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              setShowStatusModal(false);
-              setSelectedCourse(null);
-            }
-          }}
-          tabIndex={-1}
+        <dialog 
+          open={showStatusModal}
+          className="fixed inset-0 bg-transparent border-0 max-w-none max-h-none p-0 m-0"
+          aria-labelledby="status-modal-title"
         >
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <h3 className="text-lg font-bold mb-4">Update Course Status</h3>
-              <p className="text-gray-600 mb-4">Course: {selectedCourse.name}</p>
-              <p className="text-sm text-gray-500 mb-6">Current Status: {selectedCourse.status}</p>
-              
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => updateStatus('PENDING')}
-                  className="p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm"
-                >
-                  Set as Pending
-                </button>
-                <button
-                  onClick={() => updateStatus('APPROVED')}
-                  className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
-                >
-                  Approve Course
-                </button>
-                <button
-                  onClick={() => updateStatus('REJECTED')}
-                  className="p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
-                >
-                  Reject Course
-                </button>
-              </div>
-              
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={() => {
-                    setShowStatusModal(false);
-                    setSelectedCourse(null);
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6">
+                <h3 id="status-modal-title" className="text-lg font-bold mb-4">Update Course Status</h3>
+                <p className="text-gray-600 mb-4">Course: {selectedCourse.name}</p>
+                <p className="text-sm text-gray-500 mb-6">Current Status: {selectedCourse.status}</p>
+                
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => updateStatus('PENDING')}
+                    className="p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm"
+                  >
+                    Set as Pending
+                  </button>
+                  <button
+                    onClick={() => updateStatus('APPROVED')}
+                    className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+                  >
+                    Approve Course
+                  </button>
+                  <button
+                    onClick={() => updateStatus('REJECTED')}
+                    className="p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
+                  >
+                    Reject Course
+                  </button>
+                </div>
+                
+                <div className="flex justify-end mt-6">
+                  <button
+                    onClick={() => {
+                      setShowStatusModal(false);
+                      setSelectedCourse(null);
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+          <div 
+            className="fixed inset-0 -z-10"
+            onClick={() => {
+              setShowStatusModal(false);
+              setSelectedCourse(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') {
+                setShowStatusModal(false);
+                setSelectedCourse(null);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
+          />
+        </dialog>
       )}
 
       {/* Thumbnail Update Modal */}
       {showThumbnailModal && selectedCourse && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowThumbnailModal(false);
-              setSelectedCourse(null);
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              setShowThumbnailModal(false);
-              setSelectedCourse(null);
-            }
-          }}
-          tabIndex={-1}
+        <dialog 
+          open={showThumbnailModal}
+          className="fixed inset-0 bg-transparent border-0 max-w-none max-h-none p-0 m-0"
+          aria-labelledby="thumbnail-modal-title"
         >
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <h3 className="text-lg font-bold mb-4">Update Course Thumbnail</h3>
-              <p className="text-gray-600 mb-4">Course: <strong>{selectedCourse.name}</strong></p>
-              
-              <div className="mb-4">
-                <label htmlFor="thumbnailUpdate" className="block text-sm font-medium text-gray-700 mb-2">Select New Thumbnail</label>
-                <input
-                  id="thumbnailUpdate"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleThumbnailFileUpload}
-                  ref={thumbnailUpdateRef}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  disabled={thumbnailUpdating}
-                />
-                <p className="text-xs text-gray-500 mt-1">Max file size: 5MB</p>
-              </div>
-              
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    setShowThumbnailModal(false);
-                    setSelectedCourse(null);
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                  disabled={thumbnailUpdating}
-                >
-                  Cancel
-                </button>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6">
+                <h3 id="thumbnail-modal-title" className="text-lg font-bold mb-4">Update Course Thumbnail</h3>
+                <p className="text-gray-600 mb-4">Course: <strong>{selectedCourse.name}</strong></p>
+                
+                <div className="mb-4">
+                  <label htmlFor="thumbnailUpdate" className="block text-sm font-medium text-gray-700 mb-2">Select New Thumbnail</label>
+                  <input
+                    id="thumbnailUpdate"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailFileUpload}
+                    ref={thumbnailUpdateRef}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    disabled={thumbnailUpdating}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Max file size: 5MB</p>
+                </div>
+                
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => {
+                      setShowThumbnailModal(false);
+                      setSelectedCourse(null);
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                    disabled={thumbnailUpdating}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+          <div 
+            className="fixed inset-0 -z-10"
+            onClick={() => {
+              setShowThumbnailModal(false);
+              setSelectedCourse(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') {
+                setShowThumbnailModal(false);
+                setSelectedCourse(null);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
+          />
+        </dialog>
       )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedCourse && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowDeleteModal(false);
-              setSelectedCourse(null);
-              setDeleteReason('');
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              setShowDeleteModal(false);
-              setSelectedCourse(null);
-              setDeleteReason('');
-            }
-          }}
-          tabIndex={-1}
+        <dialog 
+          open={showDeleteModal}
+          className="fixed inset-0 bg-transparent border-0 max-w-none max-h-none p-0 m-0"
+          aria-labelledby="delete-modal-title"
         >
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <h3 className="text-lg font-bold mb-4 text-red-600">Delete Course</h3>
-              <p className="text-gray-600 mb-4">Course: <strong>{selectedCourse.name}</strong></p>
-              <p className="text-sm text-gray-500 mb-4">This will mark the course as DELETED. Please provide a reason:</p>
-              
-              <textarea
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-                placeholder="Enter reason for deletion (e.g., Course content violates platform guidelines)"
-                className="w-full p-3 border border-gray-300 rounded-lg resize-none"
-                rows={4}
-                required
-              />
-              
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setSelectedCourse(null);
-                    setDeleteReason('');
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                >
-                  Delete Course
-                </button>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6">
+                <h3 id="delete-modal-title" className="text-lg font-bold mb-4 text-red-600">Delete Course</h3>
+                <p className="text-gray-600 mb-4">Course: <strong>{selectedCourse.name}</strong></p>
+                <p className="text-sm text-gray-500 mb-4">This will mark the course as DELETED. Please provide a reason:</p>
+                
+                <label htmlFor="deleteReason" className="block text-sm font-medium text-gray-700 mb-2">Reason for deletion</label>
+                <textarea
+                  id="deleteReason"
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="Enter reason for deletion (e.g., Course content violates platform guidelines)"
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none"
+                  rows={4}
+                  required
+                />
+                
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setSelectedCourse(null);
+                      setDeleteReason('');
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                  >
+                    Delete Course
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+          <div 
+            className="fixed inset-0 -z-10"
+            onClick={() => {
+              setShowDeleteModal(false);
+              setSelectedCourse(null);
+              setDeleteReason('');
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') {
+                setShowDeleteModal(false);
+                setSelectedCourse(null);
+                setDeleteReason('');
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
+          />
+        </dialog>
       )}
 
       {/* Course Details Modal */}
       {showDetailsModal && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" 
+        <dialog 
+          open={showDetailsModal}
+          className="fixed inset-0 bg-transparent border-0 max-w-none max-h-none p-0 m-0" 
           style={{zIndex: 9999}}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowDetailsModal(false);
-              setSelectedCourse(null);
-              dispatch(clearCourseDetails());
-            }
-          }}
+          aria-labelledby="details-modal-title"
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-2xl font-bold">Course Details</h3>
+                  <h3 id="details-modal-title" className="text-2xl font-bold">Course Details</h3>
                   <p className="text-blue-100 mt-1">Complete course information</p>
                 </div>
                 <button
@@ -1411,14 +1432,15 @@ const CourseManager = () => {
                             );
                           })()}
                           {(() => {
-                            let statusClass = 'bg-gray-100 text-gray-800';
-                            if (selectedCourseDetails.status === 'PENDING') {
-                              statusClass = 'bg-yellow-100 text-yellow-800';
-                            } else if (selectedCourseDetails.status === 'APPROVED') {
-                              statusClass = 'bg-green-100 text-green-800';
-                            } else if (selectedCourseDetails.status === 'REJECTED') {
-                              statusClass = 'bg-red-100 text-red-800';
-                            }
+                            const getStatusClass = (status) => {
+                              switch (status) {
+                                case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+                                case 'APPROVED': return 'bg-green-100 text-green-800';
+                                case 'REJECTED': return 'bg-red-100 text-red-800';
+                                default: return 'bg-gray-100 text-gray-800';
+                              }
+                            };
+                            const statusClass = getStatusClass(selectedCourseDetails.status);
                             return (
                               <span className={`px-4 py-2 rounded-full text-sm font-medium ${statusClass}`}>
                                 {selectedCourseDetails.status}
@@ -1529,7 +1551,26 @@ const CourseManager = () => {
               )}
             </div>
           </div>
-        </div>
+          </div>
+          <div 
+            className="fixed inset-0 -z-10"
+            onClick={() => {
+              setShowDetailsModal(false);
+              setSelectedCourse(null);
+              dispatch(clearCourseDetails());
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') {
+                setShowDetailsModal(false);
+                setSelectedCourse(null);
+                dispatch(clearCourseDetails());
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
+          />
+        </dialog>
       )}
     </div>
   );

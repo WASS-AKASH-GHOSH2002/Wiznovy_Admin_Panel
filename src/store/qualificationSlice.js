@@ -7,9 +7,11 @@ import { api } from '../config/axios';
 
 export const fetchQualifications = createAsyncThunk(
   'qualifications/fetchQualifications',
-  async (params = {}, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
+    const defaultParams = {};
+    const finalParams = params || defaultParams;
     try {
-      const { limit = 50, offset = 0, keyword = '', status = '' } = params;
+      const { limit = 50, offset = 0, keyword = '', status = '' } = finalParams;
 
       const queryParams = new URLSearchParams({
         limit: String(limit),

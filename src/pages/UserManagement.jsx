@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, RefreshCw, Download, Settings, Edit } from "lucide-react";
 import { exportUsersToPDF, exportUsersToCSV } from "../utils/downloadUtils";
@@ -34,6 +35,10 @@ const LoadingSpinner = ({ text }) => (
     {text}
   </div>
 );
+
+LoadingSpinner.propTypes = {
+  text: PropTypes.string.isRequired,
+};
 
 const UserManagement = () => {
   const dispatch = useDispatch();

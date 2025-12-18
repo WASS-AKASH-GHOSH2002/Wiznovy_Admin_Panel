@@ -20,21 +20,24 @@ api.interceptors.request.use((config) => {
 
 export const fetchCourses = createAsyncThunk(
   'courses/fetchCourses',
-  async (params = {}, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
+    const defaultParams = {};
+    const finalParams = params || defaultParams;
     try {
       const queryParams = new URLSearchParams();
       
-      if (params.status) queryParams.append('status', params.status);
-      if (params.accessType) queryParams.append('accessType', params.accessType);
-      if (params.limit) queryParams.append('limit', params.limit);
-      if (params.offset) queryParams.append('offset', params.offset);
-      if (params.keyword) queryParams.append('keyword', params.keyword);
-      if (params.tutorId) queryParams.append('tutorId', params.tutorId);
-      if (params.subjectId) queryParams.append('subjectId', params.subjectId);
-      if (params.languageId) queryParams.append('languageId', params.languageId);
+      if (finalParams.status) queryParams.append('status', finalParams.status);
+      if (finalParams.accessType) queryParams.append('accessType', finalParams.accessType);
+      if (finalParams.limit) queryParams.append('limit', finalParams.limit);
+      if (finalParams.offset) queryParams.append('offset', finalParams.offset);
+      if (finalParams.keyword) queryParams.append('keyword', finalParams.keyword);
+      if (finalParams.tutorId) queryParams.append('tutorId', finalParams.tutorId);
+      if (finalParams.subjectId) queryParams.append('subjectId', finalParams.subjectId);
+      if (finalParams.languageId) queryParams.append('languageId', finalParams.languageId);
       
       const queryString = queryParams.toString();
-      const url = `/course/admin${queryString ? `?${queryString}` : ''}`;
+      const baseUrl = '/course/admin';
+      const url = queryString ? `${baseUrl}?${queryString}` : baseUrl;
       
       const response = await api.get(url);
       return response.data;
