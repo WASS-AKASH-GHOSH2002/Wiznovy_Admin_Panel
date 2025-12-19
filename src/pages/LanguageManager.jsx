@@ -13,7 +13,7 @@ const LanguageManager = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Helper function to refresh languages data
+  
   const refreshLanguages = () => {
     const offset = (currentPage - 1) * itemsPerPage;
     dispatch(fetchLanguages({ limit: itemsPerPage, offset }));

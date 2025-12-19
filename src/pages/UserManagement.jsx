@@ -459,8 +459,8 @@ const UserManagement = () => {
 
       {/* Profile Modal */}
       {showProfile && selectedUser && (
-        <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-xl w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={() => setShowProfile(false)}>
+          <div className="bg-white p-8 rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4">User Profile</h3>
             <div className="space-y-2">
               <p><strong>Name:</strong> {selectedUser.userDetail?.name || "N/A"}</p>
@@ -482,8 +482,8 @@ const UserManagement = () => {
 
       {/* Status Update Modal */}
       {showStatusModal && statusUpdateUser && (
-        <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={() => { setShowStatusModal(false); setStatusUpdateUser(null); setNewStatus(''); }}>
+          <div className="bg-white rounded-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4">Update User Status</h3>
             <p className="text-gray-600 mb-4">
               Update status for: <strong>{statusUpdateUser.userDetail?.name || statusUpdateUser.email}</strong>
@@ -524,8 +524,8 @@ const UserManagement = () => {
 
       {/* Bulk Update Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 bg-transparent flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={() => { setShowBulkModal(false); setBulkStatus(''); }}>
+          <div className="bg-white p-6 rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4">Bulk Status Update</h3>
             <p className="text-gray-600 mb-4">
               Update status for <strong>{selectedUsers.length}</strong> selected users
@@ -566,8 +566,8 @@ const UserManagement = () => {
 
       {/* Update Contact Modal */}
       {showUpdateModal && updateUser && (
-        <div className="fixed inset-0 bg-transparent bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={() => { setShowUpdateModal(false); setUpdateUser(null); setUpdateData({ email: '', phoneNumber: '' }); setValidationErrors({ email: '', phoneNumber: '' }); }}>
+          <div className="bg-white p-6 rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4">Update Contact</h3>
             <p className="text-gray-600 mb-4">
               Update contact for: <strong>{updateUser.userDetail?.name || updateUser.email}</strong>

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../config/axios";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom"; 
 
-// Helper functions to reduce duplicate code
+
 const getStatusBadgeClass = (status) => {
   return status === "ACTIVE" 
     ? "px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
@@ -21,6 +21,12 @@ const getFilterButtonClass = (isActive) => {
     : "bg-gray-100 text-gray-700 hover:bg-gray-200";
 };
 
+const getDeactiveButtonClass = (isActive) => {
+  return isActive
+    ? "bg-red-600 text-white shadow-md"
+    : "bg-gray-100 text-gray-700 hover:bg-gray-200";
+};
+
 const getEmptyStateMessage = (searchTerm) => {
   return searchTerm ? "Try a different search term" : "Try changing the status filter";
 };
@@ -33,7 +39,7 @@ const FacultyArea = () => {
   const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [searchTerm, setSearchTerm] = useState("");
   const [passwordErrors, setPasswordErrors] = useState("");
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate(); 
 
   const fetchStaffs = async () => {
     setLoading(true);
@@ -52,8 +58,12 @@ const FacultyArea = () => {
     fetchStaffs();
   }, [statusFilter]);
 
+  const getActionText = (status) => {
+    return status === "ACTIVE" ? "activate" : "deactivate";
+  };
+
   const toggleStatus = async (id, status) => {
-    if (globalThis.confirm(`Are you sure you want to ${status === "ACTIVE" ? "activate" : "deactivate"} this staff member?`)) {
+    if (globalThis.confirm(`Are you sure you want to ${getActionText(status)} this staff member?`)) {
       await api.put(`/account/staff/status/${id}`, { status });
       fetchStaffs();
     }
@@ -88,12 +98,12 @@ const FacultyArea = () => {
     alert("Password updated successfully!");
   };
 
-  // Function to navigate to menu permissions
+ 
   const goToMenuPermissions = (accountId) => {
     navigate(`/menu-permission/${accountId}`);
   };
 
-  // Filter staff based on search term
+
   const filteredStaffs = staffs.filter(staff => 
     staff.staffDetail?.[0]?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     staff.staffDetail?.[0]?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -131,11 +141,7 @@ const FacultyArea = () => {
         </button>
         <button
           onClick={() => setStatusFilter("DEACTIVE")}
-          className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            statusFilter === "DEACTIVE"
-              ? "bg-red-600 text-white shadow-md"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
+          className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${getDeactiveButtonClass(statusFilter === "DEACTIVE")}`}
         >
           Deactivated Staff
         </button>

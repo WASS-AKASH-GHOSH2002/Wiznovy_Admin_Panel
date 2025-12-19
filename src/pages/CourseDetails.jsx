@@ -131,8 +131,8 @@ const CourseDetails = () => {
 
   const normalizeUrl = (url) => {
     if (!url) return null;
-    let normalized = url.replaceAll(/\\/g, '/');
-    return normalized.replaceAll(/http:\//g, 'http://');
+    let normalized = url.replaceAll('\\', '/');
+    return normalized.replaceAll('http:/', 'http://');
   };
 
   const handleFileAction = (material, action) => {
@@ -592,7 +592,7 @@ const CourseDetails = () => {
             {units.map((unit) => {
               console.log('Unit data:', unit);
               console.log('Unit imgUrl:', unit.imgUrl);
-              const normalizedUrl = unit.imgUrl ? unit.imgUrl.replaceAll(/\\/g, '/') : null;
+              const normalizedUrl = unit.imgUrl ? unit.imgUrl.replaceAll('\\', '/') : null;
               console.log('Normalized URL:', normalizedUrl);
               return (
               <div key={unit.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -621,6 +621,7 @@ const CourseDetails = () => {
                         <label 
                           className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
                           htmlFor={`unit-image-${unit.id}`}
+                          aria-label="Upload unit image"
                         >
                           <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -646,11 +647,15 @@ const CourseDetails = () => {
                           </span>
                           <button
                             onClick={() => handleStatusUpdate(unit)}
-                            className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
-                              unit.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                              unit.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}
+                            className={(() => {
+                              if (unit.status === 'ACTIVE') {
+                                return 'px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 bg-green-100 text-green-800';
+                              } else if (unit.status === 'PENDING') {
+                                return 'px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 bg-yellow-100 text-yellow-800';
+                              } else {
+                                return 'px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 bg-gray-100 text-gray-800';
+                              }
+                            })()}
                           >
                             {unit.status}
                           </button>
@@ -968,7 +973,7 @@ const CourseDetails = () => {
         <form onSubmit={handleCreateUnit}>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="create-unit-name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <label htmlFor="create-unit-name" className="block text-sm font-medium text-gray-700 mb-1 text-left">Name *</label>
                     <input
                       id="create-unit-name"
                       type="text"
@@ -982,7 +987,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="create-unit-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="create-unit-description" className="block text-sm font-medium text-gray-700 mb-1 text-left">Description *</label>
                     <textarea
                       id="create-unit-description"
                       name="description"
@@ -996,7 +1001,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="unit-image-upload" className="block text-sm font-medium text-gray-700 mb-1">Unit Image</label>
+                    <label htmlFor="unit-image-upload" className="block text-sm font-medium text-gray-700 mb-1 text-left">Unit Image</label>
                     
                     {imagePreview ? (
                       <div className="relative mb-3">
@@ -1023,7 +1028,7 @@ const CourseDetails = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-center w-full">
-                        <label htmlFor="unit-image-upload" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <label htmlFor="unit-image-upload" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100" aria-label="Upload unit image">
                           <div className="flex flex-col items-center justify-center pt-2 pb-2">
                             <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
                               <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
@@ -1076,7 +1081,7 @@ const CourseDetails = () => {
         <form onSubmit={handleUpdateUnit}>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="edit-unit-name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <label htmlFor="edit-unit-name" className="block text-sm font-medium text-gray-700 mb-1 text-left">Name *</label>
                     <input
                       id="edit-unit-name"
                       type="text"
@@ -1090,7 +1095,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="edit-unit-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="edit-unit-description" className="block text-sm font-medium text-gray-700 mb-1 text-left">Description *</label>
                     <textarea
                       id="edit-unit-description"
                       name="description"
@@ -1184,7 +1189,7 @@ const CourseDetails = () => {
               <form onSubmit={handleVideoSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="video-title" className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label htmlFor="video-title" className="block text-sm font-medium text-gray-700 mb-1 text-left">Title *</label>
                     <input
                       id="video-title"
                       type="text"
@@ -1198,7 +1203,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="video-duration" className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes) *</label>
+                    <label htmlFor="video-duration" className="block text-sm font-medium text-gray-700 mb-1 text-left">Duration (minutes) *</label>
                     <input
                       id="video-duration"
                       type="number"
@@ -1213,7 +1218,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label htmlFor="video-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="video-description" className="block text-sm font-medium text-gray-700 mb-1 text-left">Description *</label>
                     <textarea
                       id="video-description"
                       name="description"
@@ -1227,7 +1232,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="video-file-input" className="block text-sm font-medium text-gray-700 mb-1">Video File *</label>
+                    <label htmlFor="video-file-input" className="block text-sm font-medium text-gray-700 mb-1 text-left">Video File *</label>
                     {videoPreview ? (
                       <div className="relative mb-3">
                         <video 
@@ -1253,7 +1258,7 @@ const CourseDetails = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-center w-full">
-                        <label htmlFor="video-file-input" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <label htmlFor="video-file-input" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100" aria-label="Upload video file">
                           <div className="flex flex-col items-center justify-center pt-2 pb-2">
                             <Play className="w-6 h-6 mb-2 text-gray-500" />
                             <p className="text-xs text-gray-500">Upload Video</p>
@@ -1273,7 +1278,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="thumbnail-file-input" className="block text-sm font-medium text-gray-700 mb-1">Thumbnail *</label>
+                    <label htmlFor="thumbnail-file-input" className="block text-sm font-medium text-gray-700 mb-1 text-left">Thumbnail *</label>
                     {thumbnailPreview ? (
                       <div className="relative mb-3">
                         <img 
@@ -1297,7 +1302,7 @@ const CourseDetails = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-center w-full">
-                        <label htmlFor="thumbnail-file-input" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <label htmlFor="thumbnail-file-input" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100" aria-label="Upload thumbnail image">
                           <div className="flex flex-col items-center justify-center pt-2 pb-2">
                             <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
                               <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
@@ -1354,7 +1359,7 @@ const CourseDetails = () => {
               <form onSubmit={handleStudyMaterialSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="study-material-title" className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label htmlFor="study-material-title" className="block text-sm font-medium text-gray-700 mb-1 text-left">Title *</label>
                     <input
                       id="study-material-title"
                       type="text"
@@ -1368,7 +1373,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="study-material-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="study-material-description" className="block text-sm font-medium text-gray-700 mb-1 text-left">Description *</label>
                     <textarea
                       id="study-material-description"
                       name="description"
@@ -1382,9 +1387,9 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="study-material-file" className="block text-sm font-medium text-gray-700 mb-1">File *</label>
+                    <label htmlFor="study-material-file" className="block text-sm font-medium text-gray-700 mb-1 text-left">File *</label>
                     <div className="flex items-center justify-center w-full">
-                      <label htmlFor="study-material-file" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                      <label htmlFor="study-material-file" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100" aria-label="Upload study material file">
                         <div className="flex flex-col items-center justify-center pt-2 pb-2">
                           <FileText className="w-6 h-6 mb-2 text-gray-500" />
                           <p className="text-xs text-gray-500">
@@ -1439,7 +1444,7 @@ const CourseDetails = () => {
               <form onSubmit={handleVideoStudyMaterialSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="video-study-title" className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label htmlFor="video-study-title" className="block text-sm font-medium text-gray-700 mb-1 text-left">Title *</label>
                     <input
                       id="video-study-title"
                       type="text"
@@ -1453,7 +1458,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="video-study-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="video-study-description" className="block text-sm font-medium text-gray-700 mb-1 text-left">Description *</label>
                     <textarea
                       id="video-study-description"
                       name="description"
@@ -1467,7 +1472,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="video-study-file" className="block text-sm font-medium text-gray-700 mb-1">File *</label>
+                    <label htmlFor="video-study-file" className="block text-sm font-medium text-gray-700 mb-1 text-left">File *</label>
                     <div className="flex items-center justify-center w-full">
                       <label htmlFor="video-study-file" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                         <div className="flex flex-col items-center justify-center pt-2 pb-2">
@@ -1523,7 +1528,7 @@ const CourseDetails = () => {
               <form onSubmit={handleEditStudyMaterial}>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="edit-study-title" className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label htmlFor="edit-study-title" className="block text-sm font-medium text-gray-700 mb-1 text-left">Title *</label>
                     <input
                       id="edit-study-title"
                       type="text"
@@ -1536,7 +1541,7 @@ const CourseDetails = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="edit-study-description" className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label htmlFor="edit-study-description" className="block text-sm font-medium text-gray-700 mb-1 text-left">Description *</label>
                     <textarea
                       id="edit-study-description"
                       value={selectedStudyMaterial.description}
@@ -1586,7 +1591,7 @@ const CourseDetails = () => {
               <form onSubmit={handleUpdatePdf}>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="update-pdf-file" className="block text-sm font-medium text-gray-700 mb-1">Select New PDF File *</label>
+                    <label htmlFor="update-pdf-file" className="block text-sm font-medium text-gray-700 mb-1 text-left">Select New PDF File *</label>
                     <div className="flex items-center justify-center w-full">
                       <label htmlFor="update-pdf-file" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                         <div className="flex flex-col items-center justify-center pt-2 pb-2">

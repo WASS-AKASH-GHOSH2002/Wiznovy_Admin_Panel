@@ -22,18 +22,14 @@ const VerifyOTP = () => {
   const [countdown, setCountdown] = useState(RESEND_TIME);
   const [canResend, setCanResend] = useState(false);
 
-  /* =====================
-     REDIRECT SAFETY
-  ===================== */
+ 
   useEffect(() => {
     if (!email) {
       navigate('/forgot-password');
     }
   }, [email, navigate]);
 
-  /* =====================
-     COUNTDOWN TIMER
-  ===================== */
+
   useEffect(() => {
     if (countdown <= 0) return;
 
@@ -47,11 +43,8 @@ const VerifyOTP = () => {
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  /* =====================
-     OTP HANDLERS
-  ===================== */
   const handleOtpChange = (index, value) => {
-    if (!/^[0-9]?$/.test(value)) return;
+    if (!/^\d?$/.test(value)) return;
 
     const updatedOtp = [...otp];
     updatedOtp[index] = value;
@@ -71,9 +64,7 @@ const VerifyOTP = () => {
 
   const isOtpComplete = otp.every(d => d !== '');
 
-  /* =====================
-     VERIFY OTP
-  ===================== */
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isOtpComplete) return;
@@ -100,9 +91,7 @@ const VerifyOTP = () => {
     }
   };
 
-  /* =====================
-     RESEND OTP
-  ===================== */
+ 
   const handleResendOtp = async () => {
     if (!canResend) return;
 
@@ -124,9 +113,7 @@ const VerifyOTP = () => {
     }
   };
 
-  /* =====================
-     UI
-  ===================== */
+ 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#C4DAD2]">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md mx-4">
@@ -157,7 +144,7 @@ const VerifyOTP = () => {
           <div className="flex justify-center gap-2">
             {otp.map((digit, index) => (
               <input
-                key={index}
+                key={`otp-input-${index}`}
                 ref={el => (inputRefs.current[index] = el)}
                 type="text"
                 inputMode="numeric"

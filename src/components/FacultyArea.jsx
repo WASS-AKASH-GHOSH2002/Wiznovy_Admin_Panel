@@ -1,6 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../config/axios";
 
+const getStatusBadgeClass = (status) => {
+  return status === "ACTIVE"
+    ? "px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+    : "px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800";
+};
+
+const getToggleButtonClass = (status) => {
+  return status === "ACTIVE"
+    ? "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-white hover:bg-amber-600"
+    : "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600";
+};
+
+const getMessageClass = (msg) => {
+  return msg.includes("✅")
+    ? "mt-4 p-3 rounded-lg text-center bg-green-100 text-green-700"
+    : "mt-4 p-3 rounded-lg text-center bg-red-100 text-red-700";
+};
+
 const FacultyArea = () => {
   const [activeTab, setActiveTab] = useState("manage");
   const [staffs, setStaffs] = useState([]);
@@ -176,15 +194,7 @@ const FacultyArea = () => {
                       </td>
                       <td className="p-4">{s.phoneNumber}</td>
                       <td className="p-4">
-                        <span
-                          className={(() => {
-                            if (s.status === "ACTIVE") {
-                              return "px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800";
-                            } else {
-                              return "px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800";
-                            }
-                          })()}
-                        >
+                        <span className={getStatusBadgeClass(s.status)}>
                           {s.status}
                         </span>
                       </td>
@@ -197,13 +207,7 @@ const FacultyArea = () => {
                                 s.status === "ACTIVE" ? "DEACTIVE" : "ACTIVE"
                               )
                             }
-                            className={(() => {
-                              if (s.status === "ACTIVE") {
-                                return "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-white hover:bg-amber-600";
-                              } else {
-                                return "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600";
-                              }
-                            })()}
+                            className={getToggleButtonClass(s.status)}
                           >
                             {s.status === "ACTIVE" ? "Deactivate" : "Activate"}
                           </button>
@@ -436,15 +440,7 @@ const FacultyArea = () => {
             </div>
           </form>
           {msg && (
-            <div
-              className={(() => {
-                if (msg.includes("✅")) {
-                  return "mt-4 p-3 rounded-lg text-center bg-green-100 text-green-700";
-                } else {
-                  return "mt-4 p-3 rounded-lg text-center bg-red-100 text-red-700";
-                }
-              })()}
-            >
+            <div className={getMessageClass(msg)}>
               {msg}
             </div>
           )}

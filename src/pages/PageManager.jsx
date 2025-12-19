@@ -98,39 +98,31 @@ const PageManager = () => {
     
     try {
       const submitData = new FormData();
-    submitData.append('title', formData.title);
-    submitData.append('pageType', formData.pageType);
-    submitData.append('desc', formData.desc);
-    
-    const imageFile = selectedImageFile || fileInputRef.current?.files[0];
-    if (imageFile) {
-      submitData.append('file', imageFile);
-    }
-    
-      let result;
+      submitData.append('title', formData.title);
+      submitData.append('pageType', formData.pageType);
+      submitData.append('desc', formData.desc);
+      
+      const imageFile = selectedImageFile || fileInputRef.current?.files[0];
+      if (imageFile) {
+        submitData.append('file', imageFile);
+      }
+      
       if (showEditForm && selectedPage) {
-        result = dispatch(updatePage({ id: selectedPage.id, pageData: submitData }));
-        if (result.type.endsWith('/fulfilled')) {
-          toast.success('Page updated successfully!');
-          setShowEditForm(false);
-        } else {
-          toast.error('Failed to update page');
-          return;
-        }
+        await dispatch(updatePage({ id: selectedPage.id, pageData: submitData })).unwrap();
+        toast.success('Page updated successfully!');
+        setShowEditForm(false);
       } else {
-        result = dispatch(createPage(submitData));
-        if (result.type.endsWith('/fulfilled')) {
-          toast.success('Page created successfully!');
-          setShowCreateForm(false);
-        } else {
-          toast.error('Failed to create page');
-          return;
-        }
+        await dispatch(createPage(submitData)).unwrap();
+        toast.success('Page created successfully!');
+        setShowCreateForm(false);
       }
       
       resetForm();
       const offset = (currentPage - 1) * itemsPerPage;
       dispatch(fetchPages({ limit: itemsPerPage, offset, keyword: filters.search, pageType: filters.pageType }));
+    } catch (error) {
+      console.error('Page operation failed:', error);
+      toast.error(showEditForm ? 'Failed to update page' : 'Failed to create page');
     } finally {
       setIsSubmitting(false);
     }
@@ -154,16 +146,15 @@ const PageManager = () => {
         desc: formData.desc
       };
       
-      const result = dispatch(updatePageDetails({ id: selectedPage.id, pageData: submitData }));
-      if (result.type.endsWith('/fulfilled')) {
-        toast.success('Page text updated successfully!');
-        setShowUpdateTextModal(false);
-        resetForm();
-        const offset = (currentPage - 1) * itemsPerPage;
-        dispatch(fetchPages({ limit: itemsPerPage, offset, keyword: filters.search, pageType: filters.pageType }));
-      } else {
-        toast.error('Failed to update page text');
-      }
+      await dispatch(updatePageDetails({ id: selectedPage.id, pageData: submitData })).unwrap();
+      toast.success('Page text updated successfully!');
+      setShowUpdateTextModal(false);
+      resetForm();
+      const offset = (currentPage - 1) * itemsPerPage;
+      dispatch(fetchPages({ limit: itemsPerPage, offset, keyword: filters.search, pageType: filters.pageType }));
+    } catch (error) {
+      console.error('Page text update failed:', error);
+      toast.error('Failed to update page text');
     } finally {
       setIsSubmitting(false);
     }
@@ -178,16 +169,15 @@ const PageManager = () => {
       const submitData = new FormData();
       submitData.append('file', imageFile);
       
-      const result = dispatch(updatePage({ id: selectedPage.id, pageData: submitData }));
-      if (result.type.endsWith('/fulfilled')) {
-        toast.success('Page image updated successfully!');
-        setShowUpdateImageModal(false);
-        resetForm();
-        const offset = (currentPage - 1) * itemsPerPage;
-        dispatch(fetchPages({ limit: itemsPerPage, offset, keyword: filters.search, pageType: filters.pageType }));
-      } else {
-        toast.error('Failed to update page image');
-      }
+      await dispatch(updatePage({ id: selectedPage.id, pageData: submitData })).unwrap();
+      toast.success('Page image updated successfully!');
+      setShowUpdateImageModal(false);
+      resetForm();
+      const offset = (currentPage - 1) * itemsPerPage;
+      dispatch(fetchPages({ limit: itemsPerPage, offset, keyword: filters.search, pageType: filters.pageType }));
+    } catch (error) {
+      console.error('Page image update failed:', error);
+      toast.error('Failed to update page image');
     } finally {
       setIsSubmitting(false);
     }
@@ -447,11 +437,19 @@ const PageManager = () => {
         title={showEditForm ? 'Edit Page' : 'Add New Page'}
         maxWidth="max-w-2xl"
       >
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-96 overflow-y-auto relative">
+          {isSubmitting && (
+            <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                <p className="mt-2 text-sm text-gray-600">{showEditForm ? 'Updating...' : 'Creating...'}</p>
+              </div>
+            </div>
+          )}
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label htmlFor="pageTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="pageTitle" className="block text-sm font-medium text-gray-700 mb-2 text-left">
                     Title *
                   </label>
                   <input
@@ -465,7 +463,7 @@ const PageManager = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="pageType" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="pageType" className="block text-sm font-medium text-gray-700 mb-2 text-left">
                     Page Type *
                   </label>
                   <select
@@ -481,7 +479,7 @@ const PageManager = () => {
                 </div>
               </div>
               <div className="mb-4">
-                <label htmlFor="pageImage" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="pageImage" className="block text-sm font-medium text-gray-700 mb-2 text-left">
                   Page Image
                   {fileInputRef.current?.files[0] && (
                     <span className="ml-2 text-green-600 text-xs">✓ File selected</span>
@@ -507,7 +505,7 @@ const PageManager = () => {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center w-full">
-                    <label htmlFor="pageImageUpload" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <label htmlFor="pageImageUpload" className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100" aria-label="Upload page image">
                       <div className="flex flex-col items-center justify-center pt-2 pb-2">
                         <svg className="w-6 h-6 mb-2 text-gray-500" fill="none" viewBox="0 0 20 16">
                           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
@@ -527,7 +525,7 @@ const PageManager = () => {
                 )}
               </div>
               <div className="mb-4">
-                <label htmlFor="pageDescription" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="pageDescription" className="block text-sm font-medium text-gray-700 mb-2 text-left">
                   Description *
                 </label>
                 <textarea
@@ -599,7 +597,7 @@ const PageManager = () => {
             <>
             <div className="space-y-4">
               <div>
-                <label htmlFor="updateTitle" className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+                <label htmlFor="updateTitle" className="block text-sm font-medium text-gray-700 mb-2 text-left">Title *</label>
                 <input
                   id="updateTitle"
                   type="text"
@@ -609,7 +607,7 @@ const PageManager = () => {
                 />
               </div>
               <div>
-                <label htmlFor="updatePageType" className="block text-sm font-medium text-gray-700 mb-2">Page Type *</label>
+                <label htmlFor="updatePageType" className="block text-sm font-medium text-gray-700 mb-2 text-left">Page Type *</label>
                 <select
                   id="updatePageType"
                   value={formData.pageType}
@@ -621,7 +619,7 @@ const PageManager = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="updateDescription" className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                <label htmlFor="updateDescription" className="block text-sm font-medium text-gray-700 mb-2 text-left">Description *</label>
                 <textarea
                   id="updateDescription"
                   value={formData.desc}
@@ -669,7 +667,7 @@ const PageManager = () => {
         {selectedPage && (
             <>
             <div className="mb-4">
-              <label htmlFor="updateImage" className="block text-sm font-medium text-gray-700 mb-2">Select New Image</label>
+              <label htmlFor="updateImage" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select New Image</label>
               <input 
                 id="updateImage"
                 type="file" 

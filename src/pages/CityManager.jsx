@@ -35,7 +35,7 @@ const CityManager = () => {
     setShowStatusModal(true);
   };
 
-  // Helper function to refresh cities data
+  
   const refreshCities = () => {
     dispatch(fetchCities({ stateId: filters.stateId }));
   };

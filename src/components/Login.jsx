@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { loginUser } from '../store/authThunks';
 import { Lock, User, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import swcLogo from "../assets/WIZNOVY.png";
+import WiznovyLogo from "../assets/WIZNOVY.png";
 import TextCaptcha from './TextCaptcha';
 import { toast } from 'react-toastify';
 
@@ -61,26 +61,28 @@ const LoginPage = () => {
       return;
     }
 
-    const result = dispatch(loginUser(credentials));
+    const result = await dispatch(loginUser(credentials));
     
     if (result?.success) {
-      // Check if email is provided in response (indicates OTP verification required)
+      
       if (result.email) {
         toast.success('OTP sent to your email. Please verify to continue.');
         navigate('/login-otp-verify', { state: { email: result.email } });
       }
-      // If no email but success, user is already logged in (handled by authThunks)
-    } else if (result?.error?.includes('unauthorized') || result?.error?.includes('Invalid')) {
-      setLocalError('Invalid admin credentials. This email is not authorized for admin access.');
+      
     } else if (result?.error) {
-      setLocalError(result.error);
+      if (result.error.includes('unauthorized') || result.error.includes('Invalid')) {
+        setLocalError('Invalid admin credentials. This email is not authorized for admin access.');
+      } else {
+        setLocalError(result.error);
+      }
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // For email field, only allow letters, numbers, dots, and @
+    
     if (name === 'loginId') {
       const filteredValue = value.replaceAll(/[^a-zA-Z0-9.@]/g, '');
       setCredentials({
@@ -124,8 +126,8 @@ const LoginPage = () => {
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md mx-4">
         <div className="text-center mb-8">
           <img 
-            src={swcLogo} 
-            alt="SWC Logo" 
+            src={WiznovyLogo} 
+            alt="Wiznovy Logo" 
             className="w-36 h-36 mx-auto mt-4 mb-2 rounded-full object-cover"
           />
 
