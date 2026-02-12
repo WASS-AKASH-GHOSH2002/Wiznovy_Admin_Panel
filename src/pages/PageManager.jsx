@@ -27,6 +27,22 @@ const PageManager = () => {
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+  const handleKeywordChange = (e) => {
+    const value = e.target.value;
+    setSearchKeyword(value);
+    dispatch(setSearch(value));
+  };
+
+  useEffect(() => {
+    if (searchInputRef.current && document.activeElement !== searchInputRef.current && searchKeyword) {
+      const cursorPosition = searchInputRef.current.selectionStart;
+      searchInputRef.current.focus();
+      searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+    }
+  }, [pages, searchKeyword]);
 
   useEffect(() => {
     const offset = (currentPage - 1) * itemsPerPage;
@@ -276,10 +292,11 @@ const PageManager = () => {
 
         <div className="flex gap-4 mb-6">
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search by page title..."
-            value={filters.search}
-            onChange={(e) => dispatch(setSearch(e.target.value))}
+            value={searchKeyword}
+            onChange={handleKeywordChange}
             className="flex-1 border border-gray-300 p-2.5 rounded-lg"
           />
           <select
@@ -435,7 +452,7 @@ const PageManager = () => {
         isOpen={showCreateForm || showEditForm} 
         onClose={resetForm}
         title={showEditForm ? 'Edit Page' : 'Add New Page'}
-        maxWidth="max-w-2xl"
+        maxWidth="max-w-4xl"
       >
         <div className="max-h-96 overflow-y-auto relative">
           {isSubmitting && (
@@ -532,7 +549,7 @@ const PageManager = () => {
                   id="pageDescription"
                   value={formData.desc}
                   onChange={(e) => setFormData({ ...formData, desc: e.target.value })}
-                  className="w-full border border-gray-300 p-2 rounded-lg"
+                  className="w-full border border-gray-300 p-4 rounded-lg bg-gray-50 max-h-64 overflow-y-auto"
                   placeholder="Enter page description (minimum 50 characters)"
                   rows={8}
                   minLength={50}
@@ -590,7 +607,7 @@ const PageManager = () => {
         isOpen={showUpdateTextModal && selectedPage} 
         onClose={() => setShowUpdateTextModal(false)}
         title="Update Page Text"
-        maxWidth="max-w-md"
+        maxWidth="max-w-4xl"
         position="center"
       >
         {selectedPage && (
@@ -624,8 +641,8 @@ const PageManager = () => {
                   id="updateDescription"
                   value={formData.desc}
                   onChange={(e) => setFormData({ ...formData, desc: e.target.value })}
-                  className="w-full border border-gray-300 p-2 rounded-lg"
-                  rows={4}
+                  className="w-full border border-gray-300 p-4 rounded-lg bg-gray-50 max-h-64 overflow-y-auto"
+                  rows={8}
                   minLength={50}
                 />
                 <p className="text-xs text-gray-500 mt-1">

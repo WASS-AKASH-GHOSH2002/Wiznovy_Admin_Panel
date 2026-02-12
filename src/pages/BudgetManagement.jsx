@@ -1,21 +1,19 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, Settings, RefreshCw, Plus, Edit } from "lucide-react";
-import { fetchCities, createCity, updateCityStatus, updateCity, bulkUpdateCityStatus, setSearch, setStatusFilter, setStateFilter } from "../store/citySlice";
-import { fetchStates } from "../store/stateSlice";
+import { fetchBudgets, createBudget, updateBudgetStatus, updateBudget, bulkUpdateBudgetStatus, setSearch, setStatusFilter } from "../store/budgetSlice";
 import { toast } from 'react-toastify';
 import Modal from '../components/Modal';
 
-const CityManager = () => {
+const BudgetManagement = () => {
   const dispatch = useDispatch();
-  const { cities, total, loading, error, filters } = useSelector(state => state.cities);
-  const { states } = useSelector(state => state.states);
-  const [selectedCity, setSelectedCity] = useState(null);
+  const { budgets, total, loading, error, filters } = useSelector(state => state.budgets);
+  const [selectedBudget, setSelectedBudget] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newCity, setNewCity] = useState({ name: '', stateId: '' });
+  const [newBudget, setNewBudget] = useState({ min: '', max: '' });
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [statusUpdateCity, setStatusUpdateCity] = useState(null);
+  const [statusUpdateBudget, setStatusUpdateBudget] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -24,10 +22,10 @@ const CityManager = () => {
   const searchTimeoutRef = useRef(null);
   const searchInputRef = useRef(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editCity, setEditCity] = useState(null);
-  const [editData, setEditData] = useState({ name: '', stateId: '' });
+  const [editBudget, setEditBudget] = useState(null);
+  const [editData, setEditData] = useState({ min: '', max: '' });
   const [isUpdating, setIsUpdating] = useState(false);
-  const [selectedCities, setSelectedCities] = useState([]);
+  const [selectedBudgets, setSelectedBudgets] = useState([]);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [bulkStatus, setBulkStatus] = useState('');
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
@@ -52,7 +50,7 @@ const CityManager = () => {
       searchInputRef.current.focus();
       searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
     }
-  }, [cities, searchKeyword]);
+  }, [budgets, searchKeyword]);
 
   useEffect(() => {
     const offset = (currentPage - 1) * itemsPerPage;
@@ -64,15 +62,8 @@ const CityManager = () => {
     if (filters.status) {
       params.status = filters.status;
     }
-    if (filters.stateId) {
-      params.stateId = filters.stateId;
-    }
-    dispatch(fetchCities(params));
-  }, [dispatch, currentPage, itemsPerPage, filters.search, filters.status, filters.stateId]);
-
-  useEffect(() => {
-    dispatch(fetchStates({ limit: 100, offset: 0, status: 'ACTIVE' }));
-  }, [dispatch]);
+    dispatch(fetchBudgets(params));
+  }, [dispatch, currentPage, itemsPerPage, filters.search, filters.status]);
 
   useEffect(() => {
     return () => {
@@ -82,19 +73,19 @@ const CityManager = () => {
     };
   }, []);
 
-  const handleStatusUpdate = (city) => {
-    setStatusUpdateCity(city);
-    setNewStatus(city.status);
+  const handleStatusUpdate = (budget) => {
+    setStatusUpdateBudget(budget);
+    setNewStatus(budget.status);
     setShowStatusModal(true);
   };
 
   const confirmStatusUpdate = async () => {
-    if (statusUpdateCity && newStatus) {
+    if (statusUpdateBudget && newStatus) {
       try {
-        await dispatch(updateCityStatus({ cityId: statusUpdateCity.id, status: newStatus })).unwrap();
+        await dispatch(updateBudgetStatus({ budgetId: statusUpdateBudget.id, status: newStatus })).unwrap();
         toast.success('Status updated successfully!');
         setShowStatusModal(false);
-        setStatusUpdateCity(null);
+        setStatusUpdateBudget(null);
         setNewStatus('');
         handleRefresh();
       } catch (error) {
@@ -104,45 +95,45 @@ const CityManager = () => {
     }
   };
 
-  const handleSelectCity = (cityId) => {
-    setSelectedCities(prev => 
-      prev.includes(cityId) 
-        ? prev.filter(id => id !== cityId)
-        : [...prev, cityId]
+  const handleSelectBudget = (budgetId) => {
+    setSelectedBudgets(prev => 
+      prev.includes(budgetId) 
+        ? prev.filter(id => id !== budgetId)
+        : [...prev, budgetId]
     );
   };
 
   const handleSelectAll = () => {
-    setSelectedCities(selectedCities.length === cities.length ? [] : cities.map(c => c.id));
+    setSelectedBudgets(selectedBudgets.length === budgets.length ? [] : budgets.map(b => b.id));
   };
 
   const handleBulkStatusUpdate = () => {
-    if (selectedCities.length > 0) {
+    if (selectedBudgets.length > 0) {
       setShowBulkModal(true);
     }
   };
 
   const confirmBulkStatusUpdate = async () => {
-    if (selectedCities.length > 0 && bulkStatus) {
+    if (selectedBudgets.length > 0 && bulkStatus) {
       setIsBulkUpdating(true);
       try {
-        await dispatch(bulkUpdateCityStatus({ ids: selectedCities, status: bulkStatus })).unwrap();
-        toast.success(`${selectedCities.length} cities updated successfully!`);
+        await dispatch(bulkUpdateBudgetStatus({ ids: selectedBudgets, status: bulkStatus })).unwrap();
+        toast.success(`${selectedBudgets.length} budgets updated successfully!`);
         setShowBulkModal(false);
-        setSelectedCities([]);
+        setSelectedBudgets([]);
         setBulkStatus('');
         handleRefresh();
       } catch (error) {
         console.error('Bulk status update failed:', error);
-        toast.error('Failed to update cities status');
+        toast.error('Failed to update budgets status');
       } finally {
         setIsBulkUpdating(false);
       }
     }
   };
 
-  const handleViewProfile = (city) => {
-    setSelectedCity(city);
+  const handleViewProfile = (budget) => {
+    setSelectedBudget(budget);
     setShowProfile(true);
   };
 
@@ -156,70 +147,73 @@ const CityManager = () => {
     if (filters.status) {
       params.status = filters.status;
     }
-    if (filters.stateId) {
-      params.stateId = filters.stateId;
-    }
-    dispatch(fetchCities(params));
+    dispatch(fetchBudgets(params));
   };
 
   const handleOpenCreateModal = () => {
-    setNewCity({ name: '',  stateId: '' });
+    setNewBudget({ min: '', max: '' });
     setShowCreateForm(true);
   };
 
-  const handleCreateCity = async (e) => {
+  const handleCreateBudget = async (e) => {
     e.preventDefault();
-    if (!newCity.name.trim() || !newCity.stateId) return;
+    if (!newBudget.min || !newBudget.max) return;
     
-    const existingCity = cities.find(city => 
-      city.name.toLowerCase() === newCity.name.trim().toLowerCase()
-    );
+    const min = Number(newBudget.min);
+    const max = Number(newBudget.max);
     
-    if (existingCity) {
-      toast.error('A city with this name already exists');
+    if (min >= max) {
+      toast.error('Maximum value must be greater than minimum value');
       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      await dispatch(createCity(newCity)).unwrap();
-      toast.success('City created successfully!');
-      setNewCity({ name: '',  stateId: '' });
+      await dispatch(createBudget({ min, max })).unwrap();
+      toast.success('Budget created successfully!');
+      setNewBudget({ min: '', max: '' });
       setShowCreateForm(false);
       handleRefresh();
     } catch (error) {
-      console.error('City creation failed:', error);
-      toast.error('Failed to create city');
+      console.error('Budget creation failed:', error);
+      toast.error('Failed to create budget');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleEditCity = (city) => {
-    setEditCity(city);
-    setEditData({ name: city.name, stateId: city.state?.id || city.stateId });
+  const handleEditBudget = (budget) => {
+    setEditBudget(budget);
+    setEditData({ min: budget.min, max: budget.max });
     setShowEditModal(true);
   };
 
-  const confirmUpdateCity = async () => {
-    if (!editCity || !editData.name.trim() || !editData.stateId) return;
+  const confirmUpdateBudget = async () => {
+    if (!editBudget || !editData.min || !editData.max) return;
+    
+    const min = Number(editData.min);
+    const max = Number(editData.max);
+    
+    if (min >= max) {
+      toast.error('Maximum value must be greater than minimum value');
+      return;
+    }
     
     setIsUpdating(true);
     try {
-      await dispatch(updateCity({ 
-        cityId: editCity.id, 
-        name: editData.name.trim(),
-        stateId: editData.stateId
+      await dispatch(updateBudget({ 
+        budgetId: editBudget.id, 
+        min, 
+        max 
       })).unwrap();
       
       setShowEditModal(false);
-      setEditCity(null);
-      setEditData({ name: '', stateId: '' });
-      toast.success('City updated successfully!');
-      handleRefresh();
+      setEditBudget(null);
+      setEditData({ min: '', max: '' });
+      toast.success('Budget updated successfully!');
     } catch (error) {
-      const errorMessage = error?.message || 'Failed to update city';
+      const errorMessage = error?.message || 'Failed to update budget';
       toast.error(errorMessage);
     } finally {
       setIsUpdating(false);
@@ -231,7 +225,7 @@ const CityManager = () => {
       <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
         <div className="text-center">
           <RefreshCw className="animate-spin h-12 w-12 mx-auto text-blue-500" />
-          <p className="mt-4 text-gray-600">Loading cities...</p>
+          <p className="mt-4 text-gray-600">Loading budgets...</p>
         </div>
       </div>
     );
@@ -257,13 +251,13 @@ const CityManager = () => {
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">City Management</h2>
+          <h2 className="text-3xl font-bold text-gray-800">Budget Management</h2>
           <div className="flex gap-2">
             <button
               onClick={handleOpenCreateModal}
               className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
             >
-              <Plus size={18} /> Add City
+              <Plus size={18} /> Add Budget
             </button>
             <button
               onClick={handleRefresh}
@@ -274,13 +268,13 @@ const CityManager = () => {
           </div>
         </div>
         
-        <p className="text-gray-600 mb-6">Total Cities: {total}</p>
+        <p className="text-gray-600 mb-6">Total Budgets: {total}</p>
 
         <div className="flex gap-4 mb-6">
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="Search by city name..."
+            placeholder="Search budgets..."
             value={searchKeyword}
             onChange={handleKeywordChange}
             className="flex-1 border border-gray-300 p-2.5 rounded-lg"
@@ -294,24 +288,12 @@ const CityManager = () => {
             <option value="ACTIVE">Active</option>
             <option value="DEACTIVE">Deactive</option>
           </select>
-          <select
-            value={filters.stateId}
-            onChange={(e) => dispatch(setStateFilter(e.target.value))}
-            className="border border-gray-300 p-2.5 rounded-lg"
-          >
-            <option value="">All States</option>
-            {states.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-          {selectedCities.length > 0 && (
+          {selectedBudgets.length > 0 && (
             <button
               onClick={handleBulkStatusUpdate}
               className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
             >
-              Bulk Update ({selectedCities.length})
+              Bulk Update ({selectedBudgets.length})
             </button>
           )}
         </div>
@@ -323,60 +305,60 @@ const CityManager = () => {
                 <th className="p-4 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedCities.length === cities.length && cities.length > 0}
+                    checked={selectedBudgets.length === budgets.length && budgets.length > 0}
                     onChange={handleSelectAll}
                     className="rounded"
                   />
                 </th>
-                <th className="p-4 text-left">Name</th>
-                <th className="p-4 text-left">State</th>
+                <th className="p-4 text-left">Min</th>
+                <th className="p-4 text-left">Max</th>
                 <th className="p-4 text-left">Status</th>
                 <th className="p-4 text-left">Created</th>
                 <th className="p-4 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {cities.map((city, index) => (
-                <tr key={city.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+              {budgets.map((budget, index) => (
+                <tr key={budget.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   <td className="p-4">
                     <input
                       type="checkbox"
-                      checked={selectedCities.includes(city.id)}
-                      onChange={() => handleSelectCity(city.id)}
+                      checked={selectedBudgets.includes(budget.id)}
+                      onChange={() => handleSelectBudget(budget.id)}
                       className="rounded"
                     />
                   </td>
-                  <td className="p-4">{city.name}</td>
-                  <td className="p-4">{city.state?.name || 'N/A'}</td>
+                  <td className="p-4">{budget.min}</td>
+                  <td className="p-4">{budget.max}</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 text-xs rounded-full ${
-                      city.status === "ACTIVE" ? "bg-green-100 text-green-800" : 
+                      budget.status === "ACTIVE" ? "bg-green-100 text-green-800" : 
                       "bg-red-100 text-red-800"
                     }`}>
-                      {city.status}
+                      {budget.status}
                     </span>
                   </td>
-                  <td className="p-4">{new Date(city.createdAt).toLocaleDateString()}</td>
+                  <td className="p-4">{new Date(budget.createdAt).toLocaleDateString()}</td>
                   <td className="p-4">
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleViewProfile(city)}
+                        onClick={() => handleViewProfile(budget)}
                         className="text-blue-600 hover:text-blue-800"
                         title="View Details"
                       >
                         <Eye size={18} />
                       </button>
                       <button
-                        onClick={() => handleStatusUpdate(city)}
+                        onClick={() => handleStatusUpdate(budget)}
                         className="text-green-600 hover:text-green-800"
                         title="Update Status"
                       >
                         <Settings size={18} />
                       </button>
                       <button
-                        onClick={() => handleEditCity(city)}
+                        onClick={() => handleEditBudget(budget)}
                         className="text-orange-600 hover:text-orange-800"
-                        title="Edit City"
+                        title="Edit Budget"
                       >
                         <Edit size={18} />
                       </button>
@@ -404,7 +386,7 @@ const CityManager = () => {
               <option value={50}>50 per page</option>
             </select>
             <span className="text-sm text-gray-600">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, total)} of {total} cities
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, total)} of {total} budgets
             </span>
             <div className="flex gap-2">
               <button
@@ -432,9 +414,9 @@ const CityManager = () => {
           isOpen={showCreateForm} 
           onClose={() => {
             setShowCreateForm(false);
-            setNewCity({ name: '', stateId: '' });
+            setNewBudget({ min: '', max: '' });
           }}
-          title="Add New City"
+          title="Add New Budget"
           maxWidth="max-w-md"
           position="center"
         >
@@ -447,35 +429,30 @@ const CityManager = () => {
                 </div>
               </div>
             )}
-            <form onSubmit={handleCreateCity} className="space-y-4">
+            <form onSubmit={handleCreateBudget} className="space-y-4">
               <div>
-                <label htmlFor="cityName" className="block text-sm font-medium text-gray-700 mb-2 text-left">City Name *</label>
+                <label htmlFor="budgetMin" className="block text-sm font-medium text-gray-700 mb-2 text-left">Minimum *</label>
                 <input
-                  id="cityName"
-                  type="text"
-                  placeholder="City Name"
-                  value={newCity.name}
-                  onChange={(e) => setNewCity({...newCity, name: e.target.value})}
+                  id="budgetMin"
+                  type="number"
+                  placeholder="Minimum value"
+                  value={newBudget.min}
+                  onChange={(e) => setNewBudget({...newBudget, min: e.target.value})}
                   className="w-full border border-gray-300 p-2 rounded-lg"
                   required
                 />
               </div>
               <div>
-                <label htmlFor="cityState" className="block text-sm font-medium text-gray-700 mb-2 text-left">State *</label>
-                <select
-                  id="cityState"
-                  value={newCity.stateId}
-                  onChange={(e) => setNewCity({...newCity, stateId: e.target.value})}
+                <label htmlFor="budgetMax" className="block text-sm font-medium text-gray-700 mb-2 text-left">Maximum *</label>
+                <input
+                  id="budgetMax"
+                  type="number"
+                  placeholder="Maximum value"
+                  value={newBudget.max}
+                  onChange={(e) => setNewBudget({...newBudget, max: e.target.value})}
                   className="w-full border border-gray-300 p-2 rounded-lg"
                   required
-                >
-                  <option value="">Select State</option>
-                  {states.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
               <div className="flex gap-2">
                 <button
@@ -503,19 +480,19 @@ const CityManager = () => {
         </Modal>
 
         <Modal 
-          isOpen={showProfile && selectedCity} 
+          isOpen={showProfile && selectedBudget} 
           onClose={() => setShowProfile(false)}
-          title="City Details"
+          title="Budget Details"
           maxWidth="max-w-md"
           position="center"
         >
-          {selectedCity && (
+          {selectedBudget && (
             <div className="space-y-2 text-left">
-              <p><strong>Name:</strong> {selectedCity.name}</p>
-              <p><strong>State:</strong> {selectedCity.state?.name || 'N/A'}</p>
-              <p><strong>Status:</strong> {selectedCity.status}</p>
-              <p><strong>Created:</strong> {new Date(selectedCity.createdAt).toLocaleDateString()}</p>
-              <p><strong>Updated:</strong> {new Date(selectedCity.updatedAt).toLocaleDateString()}</p>
+              <p><strong>Min:</strong> {selectedBudget.min}</p>
+              <p><strong>Max:</strong> {selectedBudget.max}</p>
+              <p><strong>Status:</strong> {selectedBudget.status}</p>
+              <p><strong>Created:</strong> {new Date(selectedBudget.createdAt).toLocaleDateString()}</p>
+              <p><strong>Updated:</strong> {new Date(selectedBudget.updatedAt).toLocaleDateString()}</p>
             </div>
           )}
           <button
@@ -527,20 +504,20 @@ const CityManager = () => {
         </Modal>
 
         <Modal 
-          isOpen={showStatusModal && statusUpdateCity} 
+          isOpen={showStatusModal && statusUpdateBudget} 
           onClose={() => {
             setShowStatusModal(false);
-            setStatusUpdateCity(null);
+            setStatusUpdateBudget(null);
             setNewStatus('');
           }}
-          title="Update City Status"
+          title="Update Budget Status"
           maxWidth="max-w-md"
           position="center"
         >
-          {statusUpdateCity && (
+          {statusUpdateBudget && (
             <>
               <p className="text-gray-600 mb-4">
-                Update status for: <strong>{statusUpdateCity.name}</strong>
+                Update status for: <strong>{statusUpdateBudget.min} - {statusUpdateBudget.max}</strong>
               </p>
               <div className="mb-4">
                 <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Status</label>
@@ -558,7 +535,7 @@ const CityManager = () => {
                 <button
                   onClick={() => {
                     setShowStatusModal(false);
-                    setStatusUpdateCity(null);
+                    setStatusUpdateBudget(null);
                     setNewStatus('');
                   }}
                   className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
@@ -575,140 +552,135 @@ const CityManager = () => {
             </>
           )}
         </Modal>
-      </div>
 
-      <Modal 
-        isOpen={showBulkModal} 
-        onClose={() => {
-          setShowBulkModal(false);
-          setBulkStatus('');
-        }}
-        title="Bulk Status Update"
-        maxWidth="max-w-md"
-        position="center"
-      >
-        <div className="relative">
-          {isBulkUpdating && (
-            <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <p className="mt-2 text-sm text-gray-600">Updating...</p>
+        <Modal 
+          isOpen={showBulkModal} 
+          onClose={() => {
+            setShowBulkModal(false);
+            setBulkStatus('');
+          }}
+          title="Bulk Status Update"
+          maxWidth="max-w-md"
+          position="center"
+        >
+          <div className="relative">
+            {isBulkUpdating && (
+              <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                <div className="flex flex-col items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  <p className="mt-2 text-sm text-gray-600">Updating...</p>
+                </div>
               </div>
+            )}
+            <p className="text-gray-600 mb-4">
+              Update status for <strong>{selectedBudgets.length}</strong> selected budgets
+            </p>
+            <div className="mb-4">
+              <label htmlFor="bulkStatusSelect" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Status</label>
+              <select
+                id="bulkStatusSelect"
+                value={bulkStatus}
+                onChange={(e) => setBulkStatus(e.target.value)}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+              >
+                <option value="">Select Status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="DEACTIVE">Deactive</option>
+              </select>
             </div>
-          )}
-          <p className="text-gray-600 mb-4">
-            Update status for <strong>{selectedCities.length}</strong> selected cities
-          </p>
-          <div className="mb-4">
-            <label htmlFor="bulkStatusSelect" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Status</label>
-            <select
-              id="bulkStatusSelect"
-              value={bulkStatus}
-              onChange={(e) => setBulkStatus(e.target.value)}
-              className="w-full border border-gray-300 p-2.5 rounded-lg"
-            >
-              <option value="">Select Status</option>
-              <option value="ACTIVE">Active</option>
-              <option value="DEACTIVE">Deactive</option>
-            </select>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => {
-                setShowBulkModal(false);
-                setBulkStatus('');
-              }}
-              className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmBulkStatusUpdate}
-              disabled={!bulkStatus || isBulkUpdating}
-              className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
-            >
-              {isBulkUpdating ? 'Updating...' : 'Update Status'}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal 
-        isOpen={showEditModal && editCity} 
-        onClose={() => {
-          setShowEditModal(false);
-          setEditCity(null);
-          setEditData({ name: '', code: '', stateId: '' });
-        }}
-        title="Edit City"
-        maxWidth="max-w-md"
-        position="center"
-      >
-        <div className="relative">
-          {isUpdating && (
-            <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <p className="mt-2 text-sm text-gray-600">Updating...</p>
-              </div>
-            </div>
-          )}
-          {editCity && (
-            <>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="editCityName" className="block text-sm font-medium text-gray-700 mb-2 text-left">City Name *</label>
-                <input
-                  id="editCityName"
-                  type="text"
-                  value={editData.name}
-                  onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full border border-gray-300 p-2.5 rounded-lg"
-                  placeholder="Enter city name"
-                />
-              </div>
-              <div>
-                <label htmlFor="editCityState" className="block text-sm font-medium text-gray-700 mb-2 text-left">State *</label>
-                <select
-                  id="editCityState"
-                  value={editData.stateId}
-                  onChange={(e) => setEditData(prev => ({ ...prev, stateId: e.target.value }))}
-                  className="w-full border border-gray-300 p-2.5 rounded-lg"
-                >
-                  <option value="">Select State</option>
-                  {states.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3">
               <button
                 onClick={() => {
-                  setShowEditModal(false);
-                  setEditCity(null);
-                  setEditData({ name: '', stateId: '' });
+                  setShowBulkModal(false);
+                  setBulkStatus('');
                 }}
                 className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmUpdateCity}
-                disabled={!editData.name.trim() || !editData.stateId || isUpdating}
+                onClick={confirmBulkStatusUpdate}
+                disabled={!bulkStatus || isBulkUpdating}
                 className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
               >
-                {isUpdating ? 'Updating...' : 'Update'}
+                {isBulkUpdating ? 'Updating...' : 'Update Status'}
               </button>
             </div>
-          </>
-        )}
-        </div>
-      </Modal>
+          </div>
+        </Modal>
+
+        <Modal 
+          isOpen={showEditModal && editBudget} 
+          onClose={() => {
+            setShowEditModal(false);
+            setEditBudget(null);
+            setEditData({ min: '', max: '' });
+          }}
+          title="Edit Budget"
+          maxWidth="max-w-md"
+          position="center"
+        >
+          <div className="relative">
+            {isUpdating && (
+              <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                <div className="flex flex-col items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  <p className="mt-2 text-sm text-gray-600">Updating...</p>
+                </div>
+              </div>
+            )}
+            {editBudget && (
+              <>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="editBudgetMin" className="block text-sm font-medium text-gray-700 mb-2 text-left">Minimum *</label>
+                    <input
+                      id="editBudgetMin"
+                      type="number"
+                      value={editData.min}
+                      onChange={(e) => setEditData(prev => ({ ...prev, min: e.target.value }))}
+                      className="w-full border border-gray-300 p-2.5 rounded-lg"
+                      placeholder="Enter minimum value"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="editBudgetMax" className="block text-sm font-medium text-gray-700 mb-2 text-left">Maximum *</label>
+                    <input
+                      id="editBudgetMax"
+                      type="number"
+                      value={editData.max}
+                      onChange={(e) => setEditData(prev => ({ ...prev, max: e.target.value }))}
+                      className="w-full border border-gray-300 p-2.5 rounded-lg"
+                      placeholder="Enter maximum value"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditBudget(null);
+                      setEditData({ min: '', max: '' });
+                    }}
+                    className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmUpdateBudget}
+                    disabled={!editData.min || !editData.max || isUpdating}
+                    className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
+                  >
+                    {isUpdating ? 'Updating...' : 'Update'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </Modal>
+      </div>
     </div>
   );
 };
 
-export default CityManager;
+export default BudgetManagement;

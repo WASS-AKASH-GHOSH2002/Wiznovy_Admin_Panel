@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { API_BASE_URL } from "../config/api";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -32,7 +33,6 @@ const UserPermissionsPage = () => {
   const [menus, setMenus] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
   const [userPermissions, setUserPermissions] = useState({});
 
   // Fetch user details
@@ -44,7 +44,7 @@ const UserPermissionsPage = () => {
         setUser(res.data);
       } catch (err) {
         console.error("Error fetching user:", err);
-        setMessage("Failed to load user details.");
+        toast.error('Failed to load user details');
       } finally {
         setLoading(false);
       }
@@ -64,7 +64,7 @@ const UserPermissionsPage = () => {
         setMenus(res.data?.result || res.data || []);
       } catch (err) {
         console.error("Error fetching menus:", err);
-        setMessage("Failed to load menus.");
+        toast.error('Failed to load menus');
       } finally {
         setLoading(false);
       }
@@ -116,7 +116,7 @@ const UserPermissionsPage = () => {
       setUserPermissions(permissionsObj);
     } catch (err) {
       console.error("Error fetching permissions:", err);
-      setMessage("Failed to load permissions.");
+      toast.error('Failed to load permissions');
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,6 @@ const UserPermissionsPage = () => {
     }));
   };
 
-  // Save all permissions using bulk update
   const saveAllPermissions = async () => {
     try {
       setLoading(true);
@@ -180,15 +179,35 @@ const UserPermissionsPage = () => {
       
       const requestData = { menu: menuArray };
       
-      // Use any ID (backend doesn't use this param, just needs it in URL)
-      await api.put(`/user-permissions/1`, requestData);
+      const response = await api.put(`/user-permissions/${accountId}`, requestData);
       
-      setMessage("✅ All permissions saved successfully!");
-      await fetchUserPermissions();
+      toast.success('Permissions saved successfully');
+      
+      if (response.data?.result) {
+        const updatedPermissions = {};
+        for (const menu of response.data.result) {
+          updatedPermissions[menu.id] = {
+            read: { status: false, id: null },
+            write: { status: false, id: null },
+            update: { status: false, id: null },
+            delete: { status: false, id: null }
+          };
+          
+          for (const perm of menu.userPermission || []) {
+            switch (perm.permissionId) {
+              case 1: updatedPermissions[menu.id].write = { status: perm.status, id: perm.id }; break;
+              case 2: updatedPermissions[menu.id].read = { status: perm.status, id: perm.id }; break;
+              case 3: updatedPermissions[menu.id].update = { status: perm.status, id: perm.id }; break;
+              case 4: updatedPermissions[menu.id].delete = { status: perm.status, id: perm.id }; break;
+            }
+          }
+        }
+        setUserPermissions(updatedPermissions);
+      }
       
     } catch (err) {
       console.error("Error saving permissions:", err);
-      setMessage("❌ Failed to save permissions.");
+      toast.error('Failed to save permissions');
     } finally {
       setLoading(false);
     }
@@ -374,11 +393,6 @@ const UserPermissionsPage = () => {
         )}
 
         {/* Show message */}
-        {message && (
-          <p className={`text-sm mb-4 ${message.includes("✅") ? "text-green-600" : "text-red-500"}`}>
-            {message}
-          </p>
-        )}
 
         {/* Permissions List */}
         <div>

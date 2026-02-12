@@ -84,7 +84,7 @@ const FacultyArea = () => {
 
     try {
       await api.post("/account/add-staff", form);
-      setMsg("✅ Staff created successfully!");
+      setMsg(" Staff created successfully!");
       setForm({
         loginId: "",
         password: "",
@@ -97,7 +97,7 @@ const FacultyArea = () => {
         country: "",
         pin: "",
       });
-      setShowPassword(false); // Reset password visibility
+      setShowPassword(false); 
     } catch (err) {
       setMsg("❌ Error: " + err.response?.data?.message);
     } finally {

@@ -32,6 +32,7 @@ export const updateStudyMaterial = createAsyncThunk(
           'Content-Type': 'application/json'
         }
       });
+      
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

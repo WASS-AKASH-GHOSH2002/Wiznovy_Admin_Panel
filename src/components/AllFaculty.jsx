@@ -1,108 +1,178 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../config/axios";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
+import { RefreshCw, Eye, Settings, Edit, Plus, ShieldCheck } from 'lucide-react';
+import { toast } from 'react-toastify';
+import Modal from '../components/Modal';
 
-
-const getStatusBadgeClass = (status) => {
-  return status === "ACTIVE" 
-    ? "px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
-    : "px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800";
-};
-
-const getToggleButtonClass = (status) => {
-  return status === "ACTIVE"
-    ? "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-white hover:bg-amber-600"
-    : "px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600";
-};
-
-const getFilterButtonClass = (isActive) => {
-  return isActive
-    ? "bg-blue-600 text-white shadow-md"
-    : "bg-gray-100 text-gray-700 hover:bg-gray-200";
-};
-
-const getDeactiveButtonClass = (isActive) => {
-  return isActive
-    ? "bg-red-600 text-white shadow-md"
-    : "bg-gray-100 text-gray-700 hover:bg-gray-200";
-};
-
-const getEmptyStateMessage = (searchTerm) => {
-  return searchTerm ? "Try a different search term" : "Try changing the status filter";
-};
-
-const FacultyArea = () => {
+const AllFaculty = () => {
+  const navigate = useNavigate();
   const [staffs, setStaffs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
-  const [newPassword, setNewPassword] = useState("");
   const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [total, setTotal] = useState(0);
+  
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState(null);
+  
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordStaff, setPasswordStaff] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
   const [passwordErrors, setPasswordErrors] = useState("");
-  const navigate = useNavigate(); 
+  
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusStaff, setStatusStaff] = useState(null);
+  const [newStatus, setNewStatus] = useState("");
+  
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addFormData, setAddFormData] = useState({
+    loginId: "",
+    password: "",
+    name: "",
+    email: "",
+    dob: "",
+    gender: "",
+    city: "",
+    state: "",
+    country: "",
+    pin: ""
+  });
+  const [addFormErrors, setAddFormErrors] = useState({});
 
   const fetchStaffs = async () => {
     setLoading(true);
     try {
+      const offset = (currentPage - 1) * itemsPerPage;
       const res = await api.get(
-        `/account/stafflist?status=${statusFilter}&limit=20&offset=0`
+        `/account/stafflist?status=${statusFilter}&limit=${itemsPerPage}&offset=${offset}`
       );
-      setStaffs(res.data.result);
+      setStaffs(res.data.result || []);
+      setTotal(res.data.total || 0);
     } catch (err) {
       console.error(err);
+      toast.error('Failed to fetch staff');
     }
     setLoading(false);
   };
 
   useEffect(() => {
     fetchStaffs();
-  }, [statusFilter]);
+  }, [statusFilter, currentPage, itemsPerPage]);
 
-  const getActionText = (status) => {
-    return status === "ACTIVE" ? "activate" : "deactivate";
+  const handleRefresh = () => {
+    fetchStaffs();
+    toast.success('Staff list refreshed');
   };
 
-  const toggleStatus = async (id, status) => {
-    if (globalThis.confirm(`Are you sure you want to ${getActionText(status)} this staff member?`)) {
-      await api.put(`/account/staff/status/${id}`, { status });
-      fetchStaffs();
-    }
+  const handleViewDetails = (staff) => {
+    setSelectedStaff(staff);
+    setShowViewModal(true);
+  };
+
+  const handleOpenPasswordModal = (staff) => {
+    setPasswordStaff(staff);
+    setNewPassword("");
+    setPasswordErrors("");
+    setShowPasswordModal(true);
+  };
+
+  const handleOpenStatusModal = (staff) => {
+    setStatusStaff(staff);
+    setNewStatus(staff.status === "ACTIVE" ? "DEACTIVE" : "ACTIVE");
+    setShowStatusModal(true);
   };
 
   const validatePassword = (password) => {
-    if (password.length < 6) {
-      return "Password must be at least 6 characters long";
-    }
-    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password)) {
-      return "Password must contain both uppercase and lowercase letters";
-    }
-    if (!/\d/.test(password)) {
-      return "Password must contain at least one number";
-    }
+    if (password.length < 6) return "Password must be at least 6 characters long";
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password)) return "Password must contain both uppercase and lowercase letters";
+    if (!/\d/.test(password)) return "Password must contain at least one number";
     return "";
   };
 
-  const updatePassword = async (id) => {
+  const confirmPasswordUpdate = async () => {
+    if (!passwordStaff) return;
     const error = validatePassword(newPassword);
     if (error) {
       setPasswordErrors(error);
       return;
     }
     
-    if (!newPassword) return;
-    
-    await api.patch(`/account/staff/password/${id}`, { password: newPassword });
-    setNewPassword("");
-    setSelected(null);
-    setPasswordErrors("");
-    alert("Password updated successfully!");
+    try {
+      await api.patch(`/account/staff/password/${passwordStaff.id}`, { password: newPassword });
+      toast.success('Password updated successfully');
+      setShowPasswordModal(false);
+      setPasswordStaff(null);
+      setNewPassword("");
+      setPasswordErrors("");
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update password');
+    }
   };
 
- 
+  const confirmStatusUpdate = async () => {
+    if (!statusStaff || !newStatus) return;
+    try {
+      await api.put(`/account/staff/status/${statusStaff.id}`, { status: newStatus });
+      toast.success('Status updated successfully');
+      setShowStatusModal(false);
+      setStatusStaff(null);
+      fetchStaffs();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update status');
+    }
+  };
+
   const goToMenuPermissions = (accountId) => {
     navigate(`/menu-permission/${accountId}`);
   };
 
+  const handleOpenAddModal = () => {
+    setAddFormData({
+      loginId: "",
+      password: "",
+      name: "",
+      email: "",
+      dob: "",
+      gender: "",
+      city: "",
+      state: "",
+      country: "",
+      pin: ""
+    });
+    setAddFormErrors({});
+    setShowAddModal(true);
+  };
+
+  const validateAddForm = () => {
+    const errors = {};
+    if (!addFormData.loginId.trim()) errors.loginId = "Login ID is required";
+    if (!addFormData.password) errors.password = "Password is required";
+    if (!addFormData.name.trim()) errors.name = "Name is required";
+    return errors;
+  };
+
+  const confirmAddStaff = async () => {
+    const errors = validateAddForm();
+    if (Object.keys(errors).length > 0) {
+      setAddFormErrors(errors);
+      return;
+    }
+    
+    try {
+      await api.post('/account/add-staff', addFormData);
+      toast.success('Staff added successfully');
+      setShowAddModal(false);
+      fetchStaffs();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to add staff');
+    }
+  };
 
   const filteredStaffs = staffs.filter(staff => 
     staff.staffDetail?.[0]?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,163 +180,434 @@ const FacultyArea = () => {
     staff.phoneNumber?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (loading && staffs.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="animate-spin h-12 w-12 mx-auto text-blue-500" />
+          <p className="mt-4 text-gray-600">Loading staff...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-6xl mx-auto bg-white p-6 rounded-xl shadow-lg mt-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-          <span className="bg-blue-100 p-2 rounded-lg mr-3">👨‍💼</span>
-          {" "}Staff Management
-        </h2>
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search staff..."
-              className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">Admin & Staff Management</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={handleOpenAddModal}
+              className="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-600"
+            >
+              <Plus size={18} /> Add Staff
+            </button>
+            <button
+              onClick={handleRefresh}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-600"
+            >
+              <RefreshCw size={18} /> Refresh
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Filter Buttons */}
-      <div className="flex gap-3 mb-6">
-        <button
-          onClick={() => setStatusFilter("ACTIVE")}
-          className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${getFilterButtonClass(statusFilter === "ACTIVE")}`}
-        >
-          Active Staff
-        </button>
-        <button
-          onClick={() => setStatusFilter("DEACTIVE")}
-          className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${getDeactiveButtonClass(statusFilter === "DEACTIVE")}`}
-        >
-          Deactivated Staff
-        </button>
-      </div>
+        <p className="text-gray-600 mb-6">Total Staff: {total}</p>
 
-      {loading ? (
-        <div className="flex justify-center py-10">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        <div className="flex gap-4 mb-6">
+          <input
+            type="text"
+            placeholder="Search by name, email, phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 border border-gray-300 p-2.5 rounded-lg"
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border border-gray-300 p-2.5 rounded-lg"
+          >
+            <option value="">All Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="DEACTIVE">Deactive</option>
+          </select>
         </div>
-      ) : filteredStaffs.length === 0 ? (
-        <div className="text-center py-10 bg-gray-50 rounded-xl">
-          <p className="text-gray-500 text-lg">
-            No {statusFilter.toLowerCase()} staff found.
-          </p>
-          <p className="text-gray-400 text-sm mt-2">
-            {getEmptyStateMessage(searchTerm)}
-          </p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border shadow-sm">
-          <table className="w-full">
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-left text-gray-700 text-sm">
-                <th className="p-4 font-medium">Name</th>
-                <th className="p-4 font-medium">Email</th>
-                <th className="p-4 font-medium">Login ID</th>
-                <th className="p-4 font-medium">Status</th>
-                <th className="p-4 font-medium text-center">Actions</th>
+              <tr className="bg-gray-200">
+                <th className="p-4 text-left">Name</th>
+                <th className="p-4 text-left">Email</th>
+                <th className="p-4 text-left">Login ID</th>
+                <th className="p-4 text-left">Status</th>
+                <th className="p-4 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredStaffs.map((s) => (
-                <tr key={s.id} className="border-t hover:bg-gray-50">
-                  <td className="p-4">
-                    {s.staffDetail?.[0]?.name || "N/A"}
-                  </td>
-                  <td className="p-4">
-                    {s.staffDetail?.[0]?.email || "N/A"}
-                  </td>
-                  <td className="p-4">{s.phoneNumber}</td>
-                  <td className="p-4">
-                    <span className={getStatusBadgeClass(s.status)}>
-                      {s.status}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex gap-2 justify-center">
-                      <button
-                        onClick={() =>
-                          toggleStatus(
-                            s.id,
-                            s.status === "ACTIVE" ? "DEACTIVE" : "ACTIVE"
-                          )
-                        }
-                        className={getToggleButtonClass(s.status)}
-                      >
-                        {s.status === "ACTIVE" ? "DEACTIVE" : "Activate"}
-                      </button>
-                      <button
-                        onClick={() => setSelected(s.id)}
-                        className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600 transition-all"
-                      >
-                        Change Password
-                      </button>
-                      {/* New button for menu permissions */}
-                      <button
-                        onClick={() => goToMenuPermissions(s.id)}
-                        className="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-xs font-medium hover:bg-purple-600 transition-all"
-                      >
-                        Menu Permissions
-                      </button>
-                    </div>
+              {filteredStaffs.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="p-8 text-center text-gray-500">
+                    No staff found
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredStaffs.map((staff, index) => (
+                  <tr key={staff.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                    <td className="p-4">{staff.staffDetail?.[0]?.name || "N/A"}</td>
+                    <td className="p-4">{staff.staffDetail?.[0]?.email || "N/A"}</td>
+                    <td className="p-4">{staff.phoneNumber}</td>
+                    <td className="p-4">
+                      <span className={`px-3 py-1 text-xs rounded-full ${
+                        staff.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      }`}>
+                        {staff.status}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleViewDetails(staff)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="View Details"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleOpenStatusModal(staff)}
+                          className="text-green-600 hover:text-green-800"
+                          title="Update Status"
+                        >
+                          <Settings size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleOpenPasswordModal(staff)}
+                          className="text-orange-600 hover:text-orange-800"
+                          title="Change Password"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => goToMenuPermissions(staff.id)}
+                          className="text-purple-600 hover:text-purple-800"
+                          title="Menu Permissions"
+                        >
+                          <ShieldCheck size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-      )}
 
-      {selected && (
-        <div className="mt-6 p-5 border rounded-xl bg-blue-50 border-blue-200">
-          <h3 className="font-semibold mb-3 text-blue-800">
-            Update Password for Staff ID: {selected}
-          </h3>
-          <div className="mb-3">
-            <input
-              type="password"
-              placeholder="Enter new password"
-              className="border p-2.5 rounded-lg mr-2 w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={newPassword}
+        <div className="mt-6">
+          <div className="flex items-center gap-4 justify-between">
+            <select
+              value={itemsPerPage}
               onChange={(e) => {
-                setNewPassword(e.target.value);
-                setPasswordErrors("");
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
               }}
-            />
-            {passwordErrors && (
-              <p className="text-red-500 text-sm mt-1">{passwordErrors}</p>
-            )}
-            <p className="text-xs text-gray-500 mt-1">
-              Password must be at least 6 characters with uppercase, lowercase, and numbers
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => updatePassword(selected)}
-              className="bg-green-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-all"
-              disabled={!newPassword}
+              className="border border-gray-300 px-2 py-1 rounded text-sm"
             >
-              Update Password
-            </button>
+              <option value={5}>5 per page</option>
+              <option value={10}>10 per page</option>
+              <option value={25}>25 per page</option>
+              <option value={50}>50 per page</option>
+            </select>
+            <span className="text-sm text-gray-600">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, total)} of {total} staff
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 bg-blue-600 text-white rounded disabled:bg-gray-300"
+              >
+                Previous
+              </button>
+              <span className="px-3 py-1 bg-gray-100 rounded">
+                Page {currentPage} of {Math.ceil(total / itemsPerPage)}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={currentPage >= Math.ceil(total / itemsPerPage)}
+                className="px-3 py-1 bg-blue-600 text-white rounded disabled:bg-gray-300"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <Modal 
+          isOpen={showViewModal && selectedStaff} 
+          onClose={() => setShowViewModal(false)}
+          title="Staff Details"
+          maxWidth="max-w-md"
+          position="center"
+        >
+          {selectedStaff && (
+            <div className="space-y-2 text-left">
+              <p><strong>Name:</strong> {selectedStaff.staffDetail?.[0]?.name || "N/A"}</p>
+              <p><strong>Email:</strong> {selectedStaff.staffDetail?.[0]?.email || "N/A"}</p>
+              <p><strong>Login ID:</strong> {selectedStaff.phoneNumber}</p>
+              <p><strong>Role:</strong> {selectedStaff.roles}</p>
+              <p><strong>Status:</strong> {selectedStaff.status}</p>
+            </div>
+          )}
+          <button
+            onClick={() => setShowViewModal(false)}
+            className="mt-4 w-full bg-gray-600 text-white px-4 py-2 rounded-lg"
+          >
+            Close
+          </button>
+        </Modal>
+
+        <Modal 
+          isOpen={showPasswordModal && passwordStaff} 
+          onClose={() => {
+            setShowPasswordModal(false);
+            setPasswordStaff(null);
+            setNewPassword("");
+            setPasswordErrors("");
+          }}
+          title="Change Password"
+          maxWidth="max-w-md"
+          position="center"
+        >
+          {passwordStaff && (
+            <>
+              <p className="text-gray-600 mb-4">
+                Change password for: <strong>{passwordStaff.staffDetail?.[0]?.name}</strong>
+              </p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-left">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setPasswordErrors("");
+                  }}
+                  className="w-full border border-gray-300 p-2.5 rounded-lg"
+                  placeholder="Enter new password"
+                />
+                {passwordErrors && (
+                  <p className="text-red-500 text-sm mt-1">{passwordErrors}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Password must be at least 6 characters with uppercase, lowercase, and numbers
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setPasswordStaff(null);
+                    setNewPassword("");
+                    setPasswordErrors("");
+                  }}
+                  className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmPasswordUpdate}
+                  disabled={!newPassword}
+                  className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
+                >
+                  Update Password
+                </button>
+              </div>
+            </>
+          )}
+        </Modal>
+
+        <Modal 
+          isOpen={showStatusModal && statusStaff} 
+          onClose={() => {
+            setShowStatusModal(false);
+            setStatusStaff(null);
+            setNewStatus("");
+          }}
+          title="Update Staff Status"
+          maxWidth="max-w-md"
+          position="center"
+        >
+          {statusStaff && (
+            <>
+              <p className="text-gray-600 mb-4">
+                Update status for: <strong>{statusStaff.staffDetail?.[0]?.name}</strong>
+              </p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Status</label>
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="w-full border border-gray-300 p-2.5 rounded-lg"
+                >
+                  <option value="ACTIVE">Active</option>
+                  <option value="DEACTIVE">Deactive</option>
+                </select>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowStatusModal(false);
+                    setStatusStaff(null);
+                    setNewStatus("");
+                  }}
+                  className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmStatusUpdate}
+                  className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                >
+                  Update Status
+                </button>
+              </div>
+            </>
+          )}
+        </Modal>
+
+        <Modal 
+          isOpen={showAddModal} 
+          onClose={() => setShowAddModal(false)}
+          title="Add New Staff"
+          maxWidth="max-w-2xl"
+          position="center"
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Login ID *</label>
+              <input
+                type="text"
+                value={addFormData.loginId}
+                onChange={(e) => setAddFormData({...addFormData, loginId: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+                placeholder="Enter login ID"
+              />
+              {addFormErrors.loginId && <p className="text-red-500 text-sm mt-1">{addFormErrors.loginId}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Password *</label>
+              <input
+                type="password"
+                value={addFormData.password}
+                onChange={(e) => setAddFormData({...addFormData, password: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+                placeholder="Enter password"
+              />
+              {addFormErrors.password && <p className="text-red-500 text-sm mt-1">{addFormErrors.password}</p>}
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Full Name *</label>
+              <input
+                type="text"
+                value={addFormData.name}
+                onChange={(e) => setAddFormData({...addFormData, name: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+                placeholder="Enter full name"
+              />
+              {addFormErrors.name && <p className="text-red-500 text-sm mt-1">{addFormErrors.name}</p>}
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Email</label>
+              <input
+                type="email"
+                value={addFormData.email}
+                onChange={(e) => setAddFormData({...addFormData, email: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+                placeholder="Enter email address"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Date of Birth</label>
+              <input
+                type="date"
+                value={addFormData.dob}
+                onChange={(e) => setAddFormData({...addFormData, dob: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Gender</label>
+              <select
+                value={addFormData.gender}
+                onChange={(e) => setAddFormData({...addFormData, gender: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+              >
+                <option value="">Select Gender</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">City</label>
+              <input
+                type="text"
+                value={addFormData.city}
+                onChange={(e) => setAddFormData({...addFormData, city: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+                placeholder="Enter city"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">State</label>
+              <input
+                type="text"
+                value={addFormData.state}
+                onChange={(e) => setAddFormData({...addFormData, state: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+                placeholder="Enter state"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Country</label>
+              <input
+                type="text"
+                value={addFormData.country}
+                onChange={(e) => setAddFormData({...addFormData, country: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+                placeholder="Enter country"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">PIN Code</label>
+              <input
+                type="text"
+                value={addFormData.pin}
+                onChange={(e) => setAddFormData({...addFormData, pin: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+                placeholder="Enter PIN code"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3 mt-6">
             <button
-              onClick={() => {
-                setSelected(null);
-                setPasswordErrors("");
-              }}
-              className="ml-2 text-gray-600 hover:text-gray-800 px-3 py-2.5 rounded-lg font-medium hover:bg-gray-100 transition-all"
+              onClick={() => setShowAddModal(false)}
+              className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
             >
               Cancel
             </button>
+            <button
+              onClick={confirmAddStaff}
+              className="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+            >
+              Create Staff
+            </button>
           </div>
-        </div>
-      )}
+        </Modal>
+      </div>
     </div>
   );
 };
 
-export default FacultyArea;
+export default AllFaculty;

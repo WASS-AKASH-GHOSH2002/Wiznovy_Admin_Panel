@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, RefreshCw, FileText, Download, Settings, Edit } from "lucide-react";
 import { toast } from 'react-toastify';
-import { exportTutorsToPDF, exportTutorsToCSV } from "../utils/downloadUtils";
+import { exportTutorsToPDF, exportTutorsToCSV, downloadAllTutorsPDF } from "../utils/downloadUtils";
 import { fetchTutors, updateTutorStatus, bulkUpdateTutorStatus, setStatusFilter, updateTutorContact, fetchTutorDetails } from "../store/tutorSlice";
 import { fetchCountries } from "../store/countrySlice";
 import { fetchSubjects } from "../store/subjectSlice";
@@ -301,13 +301,27 @@ const Tutormanagement = () => {
               {showExportMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
                   <button
+                    onClick={async () => {
+                      try {
+                        await downloadAllTutorsPDF();
+                        toast.success('PDF downloaded successfully');
+                      } catch (error) {
+                        toast.error('Failed to download PDF');
+                      }
+                      setShowExportMenu(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Download All Tutors PDF
+                  </button>
+                  <button
                     onClick={() => {
                       exportTutorsToPDF(tutors);
                       setShowExportMenu(false);
                     }}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    Export as PDF
+                    Export Current Page as PDF
                   </button>
                   <button
                     onClick={() => {

@@ -27,8 +27,9 @@ const CountryManagement = () => {
   const fileInputRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
   const searchTimeoutRef = useRef(null);
+  const searchInputRef = useRef(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editCountry, setEditCountry] = useState(null);
   const [editData, setEditData] = useState({ name: '', code: '' });
@@ -46,6 +47,19 @@ const CountryManagement = () => {
       dispatch(setSearch(searchValue));
     }, 500);
   }, [dispatch]);
+
+  const handleKeywordChange = (e) => {
+    setSearchKeyword(e.target.value);
+    debouncedSearch(e.target.value);
+  };
+
+  useEffect(() => {
+    if (searchInputRef.current && document.activeElement !== searchInputRef.current && searchKeyword) {
+      const cursorPosition = searchInputRef.current.selectionStart;
+      searchInputRef.current.focus();
+      searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+    }
+  }, [countries, searchKeyword]);
 
   useEffect(() => {
     const offset = (currentPage - 1) * itemsPerPage;
@@ -327,13 +341,11 @@ const CountryManagement = () => {
 
         <div className="flex gap-4 mb-6">
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search by country name..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              debouncedSearch(e.target.value);
-            }}
+            value={searchKeyword}
+            onChange={handleKeywordChange}
             className="flex-1 border border-gray-300 p-2.5 rounded-lg"
           />
           <select
@@ -600,7 +612,7 @@ const CountryManagement = () => {
         >
           {selectedCountryForImage && (
             <>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 mb-4 text-left">
                 Upload image for: <strong>{selectedCountryForImage.name}</strong>
               </p>
               <div className="mb-4">

@@ -118,7 +118,6 @@ const tutorSlice = createSlice({
         if (index !== -1) {
           state.tutors[index] = action.payload;
         }
-        toast.success('Tutor contact updated successfully!');
       })
       .addCase(updateTutorContact.rejected, (state, action) => {
         toast.error('Failed to update tutor contact: ' + (action.payload?.message || 'Unknown error'));

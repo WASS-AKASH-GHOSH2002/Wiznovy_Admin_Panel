@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { api } from '../config/axios';
 
 // Helper functions
 const generatePDF = (title, columns, rows, filename) => {
@@ -52,6 +53,24 @@ export const exportUsersToPDF = (users) => {
   generatePDF('Users Report', columns, rows, 'users-report.pdf');
 };
 
+export const downloadAllUsersPDF = async () => {
+  try {
+    const response = await api.get('/account/pdf/all-users', {
+      responseType: 'blob'
+    });
+    
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `all-users-${new Date().toISOString().split('T')[0]}.pdf`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  } catch (error) {
+    console.error('Error downloading PDF:', error);
+    throw error;
+  }
+};
+
 
 export const exportUsersToExcel = (users) => {
   const data = users.map(user => ({
@@ -92,6 +111,24 @@ export const exportTutorsToPDF = (tutors) => {
   ]);
   
   generatePDF('Tutors Report', columns, rows, 'tutors-report.pdf');
+};
+
+export const downloadAllTutorsPDF = async () => {
+  try {
+    const response = await api.get('/account/pdf/all-tutors', {
+      responseType: 'blob'
+    });
+    
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `all-tutors-${new Date().toISOString().split('T')[0]}.pdf`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  } catch (error) {
+    console.error('Error downloading PDF:', error);
+    throw error;
+  }
 };
 
 

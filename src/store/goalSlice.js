@@ -1,194 +1,116 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-import { API_BASE_URL } from '../config/api';
+import { api } from '../config/axios';
 
-/* =====================
-   AXIOS HELPER
-===================== */
+export const fetchGoals = createAsyncThunk(
+  'goals/fetchGoals',
+  async ({ limit = 10, offset = 0, keyword = '', status = '' } = {}) => {
+    const params = {
+      limit: Math.min(Math.max(Number(limit) || 10, 1), 100),
+      offset: Math.max(Number(offset) || 0, 0)
+    };
+    if (keyword) params.keyword = keyword;
+    if (status) params.status = status;
 
-const authRequest = async (method, url, data) => {
-  const token = localStorage.getItem('token');
-
-  const response = await axios({
-    method,
-    url: `${API_BASE_URL}${url}`,
-    data,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  return response.data;
-};
-
-/* =====================
-   THUNKS
-===================== */
+    const response = await api.get('/goal/list', { params });
+    return {
+      result: response.data.result || [],
+      total: response.data.total || 0
+    };
+  }
+);
 
 export const createGoal = createAsyncThunk(
-  'goals/create',
-  async (goalData, { rejectWithValue }) => {
-    try {
-      return await authRequest('post', '/goal', goalData);
-    } catch (e) {
-      return rejectWithValue(e.response?.data || e.message);
-    }
-  },
-);
-
-export const getAllGoals = createAsyncThunk(
-  'goals/getAll',
-  async (_, { rejectWithValue }) => {
-    try {
-      return await authRequest('get', '/goal/all');
-    } catch (e) {
-      return rejectWithValue(e.response?.data || e.message);
-    }
-  },
-);
-
-export const getGoalById = createAsyncThunk(
-  'goals/getById',
-  async (goalId, { rejectWithValue }) => {
-    try {
-      return await authRequest('get', `/goal/${goalId}`);
-    } catch (e) {
-      return rejectWithValue(e.response?.data || e.message);
-    }
-  },
-);
-
-export const updateGoal = createAsyncThunk(
-  'goals/update',
-  async ({ goalId, goalData }, { rejectWithValue }) => {
-    try {
-      return await authRequest('patch', `/goal/${goalId}`, goalData);
-    } catch (e) {
-      return rejectWithValue(e.response?.data || e.message);
-    }
-  },
+  'goals/createGoal',
+  async (goalData) => {
+    const response = await api.post('/goal', goalData);
+    return response.data;
+  }
 );
 
 export const updateGoalStatus = createAsyncThunk(
-  'goals/updateStatus',
-  async ({ goalId, status }, { rejectWithValue }) => {
-    try {
-      return await authRequest('patch', `/goal/status/${goalId}`, { status });
-    } catch (e) {
-      return rejectWithValue(e.response?.data || e.message);
-    }
-  },
+  'goals/updateGoalStatus',
+  async ({ goalId, status }) => {
+    const response = await api.put(`/goal/status/${goalId}`, { status });
+    return response.data;
+  }
 );
 
-export const deleteGoal = createAsyncThunk(
-  'goals/delete',
-  async (goalId, { rejectWithValue }) => {
+export const updateGoal = createAsyncThunk(
+  'goals/updateGoal',
+  async ({ goalId, name }, { rejectWithValue }) => {
     try {
-      await authRequest('delete', `/goal/${goalId}`);
-      return goalId;
-    } catch (e) {
-      return rejectWithValue(e.response?.data || e.message);
+      const response = await api.patch(`/goal/${goalId}`, { name });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
     }
-  },
+  }
 );
 
-/* =====================
-   REDUCER HELPERS
-===================== */
-
-const pending = (state) => {
-  state.loading = true;
-  state.error = null;
-};
-
-const rejected = (state, action) => {
-  state.loading = false;
-  state.error = action.payload;
-};
-
-/* =====================
-   SLICE
-===================== */
+export const bulkUpdateGoalStatus = createAsyncThunk(
+  'goals/bulkUpdateGoalStatus',
+  async ({ ids, status }) => {
+    await api.put('/goal/bulk-status', { ids, status });
+    return { ids, status };
+  }
+);
 
 const goalSlice = createSlice({
   name: 'goals',
   initialState: {
     goals: [],
-    currentGoal: null,
+    total: 0,
     loading: false,
     error: null,
+    filters: {
+      search: '',
+      status: ''
+    }
   },
   reducers: {
+    setSearch: (state, action) => {
+      state.filters.search = action.payload;
+    },
+    setStatusFilter: (state, action) => {
+      state.filters.status = action.payload;
+    },
     clearError: (state) => {
       state.error = null;
-    },
-    clearCurrentGoal: (state) => {
-      state.currentGoal = null;
-    },
+    }
   },
   extraReducers: (builder) => {
     builder
-
-      /* CREATE */
-      .addCase(createGoal.pending, pending)
+      .addCase(fetchGoals.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchGoals.fulfilled, (state, action) => {
+        state.loading = false;
+        state.goals = action.payload.result;
+        state.total = action.payload.total;
+      })
+      .addCase(fetchGoals.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
       .addCase(createGoal.fulfilled, (state, action) => {
-        state.loading = false;
-        state.goals.push(action.payload);
+        state.goals.unshift(action.payload);
+        state.total += 1;
       })
-      .addCase(createGoal.rejected, rejected)
-
-      /* GET ALL */
-      .addCase(getAllGoals.pending, pending)
-      .addCase(getAllGoals.fulfilled, (state, action) => {
-        state.loading = false;
-        state.goals = action.payload?.result || action.payload;
+      .addCase(updateGoalStatus.fulfilled, (state) => {
+        // Don't update local state - let the refresh API call handle it
       })
-      .addCase(getAllGoals.rejected, rejected)
-
-      /* GET BY ID */
-      .addCase(getGoalById.pending, pending)
-      .addCase(getGoalById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.currentGoal = action.payload;
-      })
-      .addCase(getGoalById.rejected, rejected)
-
-      /* UPDATE */
-      .addCase(updateGoal.pending, pending)
       .addCase(updateGoal.fulfilled, (state, action) => {
-        state.loading = false;
-        const i = state.goals.findIndex(g => g.id === action.payload.id);
-        if (i !== -1) state.goals[i] = action.payload;
-        if (state.currentGoal?.id === action.payload.id) {
-          state.currentGoal = action.payload;
+        const index = state.goals.findIndex(g => g.id === action.payload.id);
+        if (index !== -1) {
+          state.goals[index] = action.payload;
         }
       })
-      .addCase(updateGoal.rejected, rejected)
-
-      /* UPDATE STATUS */
-      .addCase(updateGoalStatus.pending, pending)
-      .addCase(updateGoalStatus.fulfilled, (state, action) => {
-        state.loading = false;
-        const i = state.goals.findIndex(g => g.id === action.payload.id);
-        if (i !== -1) state.goals[i] = action.payload;
-        if (state.currentGoal?.id === action.payload.id) {
-          state.currentGoal = action.payload;
-        }
-      })
-      .addCase(updateGoalStatus.rejected, rejected)
-
-      /* DELETE */
-      .addCase(deleteGoal.pending, pending)
-      .addCase(deleteGoal.fulfilled, (state, action) => {
-        state.loading = false;
-        state.goals = state.goals.filter(g => g.id !== action.payload);
-        if (state.currentGoal?.id === action.payload) {
-          state.currentGoal = null;
-        }
-      })
-      .addCase(deleteGoal.rejected, rejected);
-  },
+      .addCase(bulkUpdateGoalStatus.fulfilled, (state) => {
+        // Don't update local state - let the refresh API call handle it
+      });
+  }
 });
 
-export const { clearError, clearCurrentGoal } = goalSlice.actions;
+export const { setSearch, setStatusFilter, clearError } = goalSlice.actions;
 export default goalSlice.reducer;

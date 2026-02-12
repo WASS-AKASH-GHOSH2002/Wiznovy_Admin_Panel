@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo } from "react";
 import PropTypes from "prop-types";
-import { useNavigate, Routes, Route } from "react-router-dom";
+import { useNavigate, Routes, Route, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../store/authThunks";
 import WiznovyLogo from "../assets/WIZNOVY.png";
 import LazyImage from "./LazyImage";
+import Modal from "./Modal";
 import axios from "axios";
 import { toast } from 'react-toastify';
 import {
@@ -25,7 +26,11 @@ import {
   MapPin,
   BookOpen,
   ListStart,
-  SquareKanban
+  SquareKanban,
+  PhoneCall,
+  BadgeIndianRupee,
+  FileText,
+  Settings as SettingsIcon
 } from "lucide-react";
 
 import FacultyArea from "./FacultyArea";
@@ -37,12 +42,7 @@ import UserManagement from "../pages/UserManagement";
 
 
 import CourseManager from "../pages/CourseManager";
-
-
 import { API_BASE_URL } from "../config/api";
-
-
-
 import MenuPermission from "../pages/Menu_permission";
 import Tutormanagement from "../pages/Tutormanagement";
 import CountryManagement from "../pages/CountryManagement";
@@ -55,10 +55,19 @@ import LanguageManager from "../pages/LanguageManager";
 import PageManager from "../pages/PageManager";
 import EducationalLevelManager from "../pages/EducationalLevelManager";
 import CityManager from "../pages/CityManager";
+import BookManager from "../pages/BookManager";
+import ContactUs from "../pages/ContactUs";
+import ContactCategoryManager from "../pages/ContactCategoryManager";
+import PaymentManagement from "../pages/PaymentManagement";
+import TutorPayoutManagement from "../pages/TutorPayoutManagement";
+import SessionManagement from "../pages/SessionManagement";
+import AdminLogsManagement from "../pages/AdminLogsManagement";
+import Settings from "../pages/Settings";
+import FaqManager from "../pages/FaqManager";
+import BudgetManagement from "../pages/BudgetManagement";
+import BannerManagement from "../pages/BannerManagement";
 
 
-const totalCourses = 4;
-const totalLectures = 1;
 
 const getStats = (counts) => [
   {
@@ -110,27 +119,26 @@ const getStats = (counts) => [
     icon: <Home />,
     path: "/courses/show",
   },
-
-  // {
-  //   title: "Total lectures",
-  //   count: totalLectures,
-  //   color: "border-purple-300 text-purple-500",
-  //   icon: <User />,
-  //   path: "/lectures",
-  // },
   {
-    title: "Total Feedback",
-    count: counts.totalFeedbackCount,
-    color: "border-indigo-300 text-indigo-500",
-    icon: <ShieldCheck />,
-    path: "/feedback",
+    title: "Total Tutors",
+    count: counts.totalTutorsCount,
+    color: "border-purple-300 text-purple-500",
+    icon: <User />,
+    path: "/tutors",
   },
   {
-    title: "Total News",
-    count: counts.totalNewsCount,
-    color: "border-pink-300 text-pink-500",
-    icon: <Newspaper />,
-    path: "/news-management",
+    title: "Active Tutors",
+    count: counts.activeTutorsCount,
+    color: "border-green-400 text-green-500",
+    icon: <Users />,
+    path: "/tutors?status=active",
+  },
+  {
+    title: "Inactive Tutors",
+    count: counts.inactiveTutorsCount,
+    color: "border-red-400 text-red-500",
+    icon: <Users />,
+    path: "/tutors?status=inactive",
   },
 ];
 
@@ -145,18 +153,28 @@ const courseMenuItems = [
 
 const additionalMenuItems = [
   {label: "Pages", path: "/pages", icon: <BookCopy size={18} /> },
+  { label: "Banners", path: "/banners", icon: <Newspaper size={18} /> },
   { label: "Users", path: "/users", icon: <MessageCircle size={18} /> },
   { label: "Tutors", path: "/tutors", icon: <MessageCircle size={18} /> },
   { label: "Countries", path: "/countries", icon: <Laptop size={18} /> },
+  { label: "Budgets", path: "/budgets", icon: <BadgeIndianRupee size={18} /> },
+  {label: "Books", path: "/books", icon: <BookOpen size={18} /> },
   { label: "States", path: "/states", icon: <MapPin size={18} /> },
   { label: "Cities", path: "/cities", icon: <MapPin size={18} /> },
-  { label: "Subjects", path: "/subject-list", icon: <BookOpen size={18} /> },
+   { label: "Subjects", path: "/subject-list", icon: <BookOpen size={18} /> },
   { label: "Languages", path: "/languages", icon: <BookOpen size={18} /> },
   { label: "Educational Levels", path: "/educational-levels", icon: <BookOpen size={18} /> },
   { label: "Goal Manager", path: "/goals", icon: <ListStart size={18} /> },
   { label: "Topic Manager", path: "/topics", icon: <SquareKanban size={18} /> },
-  { label: "Admin & Staff", path: "/faculty", icon: <Users size={18} />, hasDropdown: true },
-   {label: "Menu Permission", path: "/menu-permission", icon: <Users size={18} />},
+  { label: "Sessions", path: "/sessions", icon: <PcCase size={18} /> },
+  { label: "Payments", path: "/payments", icon: <BadgeIndianRupee size={18} /> },
+  { label: "Tutor Payouts", path: "/tutor-payouts", icon: <BadgeIndianRupee size={18} /> },
+  { label: "Admin Logs", path: "/admin-logs", icon: <FileText size={18} /> },
+  { label: "FAQs", path: "/faqs", icon: <FileText size={18} /> },
+  { label: "Settings", path: "/settings", icon: <SettingsIcon size={18} /> },
+  { label: "Contact US Category", path: "/contact-us-category", icon: <PhoneCall size={18} /> },
+  //{ label: "Admin & Staff", path: "/faculty", icon: <Users size={18} />, hasDropdown: true },
+   //{label: "Menu Permission", path: "/menu-permission", icon: <Users size={18} />},
  
   // { label: "Coupons", path: "/coupons", icon: <BadgePercent size={18} /> },
 
@@ -165,7 +183,7 @@ const additionalMenuItems = [
   // { label: "Payments", path: "/payments", icon: <BadgeIndianRupee size={18} /> },
 
   // { label: "FAQ Management", path: "/faqs", icon: <HelpCircle size={18} /> },
-  // { label: "Contact Us", path: "/contact-us", icon: <PhoneCall size={18} /> },
+  { label: "Contact Us", path: "/contact-us", icon: <PhoneCall size={18} /> },
   // { label: "Feedback Management", path: "/feedback", icon: <ShieldCheck size={18} /> },
   // { label: "News Management", path: "/news-management", icon: <Newspaper size={18} /> },
 
@@ -190,9 +208,15 @@ export default function DashboardPage() {
   const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [inactiveUsersCount, setInactiveUsersCount] = useState(0);
   const [totalCoursesCount, setTotalCoursesCount] = useState(0);
-  const [totalFeedbackCount, setTotalFeedbackCount] = useState(0);
-  const [totalNewsCount, setTotalNewsCount] = useState(0);
-  const [activeMenuItem, setActiveMenuItem] = useState('/');
+  const [totalTutorsCount, setTotalTutorsCount] = useState(0);
+  const [activeTutorsCount, setActiveTutorsCount] = useState(0);
+  const [inactiveTutorsCount, setInactiveTutorsCount] = useState(0);
+  const location = useLocation();
+  const [activeMenuItem, setActiveMenuItem] = useState(location.pathname);
+
+  useEffect(() => {
+    setActiveMenuItem(location.pathname);
+  }, [location.pathname]);
 
   
   const getAuthToken = () => {
@@ -274,29 +298,40 @@ export default function DashboardPage() {
         }
 
        
-        const feedbackRes = await axios.get(`${API_BASE_URL}/rating-feedback/list`, {
+        
+        const tutorsRes = await axios.get(`${API_BASE_URL}/account/tutors`, {
           headers: { Authorization: `Bearer ${token}` },
           params: {
             limit: 1,
             offset: 0,
-            status:true
           },
         });
-        if (feedbackRes.status === 200 && feedbackRes.data) {
-          setTotalFeedbackCount(feedbackRes.data.total || 0);
+        if (tutorsRes.status === 200 && tutorsRes.data) {
+          setTotalTutorsCount(tutorsRes.data.total || 0);
         }
 
-        
-        const newsRes = await axios.get(`${API_BASE_URL}/news/list`, {
+        const activeTutorsRes = await axios.get(`${API_BASE_URL}/account/tutors`, {
           headers: { Authorization: `Bearer ${token}` },
           params: {
-            limit: 10,
+            limit: 1,
             offset: 0,
-            
+            status: "ACTIVE",
           },
         });
-        if (newsRes.status === 200 && newsRes.data) {
-          setTotalNewsCount(newsRes.data.total || 0);
+        if (activeTutorsRes.status === 200 && activeTutorsRes.data) {
+          setActiveTutorsCount(activeTutorsRes.data.total || 0);
+        }
+
+        const inactiveTutorsRes = await axios.get(`${API_BASE_URL}/account/tutors`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            limit: 1,
+            offset: 0,
+            status: "DEACTIVE",
+          },
+        });
+        if (inactiveTutorsRes.status === 200 && inactiveTutorsRes.data) {
+          setInactiveTutorsCount(inactiveTutorsRes.data.total || 0);
         }
 
       } catch (error) {
@@ -340,39 +375,38 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen font-sans text-gray-800">
       {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <LogOut className="h-6 w-6 text-red-600" />
-              </div>
-              <h3 className="mt-3 text-lg font-medium text-gray-900">Confirm Logout</h3>
-              <div className="mt-2">
-                <p className="text-sm text-gray-500">
-                  Are you sure you want to logout from the admin panel?
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 flex justify-end space-x-3">
-              <button
-                type="button"
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                onClick={cancelLogout}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2 bg-red-600 text-sm font-medium text-white rounded-md hover:bg-red-700 focus:outline-none"
-                onClick={confirmLogout}
-              >
-                Logout
-              </button>
-            </div>
+      <Modal 
+        isOpen={showLogoutConfirm} 
+        onClose={cancelLogout}
+        title="Confirm Logout"
+        maxWidth="max-w-sm"
+        position="center"
+      >
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+            <LogOut className="h-6 w-6 text-red-600" />
           </div>
+          <p className="mt-4 text-sm text-gray-500">
+            Are you sure you want to logout from the admin panel?
+          </p>
         </div>
-      )}
+        <div className="mt-6 flex justify-end space-x-3">
+          <button
+            type="button"
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+            onClick={cancelLogout}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="px-4 py-2 bg-red-600 text-sm font-medium text-white rounded-md hover:bg-red-700 focus:outline-none"
+            onClick={confirmLogout}
+          >
+            Logout
+          </button>
+        </div>
+      </Modal>
 
       {/* Sidebar */}
      <aside className="w-68 bg-[#C4DAD2] border-r shadow-md flex flex-col">
@@ -473,16 +507,18 @@ export default function DashboardPage() {
             activeUsersCount={activeUsersCount}
             inactiveUsersCount={inactiveUsersCount}
             totalCoursesCount={totalCoursesCount}
-            totalFeedbackCount={totalFeedbackCount}
-            totalNewsCount={totalNewsCount}
+            totalTutorsCount={totalTutorsCount}
+            activeTutorsCount={activeTutorsCount}
+            inactiveTutorsCount={inactiveTutorsCount}
             setActiveMenuItem={setActiveMenuItem}
           />} />
           <Route path="/pages" element={<PageManager />} />
-          {/* <Route path="/classes" element={<ClassesPage />} /> */}
-          {/* <Route path="/boards" element={<AdminBoardManagement />} /> */}
+          <Route path="/banners" element={<BannerManagement />} />
           <Route path="/users" element={<UserManagement />} />
           <Route path="/tutors" element={<Tutormanagement />} />
           <Route path="/countries" element={<CountryManagement />} />
+          <Route path="/budgets" element={<BudgetManagement />} />
+          <Route path="/books" element={<BookManager />} />
           <Route path="/states" element={<StateManagement />} />
           <Route path="/cities" element={<CityManager />} />
           <Route path="/subject-list" element={<SubjectsNew />} />
@@ -496,24 +532,24 @@ export default function DashboardPage() {
           <Route path="/courses/show" element={<CourseManager courseList={courseList} setCourseList={setCourseList} />} />
           <Route path="/courses/:courseId/details" element={<CourseDetails />} />
           <Route path="/courses/add" element={<PlaceholderPage page="Add Course" />} />
-          {/* <Route path="/audio-lectures" element={<AudioLectureManager />} /> */}
-          {/* <Route path="/study-material" element={<Study_material />} /> */}
-      
+          <Route path="/contact-us-category" element={<ContactCategoryManager />} />
           <Route path="/subject" element={<SubjectsNew />} />
-
-
-
-
-
-
+          <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/payments" element={<PaymentManagement />} />
+          <Route path="/tutor-payouts" element={<TutorPayoutManagement />} />
+          <Route path="/sessions" element={<SessionManagement />} />
+          <Route path="/admin-logs" element={<AdminLogsManagement />} />
+          <Route path="/faqs" element={<FaqManager />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<PlaceholderPage page="404 - Not Found" />} />
+          
         </Routes>
       </main>
     </div>
   );
 }
 
-function OverviewSection({ facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount, setActiveMenuItem }) {
+function OverviewSection({ facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalTutorsCount, activeTutorsCount, inactiveTutorsCount, setActiveMenuItem }) {
   const navigate = useNavigate();
   
   const handleKeyDown = (e, item) => {
@@ -529,7 +565,7 @@ function OverviewSection({ facultyCount, activeStaffCount, inactiveStaffCount, t
       <h2 className="text-xl font-semibold mb-4 text-gray-800">Quick Overview</h2>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {getStats({ facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalFeedbackCount, totalNewsCount }).map((item) => (
+        {getStats({ facultyCount, activeStaffCount, inactiveStaffCount, totalUsersCount, activeUsersCount, inactiveUsersCount, totalCoursesCount, totalTutorsCount, activeTutorsCount, inactiveTutorsCount }).map((item) => (
           <button
             key={item.path}
             onClick={() => {
@@ -574,8 +610,9 @@ OverviewSection.propTypes = {
   activeUsersCount: PropTypes.number.isRequired,
   inactiveUsersCount: PropTypes.number.isRequired,
   totalCoursesCount: PropTypes.number.isRequired,
-  totalFeedbackCount: PropTypes.number.isRequired,
-  totalNewsCount: PropTypes.number.isRequired,
+  totalTutorsCount: PropTypes.number.isRequired,
+  activeTutorsCount: PropTypes.number.isRequired,
+  inactiveTutorsCount: PropTypes.number.isRequired,
   setActiveMenuItem: PropTypes.func.isRequired,
 };
 

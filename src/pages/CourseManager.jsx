@@ -17,6 +17,7 @@ import {
 } from '../store/Courseslice';
 import { fetchTutors } from '../store/tutorSlice';
 import { fetchSubjects } from '../store/subjectSlice';
+import { fetchLanguages } from '../store/languageSlice';
 
 
 import LazyImage from '../components/LazyImage';
@@ -158,6 +159,7 @@ const CourseManager = () => {
   const { courses, loading, error, totalCount, filters, thumbnailUpdating, selectedCourseDetails, detailsLoading } = useSelector(state => state.courses);
   const { tutors } = useSelector(state => state.tutors);
   const { subjects } = useSelector(state => state.subjectsManagement);
+  const { languages } = useSelector(state => state.languages);
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -198,6 +200,7 @@ const CourseManager = () => {
     endDate: new Date().toISOString().slice(0, 16),
     tutorId: '',
     subjectId: '',
+    languageId: '',
     unitIds: []
   });
 
@@ -426,6 +429,7 @@ const CourseManager = () => {
       thumbnail: course.thumbnailUrl || course.thumbnail || '',
       tutorId: course.tutorId || '',
       subjectId: course.subjectId || '',
+      languageId: course.languageId || '',
       unitIds: course.units ? course.units.map(unit => unit.id) : []
     });
     
@@ -554,6 +558,7 @@ const CourseManager = () => {
       endDate: new Date().toISOString().slice(0, 16),
       tutorId: '',
       subjectId: '',
+      languageId: '',
       unitIds: []
     });
     setShowDiscount(false);
@@ -599,6 +604,7 @@ const CourseManager = () => {
     dispatch(fetchCourses(filters));
     dispatch(fetchTutors({ limit: 100, status: 'ACTIVE' }));
     dispatch(fetchSubjects({ limit: 100, status: 'ACTIVE' }));
+    dispatch(fetchLanguages({ limit: 100, status: 'ACTIVE' }));
   };
 
   const handlePagination = (direction) => {
@@ -990,6 +996,25 @@ const CourseManager = () => {
                       {subjects.filter(subject => subject.status === 'ACTIVE').map(subject => (
                         <option key={subject.id} value={subject.id}>
                           {subject.subMaster?.name || subject.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="languageId" className="block text-sm font-medium text-gray-700 mb-1 text-left">Language *</label>
+                    <select
+                      id="languageId"
+                      name="languageId"
+                      value={formData.languageId}
+                      onChange={handleInputChange}
+                      className="w-full p-2 pr-8 border border-gray-300 rounded-md"
+                      required
+                    >
+                      <option value="">Select Language</option>
+                      {languages.filter(language => language.status === 'ACTIVE').map(language => (
+                        <option key={language.id} value={language.id}>
+                          {language.name}
                         </option>
                       ))}
                     </select>

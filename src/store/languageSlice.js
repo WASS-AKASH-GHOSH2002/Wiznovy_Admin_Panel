@@ -1,51 +1,45 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '../config/axios';
 
-/* =====================
-   ASYNC THUNKS
-===================== */
-
 export const fetchLanguages = createAsyncThunk(
   'languages/fetchLanguages',
-  async (params, { rejectWithValue }) => {
-    try {
-      const { limit = 50, offset = 0, keyword = '', status = '' } = params || {};
+  async ({ limit = 20, offset = 0, keyword = '', status = '' } = {}) => {
+    const params = {
+      limit: Math.min(Math.max(Number(limit) || 20, 1), 100),
+      offset: Math.max(Number(offset) || 0, 0)
+    };
+    if (keyword) params.keyword = keyword;
+    if (status) params.status = status;
 
-      const queryParams = new URLSearchParams({
-        limit: String(limit),
-        offset: String(offset),
-        ...(keyword && { keyword }),
-        ...(status && { status }),
-      });
-
-      const response = await api.get(`/languages/all?${queryParams}`);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
+    const response = await api.get('/languages/all', { params });
+    return {
+      result: response.data.result || [],
+      total: response.data.total || 0
+    };
   }
 );
 
 export const createLanguage = createAsyncThunk(
   'languages/createLanguage',
-  async (languageData, { rejectWithValue }) => {
-    try {
-      const response = await api.post('/languages', languageData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
+  async ({ name }) => {
+    const response = await api.post('/languages', { name });
+    return response.data;
   }
 );
 
 export const updateLanguageStatus = createAsyncThunk(
   'languages/updateLanguageStatus',
-  async ({ languageId, status }, { rejectWithValue }) => {
+  async ({ languageId, status }) => {
+    await api.put(`/languages/status/${languageId}`, { status });
+    return { languageId, status };
+  }
+);
+
+export const updateLanguage = createAsyncThunk(
+  'languages/updateLanguage',
+  async ({ languageId, name }, { rejectWithValue }) => {
     try {
-      const response = await api.patch(
-        `/languages/${languageId}/status`,
-        { status }
-      );
+      const response = await api.put(`/languages/${languageId}`, { name });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -53,34 +47,13 @@ export const updateLanguageStatus = createAsyncThunk(
   }
 );
 
-/* =====================
-   REDUCER HELPERS
-===================== */
-
-const createAsyncReducers = (entityName) => ({
-  pending: (state) => {
-    state.loading = true;
-    state.error = null;
-  },
-  rejected: (state, action) => {
-    state.loading = false;
-    state.error = action.payload || action.error?.message;
-  },
-  fulfilled: (state) => {
-    state.loading = false;
+export const bulkUpdateLanguageStatus = createAsyncThunk(
+  'languages/bulkUpdateLanguageStatus',
+  async ({ ids, status }) => {
+    await api.put('/languages/bulk-status', { ids, status });
+    return { ids, status };
   }
-});
-
-const updateById = (list, payload) => {
-  const index = list.findIndex(item => item.id === payload.id);
-  if (index !== -1) {
-    list[index] = payload;
-  }
-};
-
-/* =====================
-   SLICE
-===================== */
+);
 
 const languageSlice = createSlice({
   name: 'languages',
@@ -91,8 +64,8 @@ const languageSlice = createSlice({
     error: null,
     filters: {
       search: '',
-      status: '',
-    },
+      status: ''
+    }
   },
   reducers: {
     setSearch: (state, action) => {
@@ -101,38 +74,46 @@ const languageSlice = createSlice({
     setStatusFilter: (state, action) => {
       state.filters.status = action.payload;
     },
+    clearError: (state) => {
+      state.error = null;
+    }
   },
   extraReducers: (builder) => {
-    const asyncReducers = createAsyncReducers('languages');
-    
     builder
-      /* FETCH LANGUAGES */
-      .addCase(fetchLanguages.pending, asyncReducers.pending)
+      .addCase(fetchLanguages.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchLanguages.fulfilled, (state, action) => {
-        asyncReducers.fulfilled(state);
+        state.loading = false;
         state.languages = action.payload.result;
         state.total = action.payload.total;
       })
-      .addCase(fetchLanguages.rejected, asyncReducers.rejected)
-
-      /* CREATE LANGUAGE */
-      .addCase(createLanguage.pending, asyncReducers.pending)
+      .addCase(fetchLanguages.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
       .addCase(createLanguage.fulfilled, (state, action) => {
-        asyncReducers.fulfilled(state);
         state.languages.unshift(action.payload);
         state.total += 1;
       })
-      .addCase(createLanguage.rejected, asyncReducers.rejected)
-
-      /* UPDATE LANGUAGE STATUS */
-      .addCase(updateLanguageStatus.pending, asyncReducers.pending)
       .addCase(updateLanguageStatus.fulfilled, (state, action) => {
-        asyncReducers.fulfilled(state);
-        updateById(state.languages, action.payload);
+       
       })
-      .addCase(updateLanguageStatus.rejected, asyncReducers.rejected);
-  },
+      .addCase(updateLanguage.fulfilled, (state, action) => {
+        const index = state.languages.findIndex(l => l.id === action.payload.id);
+        if (index !== -1) {
+          state.languages[index] = action.payload;
+        }
+      })
+      .addCase(bulkUpdateLanguageStatus.fulfilled, (state, action) => {
+        // Don't update local state - let the refresh API call handle it
+      })
+      .addCase(bulkUpdateLanguageStatus.rejected, (state, action) => {
+        state.error = action.payload || action.error.message;
+      });
+  }
 });
 
-export const { setSearch, setStatusFilter } = languageSlice.actions;
+export const { setSearch, setStatusFilter, clearError } = languageSlice.actions;
 export default languageSlice.reducer;

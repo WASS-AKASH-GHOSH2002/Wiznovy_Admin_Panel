@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, RefreshCw, Download, Settings, Edit } from "lucide-react";
-import { exportUsersToPDF, exportUsersToCSV } from "../utils/downloadUtils";
+import { exportUsersToPDF, exportUsersToCSV, downloadAllUsersPDF } from "../utils/downloadUtils";
 import { fetchUsers, updateUserStatus, bulkUpdateUserStatus, setSearch, setStatusFilter, updateUserContact } from "../store/userSlice";
 import { debounce } from "lodash";
 import { toast } from "react-toastify";
@@ -62,7 +62,8 @@ const UserManagement = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [searchInput, setSearchInput] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const searchInputRef = useRef(null);
 
   // Create debounced function with useRef to maintain stable reference
   const debouncedSearchRef = useRef(
@@ -74,9 +75,17 @@ const UserManagement = () => {
   // Handle search input change
   const handleSearchChange = (e) => {
     const value = e.target.value;
-    setSearchInput(value);
+    setSearchKeyword(value);
     debouncedSearchRef.current(value);
   };
+
+  useEffect(() => {
+    if (searchInputRef.current && document.activeElement !== searchInputRef.current && searchKeyword) {
+      const cursorPosition = searchInputRef.current.selectionStart;
+      searchInputRef.current.focus();
+      searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+    }
+  }, [users, searchKeyword]);
 
   useEffect(() => {
     const offset = (currentPage - 1) * itemsPerPage;
@@ -278,13 +287,27 @@ const UserManagement = () => {
               {showExportMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
                   <button
+                    onClick={async () => {
+                      try {
+                        await downloadAllUsersPDF();
+                        toast.success('PDF downloaded successfully');
+                      } catch (error) {
+                        toast.error('Failed to download PDF');
+                      }
+                      setShowExportMenu(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Download All Users PDF
+                  </button>
+                  <button
                     onClick={() => {
                       exportUsersToPDF(users);
                       setShowExportMenu(false);
                     }}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    Export as PDF
+                    Export Current Page as PDF
                   </button>
                   <button
                     onClick={() => {
@@ -311,10 +334,11 @@ const UserManagement = () => {
           <div className="flex-1">
             <label htmlFor="searchUsers" className="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
             <input
+              ref={searchInputRef}
               id="searchUsers"
               type="text"
               placeholder="Search by name, email, or phone number..."
-              value={searchInput}
+              value={searchKeyword}
               onChange={handleSearchChange}
               className="w-full border border-gray-300 p-2.5 rounded-lg"
             />

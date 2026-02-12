@@ -27,11 +27,32 @@ export const createSubject = createAsyncThunk(
   }
 );
 
+
 export const updateSubjectStatus = createAsyncThunk(
   'subjects/updateSubjectStatus',
   async ({ subjectId, status }) => {
     await api.put(`/subjects/status/${subjectId}`, { status });
     return { subjectId, status };
+  }
+);
+
+export const updateSubject = createAsyncThunk(
+  'subjects/updateSubject',
+  async ({ subjectId, name }, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(`/subjects/${subjectId}`, { name });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const bulkUpdateSubjectStatus = createAsyncThunk(
+  'subjects/bulkUpdateSubjectStatus',
+  async ({ ids, status }) => {
+    await api.put('/subjects/bulk-status', { ids, status });
+    return { ids, status };
   }
 );
 
@@ -78,11 +99,16 @@ const subjectSlice = createSlice({
         state.total += 1;
       })
       .addCase(updateSubjectStatus.fulfilled, (state, action) => {
-        const { subjectId, status } = action.payload;
-        const subject = state.subjects.find(s => s.id === subjectId);
-        if (subject) {
-          subject.status = status;
+    
+      })
+      .addCase(updateSubject.fulfilled, (state, action) => {
+        const index = state.subjects.findIndex(s => s.id === action.payload.id);
+        if (index !== -1) {
+          state.subjects[index] = action.payload;
         }
+      })
+      .addCase(bulkUpdateSubjectStatus.fulfilled, (state, action) => {
+       
       });
   }
 });

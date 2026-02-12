@@ -1,21 +1,19 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Eye, Settings, RefreshCw, Plus, Edit } from "lucide-react";
-import { fetchCities, createCity, updateCityStatus, updateCity, bulkUpdateCityStatus, setSearch, setStatusFilter, setStateFilter } from "../store/citySlice";
-import { fetchStates } from "../store/stateSlice";
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Eye, Settings, RefreshCw, Plus, Edit } from 'lucide-react';
+import { fetchContactCategories, createContactCategory, updateContactCategoryStatus, updateContactCategory, bulkUpdateContactCategoryStatus, setSearch, setStatusFilter } from '../store/contactCategorySlice';
 import { toast } from 'react-toastify';
 import Modal from '../components/Modal';
 
-const CityManager = () => {
+const ContactCategoryManager = () => {
   const dispatch = useDispatch();
-  const { cities, total, loading, error, filters } = useSelector(state => state.cities);
-  const { states } = useSelector(state => state.states);
-  const [selectedCity, setSelectedCity] = useState(null);
+  const { categories, total, loading, error, filters } = useSelector(state => state.contactCategories);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newCity, setNewCity] = useState({ name: '', stateId: '' });
+  const [newCategory, setNewCategory] = useState({ title: '' });
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [statusUpdateCity, setStatusUpdateCity] = useState(null);
+  const [statusUpdateCategory, setStatusUpdateCategory] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -24,10 +22,10 @@ const CityManager = () => {
   const searchTimeoutRef = useRef(null);
   const searchInputRef = useRef(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editCity, setEditCity] = useState(null);
-  const [editData, setEditData] = useState({ name: '', stateId: '' });
+  const [editCategory, setEditCategory] = useState(null);
+  const [editData, setEditData] = useState({ title: '' });
   const [isUpdating, setIsUpdating] = useState(false);
-  const [selectedCities, setSelectedCities] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [bulkStatus, setBulkStatus] = useState('');
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
@@ -52,7 +50,7 @@ const CityManager = () => {
       searchInputRef.current.focus();
       searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
     }
-  }, [cities, searchKeyword]);
+  }, [categories, searchKeyword]);
 
   useEffect(() => {
     const offset = (currentPage - 1) * itemsPerPage;
@@ -64,15 +62,8 @@ const CityManager = () => {
     if (filters.status) {
       params.status = filters.status;
     }
-    if (filters.stateId) {
-      params.stateId = filters.stateId;
-    }
-    dispatch(fetchCities(params));
-  }, [dispatch, currentPage, itemsPerPage, filters.search, filters.status, filters.stateId]);
-
-  useEffect(() => {
-    dispatch(fetchStates({ limit: 100, offset: 0, status: 'ACTIVE' }));
-  }, [dispatch]);
+    dispatch(fetchContactCategories(params));
+  }, [dispatch, currentPage, itemsPerPage, filters.search, filters.status]);
 
   useEffect(() => {
     return () => {
@@ -82,19 +73,19 @@ const CityManager = () => {
     };
   }, []);
 
-  const handleStatusUpdate = (city) => {
-    setStatusUpdateCity(city);
-    setNewStatus(city.status);
+  const handleStatusUpdate = (category) => {
+    setStatusUpdateCategory(category);
+    setNewStatus(category.status);
     setShowStatusModal(true);
   };
 
   const confirmStatusUpdate = async () => {
-    if (statusUpdateCity && newStatus) {
+    if (statusUpdateCategory && newStatus) {
       try {
-        await dispatch(updateCityStatus({ cityId: statusUpdateCity.id, status: newStatus })).unwrap();
+        await dispatch(updateContactCategoryStatus({ categoryId: statusUpdateCategory.id, status: newStatus })).unwrap();
         toast.success('Status updated successfully!');
         setShowStatusModal(false);
-        setStatusUpdateCity(null);
+        setStatusUpdateCategory(null);
         setNewStatus('');
         handleRefresh();
       } catch (error) {
@@ -104,45 +95,45 @@ const CityManager = () => {
     }
   };
 
-  const handleSelectCity = (cityId) => {
-    setSelectedCities(prev => 
-      prev.includes(cityId) 
-        ? prev.filter(id => id !== cityId)
-        : [...prev, cityId]
+  const handleSelectCategory = (categoryId) => {
+    setSelectedCategories(prev => 
+      prev.includes(categoryId) 
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
     );
   };
 
   const handleSelectAll = () => {
-    setSelectedCities(selectedCities.length === cities.length ? [] : cities.map(c => c.id));
+    setSelectedCategories(selectedCategories.length === categories.length ? [] : categories.map(c => c.id));
   };
 
   const handleBulkStatusUpdate = () => {
-    if (selectedCities.length > 0) {
+    if (selectedCategories.length > 0) {
       setShowBulkModal(true);
     }
   };
 
   const confirmBulkStatusUpdate = async () => {
-    if (selectedCities.length > 0 && bulkStatus) {
+    if (selectedCategories.length > 0 && bulkStatus) {
       setIsBulkUpdating(true);
       try {
-        await dispatch(bulkUpdateCityStatus({ ids: selectedCities, status: bulkStatus })).unwrap();
-        toast.success(`${selectedCities.length} cities updated successfully!`);
+        await dispatch(bulkUpdateContactCategoryStatus({ ids: selectedCategories, status: bulkStatus })).unwrap();
+        toast.success(`${selectedCategories.length} categories updated successfully!`);
         setShowBulkModal(false);
-        setSelectedCities([]);
+        setSelectedCategories([]);
         setBulkStatus('');
         handleRefresh();
       } catch (error) {
         console.error('Bulk status update failed:', error);
-        toast.error('Failed to update cities status');
+        toast.error('Failed to update categories status');
       } finally {
         setIsBulkUpdating(false);
       }
     }
   };
 
-  const handleViewProfile = (city) => {
-    setSelectedCity(city);
+  const handleViewProfile = (category) => {
+    setSelectedCategory(category);
     setShowProfile(true);
   };
 
@@ -156,70 +147,66 @@ const CityManager = () => {
     if (filters.status) {
       params.status = filters.status;
     }
-    if (filters.stateId) {
-      params.stateId = filters.stateId;
-    }
-    dispatch(fetchCities(params));
+    dispatch(fetchContactCategories(params));
   };
 
   const handleOpenCreateModal = () => {
-    setNewCity({ name: '',  stateId: '' });
+    setNewCategory({ title: '' });
     setShowCreateForm(true);
   };
 
-  const handleCreateCity = async (e) => {
+  const handleCreateCategory = async (e) => {
     e.preventDefault();
-    if (!newCity.name.trim() || !newCity.stateId) return;
+    if (!newCategory.title.trim()) return;
     
-    const existingCity = cities.find(city => 
-      city.name.toLowerCase() === newCity.name.trim().toLowerCase()
+    const existingCategory = categories.find(category => 
+      category.title.toLowerCase() === newCategory.title.trim().toLowerCase()
     );
     
-    if (existingCity) {
-      toast.error('A city with this name already exists');
+    if (existingCategory) {
+      toast.error('A category with this title already exists');
       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      await dispatch(createCity(newCity)).unwrap();
-      toast.success('City created successfully!');
-      setNewCity({ name: '',  stateId: '' });
+      await dispatch(createContactCategory(newCategory)).unwrap();
+      toast.success('Category created successfully!');
+      setNewCategory({ title: '' });
       setShowCreateForm(false);
       handleRefresh();
     } catch (error) {
-      console.error('City creation failed:', error);
-      toast.error('Failed to create city');
+      console.error('Category creation failed:', error);
+      toast.error('Failed to create category');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleEditCity = (city) => {
-    setEditCity(city);
-    setEditData({ name: city.name, stateId: city.state?.id || city.stateId });
+  const handleEditCategory = (category) => {
+    setEditCategory(category);
+    setEditData({ title: category.title });
     setShowEditModal(true);
   };
 
-  const confirmUpdateCity = async () => {
-    if (!editCity || !editData.name.trim() || !editData.stateId) return;
+  const confirmUpdateCategory = async () => {
+    if (!editCategory || !editData.title.trim()) return;
     
     setIsUpdating(true);
     try {
-      await dispatch(updateCity({ 
-        cityId: editCity.id, 
-        name: editData.name.trim(),
-        stateId: editData.stateId
+      await dispatch(updateContactCategory({ 
+        categoryId: editCategory.id, 
+        title: editData.title.trim()
       })).unwrap();
       
       setShowEditModal(false);
-      setEditCity(null);
-      setEditData({ name: '', stateId: '' });
-      toast.success('City updated successfully!');
+      setEditCategory(null);
+      setEditData({ title: '' });
+      toast.success('Category updated successfully!');
       handleRefresh();
     } catch (error) {
-      const errorMessage = error?.message || 'Failed to update city';
+      const errorMessage = error?.message || 'Failed to update category';
       toast.error(errorMessage);
     } finally {
       setIsUpdating(false);
@@ -231,7 +218,7 @@ const CityManager = () => {
       <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
         <div className="text-center">
           <RefreshCw className="animate-spin h-12 w-12 mx-auto text-blue-500" />
-          <p className="mt-4 text-gray-600">Loading cities...</p>
+          <p className="mt-4 text-gray-600">Loading categories...</p>
         </div>
       </div>
     );
@@ -257,13 +244,13 @@ const CityManager = () => {
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">City Management</h2>
+          <h2 className="text-3xl font-bold text-gray-800">Contact Category Management</h2>
           <div className="flex gap-2">
             <button
               onClick={handleOpenCreateModal}
               className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
             >
-              <Plus size={18} /> Add City
+              <Plus size={18} /> Add Category
             </button>
             <button
               onClick={handleRefresh}
@@ -274,13 +261,13 @@ const CityManager = () => {
           </div>
         </div>
         
-        <p className="text-gray-600 mb-6">Total Cities: {total}</p>
+        <p className="text-gray-600 mb-6">Total Categories: {total}</p>
 
         <div className="flex gap-4 mb-6">
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="Search by city name..."
+            placeholder="Search by category title..."
             value={searchKeyword}
             onChange={handleKeywordChange}
             className="flex-1 border border-gray-300 p-2.5 rounded-lg"
@@ -294,24 +281,12 @@ const CityManager = () => {
             <option value="ACTIVE">Active</option>
             <option value="DEACTIVE">Deactive</option>
           </select>
-          <select
-            value={filters.stateId}
-            onChange={(e) => dispatch(setStateFilter(e.target.value))}
-            className="border border-gray-300 p-2.5 rounded-lg"
-          >
-            <option value="">All States</option>
-            {states.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-          {selectedCities.length > 0 && (
+          {selectedCategories.length > 0 && (
             <button
               onClick={handleBulkStatusUpdate}
               className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
             >
-              Bulk Update ({selectedCities.length})
+              Bulk Update ({selectedCategories.length})
             </button>
           )}
         </div>
@@ -323,60 +298,58 @@ const CityManager = () => {
                 <th className="p-4 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedCities.length === cities.length && cities.length > 0}
+                    checked={selectedCategories.length === categories.length && categories.length > 0}
                     onChange={handleSelectAll}
                     className="rounded"
                   />
                 </th>
-                <th className="p-4 text-left">Name</th>
-                <th className="p-4 text-left">State</th>
+                <th className="p-4 text-left">Title</th>
                 <th className="p-4 text-left">Status</th>
                 <th className="p-4 text-left">Created</th>
                 <th className="p-4 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {cities.map((city, index) => (
-                <tr key={city.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+              {categories.map((category, index) => (
+                <tr key={category.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   <td className="p-4">
                     <input
                       type="checkbox"
-                      checked={selectedCities.includes(city.id)}
-                      onChange={() => handleSelectCity(city.id)}
+                      checked={selectedCategories.includes(category.id)}
+                      onChange={() => handleSelectCategory(category.id)}
                       className="rounded"
                     />
                   </td>
-                  <td className="p-4">{city.name}</td>
-                  <td className="p-4">{city.state?.name || 'N/A'}</td>
+                  <td className="p-4">{category.title}</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 text-xs rounded-full ${
-                      city.status === "ACTIVE" ? "bg-green-100 text-green-800" : 
+                      category.status === "ACTIVE" ? "bg-green-100 text-green-800" : 
                       "bg-red-100 text-red-800"
                     }`}>
-                      {city.status}
+                      {category.status}
                     </span>
                   </td>
-                  <td className="p-4">{new Date(city.createdAt).toLocaleDateString()}</td>
+                  <td className="p-4">{new Date(category.createdAt).toLocaleDateString()}</td>
                   <td className="p-4">
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleViewProfile(city)}
+                        onClick={() => handleViewProfile(category)}
                         className="text-blue-600 hover:text-blue-800"
                         title="View Details"
                       >
                         <Eye size={18} />
                       </button>
                       <button
-                        onClick={() => handleStatusUpdate(city)}
+                        onClick={() => handleStatusUpdate(category)}
                         className="text-green-600 hover:text-green-800"
                         title="Update Status"
                       >
                         <Settings size={18} />
                       </button>
                       <button
-                        onClick={() => handleEditCity(city)}
+                        onClick={() => handleEditCategory(category)}
                         className="text-orange-600 hover:text-orange-800"
-                        title="Edit City"
+                        title="Edit Category"
                       >
                         <Edit size={18} />
                       </button>
@@ -404,7 +377,7 @@ const CityManager = () => {
               <option value={50}>50 per page</option>
             </select>
             <span className="text-sm text-gray-600">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, total)} of {total} cities
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, total)} of {total} categories
             </span>
             <div className="flex gap-2">
               <button
@@ -432,9 +405,9 @@ const CityManager = () => {
           isOpen={showCreateForm} 
           onClose={() => {
             setShowCreateForm(false);
-            setNewCity({ name: '', stateId: '' });
+            setNewCategory({ title: '' });
           }}
-          title="Add New City"
+          title="Add New Category"
           maxWidth="max-w-md"
           position="center"
         >
@@ -447,35 +420,18 @@ const CityManager = () => {
                 </div>
               </div>
             )}
-            <form onSubmit={handleCreateCity} className="space-y-4">
+            <form onSubmit={handleCreateCategory} className="space-y-4">
               <div>
-                <label htmlFor="cityName" className="block text-sm font-medium text-gray-700 mb-2 text-left">City Name *</label>
+                <label htmlFor="categoryTitle" className="block text-sm font-medium text-gray-700 mb-2 text-left">Category Title *</label>
                 <input
-                  id="cityName"
+                  id="categoryTitle"
                   type="text"
-                  placeholder="City Name"
-                  value={newCity.name}
-                  onChange={(e) => setNewCity({...newCity, name: e.target.value})}
+                  placeholder="Category Title"
+                  value={newCategory.title}
+                  onChange={(e) => setNewCategory({...newCategory, title: e.target.value})}
                   className="w-full border border-gray-300 p-2 rounded-lg"
                   required
                 />
-              </div>
-              <div>
-                <label htmlFor="cityState" className="block text-sm font-medium text-gray-700 mb-2 text-left">State *</label>
-                <select
-                  id="cityState"
-                  value={newCity.stateId}
-                  onChange={(e) => setNewCity({...newCity, stateId: e.target.value})}
-                  className="w-full border border-gray-300 p-2 rounded-lg"
-                  required
-                >
-                  <option value="">Select State</option>
-                  {states.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
               </div>
               <div className="flex gap-2">
                 <button
@@ -503,19 +459,18 @@ const CityManager = () => {
         </Modal>
 
         <Modal 
-          isOpen={showProfile && selectedCity} 
+          isOpen={showProfile && selectedCategory} 
           onClose={() => setShowProfile(false)}
-          title="City Details"
+          title="Category Details"
           maxWidth="max-w-md"
           position="center"
         >
-          {selectedCity && (
+          {selectedCategory && (
             <div className="space-y-2 text-left">
-              <p><strong>Name:</strong> {selectedCity.name}</p>
-              <p><strong>State:</strong> {selectedCity.state?.name || 'N/A'}</p>
-              <p><strong>Status:</strong> {selectedCity.status}</p>
-              <p><strong>Created:</strong> {new Date(selectedCity.createdAt).toLocaleDateString()}</p>
-              <p><strong>Updated:</strong> {new Date(selectedCity.updatedAt).toLocaleDateString()}</p>
+              <p><strong>Title:</strong> {selectedCategory.title}</p>
+              <p><strong>Status:</strong> {selectedCategory.status}</p>
+              <p><strong>Created:</strong> {new Date(selectedCategory.createdAt).toLocaleDateString()}</p>
+              <p><strong>Updated:</strong> {new Date(selectedCategory.updatedAt).toLocaleDateString()}</p>
             </div>
           )}
           <button
@@ -527,20 +482,20 @@ const CityManager = () => {
         </Modal>
 
         <Modal 
-          isOpen={showStatusModal && statusUpdateCity} 
+          isOpen={showStatusModal && statusUpdateCategory} 
           onClose={() => {
             setShowStatusModal(false);
-            setStatusUpdateCity(null);
+            setStatusUpdateCategory(null);
             setNewStatus('');
           }}
-          title="Update City Status"
+          title="Update Category Status"
           maxWidth="max-w-md"
           position="center"
         >
-          {statusUpdateCity && (
+          {statusUpdateCategory && (
             <>
               <p className="text-gray-600 mb-4">
-                Update status for: <strong>{statusUpdateCity.name}</strong>
+                Update status for: <strong>{statusUpdateCategory.title}</strong>
               </p>
               <div className="mb-4">
                 <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Status</label>
@@ -558,7 +513,7 @@ const CityManager = () => {
                 <button
                   onClick={() => {
                     setShowStatusModal(false);
-                    setStatusUpdateCity(null);
+                    setStatusUpdateCategory(null);
                     setNewStatus('');
                   }}
                   className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
@@ -597,7 +552,7 @@ const CityManager = () => {
             </div>
           )}
           <p className="text-gray-600 mb-4">
-            Update status for <strong>{selectedCities.length}</strong> selected cities
+            Update status for <strong>{selectedCategories.length}</strong> selected categories
           </p>
           <div className="mb-4">
             <label htmlFor="bulkStatusSelect" className="block text-sm font-medium text-gray-700 mb-2 text-left">Select Status</label>
@@ -634,13 +589,13 @@ const CityManager = () => {
       </Modal>
 
       <Modal 
-        isOpen={showEditModal && editCity} 
+        isOpen={showEditModal && editCategory} 
         onClose={() => {
           setShowEditModal(false);
-          setEditCity(null);
-          setEditData({ name: '', code: '', stateId: '' });
+          setEditCategory(null);
+          setEditData({ title: '' });
         }}
-        title="Edit City"
+        title="Edit Category"
         maxWidth="max-w-md"
         position="center"
       >
@@ -653,62 +608,46 @@ const CityManager = () => {
               </div>
             </div>
           )}
-          {editCity && (
+          {editCategory && (
             <>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="editCityName" className="block text-sm font-medium text-gray-700 mb-2 text-left">City Name *</label>
-                <input
-                  id="editCityName"
-                  type="text"
-                  value={editData.name}
-                  onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full border border-gray-300 p-2.5 rounded-lg"
-                  placeholder="Enter city name"
-                />
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="editCategoryTitle" className="block text-sm font-medium text-gray-700 mb-2 text-left">Category Title *</label>
+                  <input
+                    id="editCategoryTitle"
+                    type="text"
+                    value={editData.title}
+                    onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full border border-gray-300 p-2.5 rounded-lg"
+                    placeholder="Enter category title"
+                  />
+                </div>
               </div>
-              <div>
-                <label htmlFor="editCityState" className="block text-sm font-medium text-gray-700 mb-2 text-left">State *</label>
-                <select
-                  id="editCityState"
-                  value={editData.stateId}
-                  onChange={(e) => setEditData(prev => ({ ...prev, stateId: e.target.value }))}
-                  className="w-full border border-gray-300 p-2.5 rounded-lg"
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditCategory(null);
+                    setEditData({ title: '' });
+                  }}
+                  className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
                 >
-                  <option value="">Select State</option>
-                  {states.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmUpdateCategory}
+                  disabled={!editData.title.trim() || isUpdating}
+                  className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
+                >
+                  {isUpdating ? 'Updating...' : 'Update'}
+                </button>
               </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowEditModal(false);
-                  setEditCity(null);
-                  setEditData({ name: '', stateId: '' });
-                }}
-                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmUpdateCity}
-                disabled={!editData.name.trim() || !editData.stateId || isUpdating}
-                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
-              >
-                {isUpdating ? 'Updating...' : 'Update'}
-              </button>
-            </div>
-          </>
-        )}
+            </>
+          )}
         </div>
       </Modal>
     </div>
   );
 };
 
-export default CityManager;
+export default ContactCategoryManager;
