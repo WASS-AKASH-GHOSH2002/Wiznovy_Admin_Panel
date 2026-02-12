@@ -426,8 +426,9 @@ export default function FaqManager() {
         >
           <form onSubmit={handleCreateFaq} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Question *</label>
+              <label htmlFor="create-question" className="block text-sm font-medium text-gray-700 mb-2 text-left">Question *</label>
               <input
+                id="create-question"
                 type="text"
                 placeholder="Enter question"
                 value={newFaq.question}
@@ -437,8 +438,9 @@ export default function FaqManager() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Answer *</label>
+              <label htmlFor="create-answer" className="block text-sm font-medium text-gray-700 mb-2 text-left">Answer *</label>
               <textarea
+                id="create-answer"
                 placeholder="Enter answer"
                 value={newFaq.answer}
                 onChange={(e) => setNewFaq({...newFaq, answer: e.target.value})}
@@ -448,8 +450,9 @@ export default function FaqManager() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Type *</label>
+              <label htmlFor="create-type" className="block text-sm font-medium text-gray-700 mb-2 text-left">Type *</label>
               <select
+                id="create-type"
                 value={newFaq.type}
                 onChange={(e) => setNewFaq({...newFaq, type: e.target.value})}
                 className="w-full border border-gray-300 p-2 rounded-lg"
@@ -625,8 +628,9 @@ export default function FaqManager() {
             <>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Question *</label>
+                  <label htmlFor="edit-question" className="block text-sm font-medium text-gray-700 mb-2 text-left">Question *</label>
                   <input
+                    id="edit-question"
                     type="text"
                     value={editData.question}
                     onChange={(e) => setEditData({...editData, question: e.target.value})}
@@ -634,8 +638,9 @@ export default function FaqManager() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Answer *</label>
+                  <label htmlFor="edit-answer" className="block text-sm font-medium text-gray-700 mb-2 text-left">Answer *</label>
                   <textarea
+                    id="edit-answer"
                     value={editData.answer}
                     onChange={(e) => setEditData({...editData, answer: e.target.value})}
                     className="w-full border border-gray-300 p-2 rounded-lg"
@@ -643,8 +648,9 @@ export default function FaqManager() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Type *</label>
+                  <label htmlFor="edit-type" className="block text-sm font-medium text-gray-700 mb-2 text-left">Type *</label>
                   <select
+                    id="edit-type"
                     value={editData.type}
                     onChange={(e) => setEditData({...editData, type: e.target.value})}
                     className="w-full border border-gray-300 p-2 rounded-lg"

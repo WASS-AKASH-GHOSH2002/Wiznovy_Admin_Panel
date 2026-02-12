@@ -64,24 +64,22 @@ const BookManager = () => {
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [selectedCoverFile, setSelectedCoverFile] = useState(null);
   const [selectedPdfFile, setSelectedPdfFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const fileInputRef = useRef(null);
   const coverInputRef = useRef(null);
   const pdfInputRef = useRef(null);
 
-  // Loading States
+ 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
-  // Search
+  
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const searchTimeoutRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // Bulk Selection
+
   const [selectedBooks, setSelectedBooks] = useState([]);
   const [editBook, setEditBook] = useState(null);
 

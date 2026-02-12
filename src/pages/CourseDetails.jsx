@@ -422,7 +422,7 @@ const CourseDetails = () => {
     const updateData = {
       title: editVideoFormData.title,
       description: editVideoFormData.description,
-      duration: parseInt(editVideoFormData.duration)
+      duration:Number.parseInt(editVideoFormData.duration)
     };
     
     const unitId = selectedVideo.unitId;

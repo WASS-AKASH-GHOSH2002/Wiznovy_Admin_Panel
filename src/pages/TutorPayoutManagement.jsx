@@ -192,6 +192,15 @@ export default function TutorPayoutManagement() {
       </div>
     );
   }
+const getStatusClass = (status) => {
+  if (status === 'APPROVED') {
+    return 'bg-green-100 text-green-800';
+  }
+  if (status === 'PENDING') {
+    return 'bg-yellow-100 text-yellow-800';
+  }
+  return 'bg-red-100 text-red-800';
+};
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -275,17 +284,12 @@ export default function TutorPayoutManagement() {
                     </td>
                     <td className="p-4 font-semibold text-gray-800">₹{payout.amount}</td>
                     <td className="p-4">
-                      <span
-                        className={`px-3 py-1 text-xs rounded-full ${
-                          payout.status === 'APPROVED'
-                            ? 'bg-green-100 text-green-800'
-                            : payout.status === 'PENDING'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {payout.status}
-                      </span>
+                  <span
+  className={`px-3 py-1 text-xs rounded-full ${getStatusClass(payout.status)}`}
+>
+  {payout.status}
+</span>
+
                     </td>
                     <td className="p-4 text-sm text-gray-600">{formatDate(payout.createdAt)}</td>
                     <td className="p-4">
@@ -393,17 +397,12 @@ export default function TutorPayoutManagement() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Status</p>
-                    <span
-                      className={`px-3 py-1 text-xs rounded-full ${
-                        selectedPayout.status === 'APPROVED'
-                          ? 'bg-green-100 text-green-800'
-                          : selectedPayout.status === 'PENDING'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {selectedPayout.status}
-                    </span>
+                  <span
+  className={`px-3 py-1 text-xs rounded-full ${getStatusClass(selectedPayout.status)}`}
+>
+  {selectedPayout.status}
+</span>
+
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Transaction ID</p>
